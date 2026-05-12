@@ -1,0 +1,67 @@
+name: MOS Radar Daily Scanner
+
+on:
+  schedule:
+    # Full after-close valuation scan. Avoid :00 to reduce queue delays.
+    - cron: "37 18 * * 1-5"
+      timezone: "America/New_York"
+    # Morning full report.
+    - cron: "31 8 * * 1-5"
+      timezone: "America/New_York"
+    # Noon price-only update.
+    - cron: "31 12 * * 1-5"
+      timezone: "America/New_York"
+    # Afternoon price-only update.
+    - cron: "31 15 * * 1-5"
+      timezone: "America/New_York"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mos-radar:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mos-radar
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run MOS Radar
+        env:
+          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
+          TRAP_COUNT: ${{ vars.TRAP_COUNT }}
+          THIN_COUNT: ${{ vars.THIN_COUNT }}
+          MAX_TICKERS: ${{ vars.MAX_TICKERS }}
+          REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
+          PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
+          SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
+        run: python src/main.py
+
+      - name: Commit reports and latest results
+        run: |
+          git config user.name "mos-radar-bot"
+          git config user.email "mos-radar-bot@users.noreply.github.com"
+          git add reports/ data/results/ || true
+          git commit -m "update MOS radar report" || echo "No changes to commit"
+          git push
