@@ -3,101 +3,83 @@ from __future__ import annotations
 import math
 import time
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
 
-EXCLUDED_SECTOR_KEYWORDS = {
-    # V1 deliberately avoids sectors that need very different valuation models.
-    "financial services",
-    "real estate",
-}
+ROOT = Path(__file__).resolve().parents[1]
+FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-EXCLUDED_INDUSTRY_KEYWORDS = {
-    "biotechnology",
-    "reit",
-    "shell companies",
-}
-
-SECTOR_FCF_MULTIPLE = {
-    "Technology": 12,
-    "Communication Services": 11,
-    "Consumer Cyclical": 10,
-    "Consumer Defensive": 12,
-    "Healthcare": 11,
-    "Industrials": 10,
-    "Energy": 7,
-    "Basic Materials": 8,
-    "Utilities": 9,
-}
-
-SECTOR_EARNINGS_MULTIPLE = {
-    "Technology": 13,
-    "Communication Services": 12,
-    "Consumer Cyclical": 11,
-    "Consumer Defensive": 13,
-    "Healthcare": 12,
-    "Industrials": 11,
-    "Energy": 8,
-    "Basic Materials": 9,
-    "Utilities": 10,
-}
+MODEL_VERSION = "MOS_Radar_V5"
 
 
 @dataclass
-class StockResult:
+class AnalysisResult:
     ticker: str
     company_name: str = ""
     sector: str = ""
     industry: str = ""
-    price: Optional[float] = None
-    market_cap: Optional[float] = None
-    shares_outstanding: Optional[float] = None
-    enterprise_value: Optional[float] = None
-    revenue_latest: Optional[float] = None
-    revenue_5y_avg: Optional[float] = None
-    revenue_5y_cagr: Optional[float] = None
-    net_income_latest: Optional[float] = None
-    normalized_net_income: Optional[float] = None
-    fcf_latest: Optional[float] = None
-    fcf_5y_avg: Optional[float] = None
-    operating_cashflow_latest: Optional[float] = None
-    capex_latest: Optional[float] = None
-    total_cash: Optional[float] = None
-    total_debt: Optional[float] = None
-    ebitda: Optional[float] = None
-    net_debt: Optional[float] = None
-    roe: Optional[float] = None
-    gross_margin: Optional[float] = None
-    operating_margin: Optional[float] = None
-    profit_margin: Optional[float] = None
-    fcf_yield: Optional[float] = None
-    pe: Optional[float] = None
-    forward_pe: Optional[float] = None
-    ev_ebitda: Optional[float] = None
-    debt_to_ebitda: Optional[float] = None
-    intrinsic_equity_value: Optional[float] = None
-    intrinsic_value_per_share: Optional[float] = None
-    margin_of_safety: Optional[float] = None
+    price: float | None = None
+    market_cap: float | None = None
+    enterprise_value: float | None = None
+
+    revenue_ttm: float | None = None
+    revenue_5y_cagr: float | None = None
+    gross_margin: float | None = None
+    operating_margin: float | None = None
+    net_margin: float | None = None
+
+    net_income_ttm: float | None = None
+    fcf_ttm: float | None = None
+    fcf_3y_avg: float | None = None
+    fcf_5y_avg: float | None = None
+    fcf_yield: float | None = None
+    fcf_conversion: float | None = None
+
+    cash: float | None = None
+    total_debt: float | None = None
+    net_cash: float | None = None
+    ebitda: float | None = None
+    debt_to_ebitda: float | None = None
+    equity: float | None = None
+    roe: float | None = None
+
+    share_dilution_3y: float | None = None
+
+    intrinsic_value_total: float | None = None
+    intrinsic_value_per_share: float | None = None
+    margin_of_safety: float | None = None
+
+    valuation_method: str = ""
+    model_type: str = ""
+    model_version: str = MODEL_VERSION
+
     mos_score: float = 0
     cashflow_score: float = 0
     balance_sheet_score: float = 0
     quality_score: float = 0
-    data_score: float = 0
+    trend_score: float = 0
+    data_quality_score: float = 0
+    confidence_score: float = 0
     final_score: float = 0
-    rating: str = "NO_DATA"
+
     trap_flags: str = ""
+    trap_count: int = 0
+    feedback_label: str = ""
+
+    rating: str = "NO_DATA"
     reason: str = ""
 
 
-def _safe_float(x: Any) -> Optional[float]:
+def safe_float(x: Any) -> float | None:
     try:
         if x is None:
             return None
-        if isinstance(x, str) and not x.strip():
+        if isinstance(x, str) and x.strip() == "":
             return None
         v = float(x)
         if math.isnan(v) or math.isinf(v):
@@ -107,80 +89,359 @@ def _safe_float(x: Any) -> Optional[float]:
         return None
 
 
-def _first_not_none(*values: Any) -> Optional[float]:
-    for v in values:
-        fv = _safe_float(v)
-        if fv is not None:
-            return fv
+def clamp(x: float | None, lo: float, hi: float, default: float = 0) -> float:
+    if x is None:
+        return default
+    return max(lo, min(hi, float(x)))
+
+
+def series_latest(s: pd.Series | None) -> float | None:
+    if s is None or len(s) == 0:
+        return None
+    vals = pd.to_numeric(s, errors="coerce").dropna()
+    if vals.empty:
+        return None
+    return safe_float(vals.iloc[0])
+
+
+def series_avg(s: pd.Series | None, n: int = 5) -> float | None:
+    if s is None or len(s) == 0:
+        return None
+    vals = pd.to_numeric(s, errors="coerce").dropna().head(n)
+    if vals.empty:
+        return None
+    return safe_float(vals.mean())
+
+
+def row(df: pd.DataFrame | None, names: list[str]) -> pd.Series | None:
+    if df is None or df.empty:
+        return None
+    idx_lower = {str(i).lower(): i for i in df.index}
+    for name in names:
+        key = name.lower()
+        if key in idx_lower:
+            return pd.to_numeric(df.loc[idx_lower[key]], errors="coerce")
     return None
 
 
-def _row_values(df: Optional[pd.DataFrame], names: List[str]) -> List[float]:
-    if df is None or df.empty:
-        return []
-    idx_lower = {str(i).strip().lower(): i for i in df.index}
-    for name in names:
-        key = name.strip().lower()
-        if key in idx_lower:
-            s = df.loc[idx_lower[key]].dropna()
-            vals = []
-            for v in s.values:
-                fv = _safe_float(v)
-                if fv is not None:
-                    vals.append(fv)
-            return vals
-    return []
-
-
-def _latest(values: List[float]) -> Optional[float]:
-    return values[0] if values else None
-
-
-def _avg_positive_or_all(values: List[float]) -> Optional[float]:
-    vals = [_safe_float(v) for v in values if _safe_float(v) is not None]
-    if not vals:
-        return None
-    positives = [v for v in vals if v > 0]
-    if len(positives) >= 2:
-        return float(np.mean(positives))
-    return float(np.mean(vals))
-
-
-def _cagr(values: List[float]) -> Optional[float]:
-    vals = [_safe_float(v) for v in values if _safe_float(v) is not None]
-    if len(vals) < 3:
-        return None
-    latest = vals[0]
-    oldest = vals[-1]
-    years = len(vals) - 1
-    if latest is None or oldest is None or latest <= 0 or oldest <= 0 or years <= 0:
-        return None
-    return (latest / oldest) ** (1 / years) - 1
-
-
-def _get_fast_info(ticker_obj: yf.Ticker, key: str) -> Optional[float]:
+def fast_info_value(fast_info, key: str):
     try:
-        return _safe_float(ticker_obj.fast_info.get(key))
+        return fast_info[key]
     except Exception:
-        return None
+        try:
+            return getattr(fast_info, key)
+        except Exception:
+            return None
 
 
-def _get_df(ticker_obj: yf.Ticker, attr_name: str) -> pd.DataFrame:
+def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | None]:
+    price = None
+    market_cap = None
+
     try:
-        df = getattr(ticker_obj, attr_name)
-        if isinstance(df, pd.DataFrame):
-            # yfinance returns latest year first for most statements.
-            return df
+        fi = t.fast_info
+        price = (
+            fast_info_value(fi, "last_price")
+            or fast_info_value(fi, "lastPrice")
+            or fast_info_value(fi, "regular_market_price")
+            or fast_info_value(fi, "regularMarketPrice")
+        )
+        market_cap = (
+            fast_info_value(fi, "market_cap")
+            or fast_info_value(fi, "marketCap")
+        )
     except Exception:
         pass
-    return pd.DataFrame()
+
+    price = safe_float(price) or safe_float(info.get("currentPrice")) or safe_float(info.get("regularMarketPrice"))
+    market_cap = safe_float(market_cap) or safe_float(info.get("marketCap"))
+
+    return price, market_cap
 
 
-def _sector_multiple(sector: str, table: Dict[str, int], default: int) -> int:
-    return table.get(sector or "", default)
+def get_feedback_map() -> dict[str, dict[str, str]]:
+    if not FEEDBACK_PATH.exists():
+        return {}
+    try:
+        df = pd.read_csv(FEEDBACK_PATH)
+        if df.empty or "ticker" not in df.columns:
+            return {}
+        out = {}
+        for _, r in df.iterrows():
+            ticker = str(r.get("ticker", "")).strip().upper()
+            if not ticker:
+                continue
+            out[ticker] = {k: str(v) for k, v in r.items() if pd.notna(v)}
+        return out
+    except Exception:
+        return {}
 
 
-def _score_mos(mos: Optional[float]) -> float:
+def sector_config(sector: str, industry: str) -> dict[str, float | str]:
+    s = (sector or "").lower()
+    i = (industry or "").lower()
+
+    cfg = {
+        "model": "normal_fcf",
+        "fcf_multiple": 10.0,
+        "pe_multiple": 10.0,
+        "terminal_multiple": 9.0,
+        "discount_rate": 0.11,
+        "growth_cap": 0.08,
+    }
+
+    if "semiconductor" in i:
+        cfg.update({
+            "model": "cyclical_semiconductor",
+            "fcf_multiple": 10.0,
+            "pe_multiple": 11.0,
+            "terminal_multiple": 8.0,
+            "discount_rate": 0.12,
+            "growth_cap": 0.08,
+        })
+    elif "technology" in s:
+        cfg.update({
+            "model": "software_tech",
+            "fcf_multiple": 13.0,
+            "pe_multiple": 14.0,
+            "terminal_multiple": 12.0,
+            "discount_rate": 0.11,
+            "growth_cap": 0.12,
+        })
+    elif "communication" in s:
+        cfg.update({
+            "model": "communication_services",
+            "fcf_multiple": 11.0,
+            "pe_multiple": 12.0,
+            "terminal_multiple": 10.0,
+            "discount_rate": 0.11,
+            "growth_cap": 0.09,
+        })
+    elif "consumer defensive" in s:
+        cfg.update({
+            "model": "defensive_consumer",
+            "fcf_multiple": 12.0,
+            "pe_multiple": 13.0,
+            "terminal_multiple": 11.0,
+            "discount_rate": 0.10,
+            "growth_cap": 0.07,
+        })
+    elif "consumer cyclical" in s:
+        cfg.update({
+            "model": "consumer_cyclical",
+            "fcf_multiple": 10.0,
+            "pe_multiple": 11.0,
+            "terminal_multiple": 9.0,
+            "discount_rate": 0.12,
+            "growth_cap": 0.08,
+        })
+    elif "industrial" in s:
+        cfg.update({
+            "model": "industrial_normalized",
+            "fcf_multiple": 10.0,
+            "pe_multiple": 11.0,
+            "terminal_multiple": 9.0,
+            "discount_rate": 0.12,
+            "growth_cap": 0.07,
+        })
+    elif "energy" in s:
+        cfg.update({
+            "model": "energy_cyclical",
+            "fcf_multiple": 7.0,
+            "pe_multiple": 8.0,
+            "terminal_multiple": 6.0,
+            "discount_rate": 0.13,
+            "growth_cap": 0.03,
+        })
+    elif "basic materials" in s:
+        cfg.update({
+            "model": "materials_cyclical",
+            "fcf_multiple": 8.0,
+            "pe_multiple": 9.0,
+            "terminal_multiple": 7.0,
+            "discount_rate": 0.13,
+            "growth_cap": 0.04,
+        })
+    elif "utilities" in s:
+        cfg.update({
+            "model": "utility_debt_sensitive",
+            "fcf_multiple": 8.0,
+            "pe_multiple": 10.0,
+            "terminal_multiple": 7.0,
+            "discount_rate": 0.10,
+            "growth_cap": 0.04,
+        })
+    elif "healthcare" in s:
+        if "biotechnology" in i and ("drug" in i or "biotechnology" in i):
+            cfg.update({
+                "model": "biotech_special_case",
+                "fcf_multiple": 8.0,
+                "pe_multiple": 8.0,
+                "terminal_multiple": 6.0,
+                "discount_rate": 0.14,
+                "growth_cap": 0.06,
+            })
+        else:
+            cfg.update({
+                "model": "healthcare",
+                "fcf_multiple": 11.0,
+                "pe_multiple": 12.0,
+                "terminal_multiple": 10.0,
+                "discount_rate": 0.11,
+                "growth_cap": 0.08,
+            })
+    elif "financial" in s:
+        cfg.update({
+            "model": "financial_pb_roe",
+            "fcf_multiple": 0.0,
+            "pe_multiple": 9.0,
+            "terminal_multiple": 0.0,
+            "discount_rate": 0.12,
+            "growth_cap": 0.05,
+        })
+    elif "real estate" in s or "reit" in i:
+        cfg.update({
+            "model": "reit_needs_affo",
+            "fcf_multiple": 0.0,
+            "pe_multiple": 0.0,
+            "terminal_multiple": 0.0,
+            "discount_rate": 0.11,
+            "growth_cap": 0.03,
+        })
+
+    return cfg
+
+
+def calc_cagr(latest: float | None, oldest: float | None, years: int) -> float | None:
+    if latest is None or oldest is None or years <= 0:
+        return None
+    if latest <= 0 or oldest <= 0:
+        return None
+    try:
+        return (latest / oldest) ** (1 / years) - 1
+    except Exception:
+        return None
+
+
+def dcf_value(
+    fcf_base: float,
+    growth: float,
+    terminal_multiple: float,
+    discount_rate: float,
+    cash: float,
+    debt: float,
+) -> float | None:
+    if fcf_base <= 0:
+        return None
+
+    value = 0.0
+    fcf = fcf_base
+
+    for year in range(1, 6):
+        fcf = fcf * (1 + growth)
+        value += fcf / ((1 + discount_rate) ** year)
+
+    terminal_value = fcf * terminal_multiple
+    value += terminal_value / ((1 + discount_rate) ** 5)
+
+    equity_value = value + cash - debt
+    return equity_value if equity_value > 0 else None
+
+
+def financial_pb_value(equity: float | None, roe: float | None, market_cap: float | None) -> tuple[float | None, str]:
+    if equity is None or equity <= 0:
+        return None, "financial_pb_no_equity"
+
+    r = roe if roe is not None else 0
+
+    if r >= 0.18:
+        pb = 1.45
+    elif r >= 0.13:
+        pb = 1.20
+    elif r >= 0.09:
+        pb = 1.00
+    elif r >= 0.06:
+        pb = 0.80
+    else:
+        pb = 0.60
+
+    return equity * pb, f"financial_pb_roe_{pb:.2f}x"
+
+
+def estimate_intrinsic_value(
+    cfg: dict,
+    latest_fcf: float | None,
+    fcf_3y_avg: float | None,
+    fcf_5y_avg: float | None,
+    latest_net_income: float | None,
+    net_income_5y_avg: float | None,
+    revenue_cagr: float | None,
+    cash: float | None,
+    debt: float | None,
+    equity: float | None,
+    roe: float | None,
+    market_cap: float | None,
+) -> tuple[float | None, str]:
+    cash = cash or 0.0
+    debt = debt or 0.0
+    model = str(cfg.get("model", "normal_fcf"))
+
+    if model == "reit_needs_affo":
+        return None, "SKIP_REIT_AFFO_REQUIRED"
+
+    if model == "financial_pb_roe":
+        return financial_pb_value(equity, roe, market_cap)
+
+    fcf_candidates = [x for x in [latest_fcf, fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
+    ni_candidates = [x for x in [latest_net_income, net_income_5y_avg] if x is not None and x > 0]
+
+    valuations: list[tuple[str, float]] = []
+
+    fcf_multiple = float(cfg.get("fcf_multiple", 10))
+    pe_multiple = float(cfg.get("pe_multiple", 10))
+    terminal_multiple = float(cfg.get("terminal_multiple", 9))
+    discount_rate = float(cfg.get("discount_rate", 0.11))
+    growth_cap = float(cfg.get("growth_cap", 0.08))
+
+    if fcf_candidates:
+        # 保守 FCF 基数：取最近、3年、5年中较低的正值，防止周期高点误判
+        fcf_base = min(fcf_candidates)
+
+        valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
+
+        if latest_fcf is not None and latest_fcf > 0:
+            valuations.append(("latest_fcf_capped_10x", latest_fcf * min(10.0, fcf_multiple) + cash - debt))
+
+        growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
+        dcf = dcf_value(
+            fcf_base=fcf_base,
+            growth=growth,
+            terminal_multiple=terminal_multiple,
+            discount_rate=discount_rate,
+            cash=cash,
+            debt=debt,
+        )
+        if dcf is not None:
+            valuations.append(("conservative_5y_dcf", dcf))
+
+        valuations.append(("asset_plus_fcf_8x", cash - debt + fcf_base * 8.0))
+
+    if ni_candidates:
+        ni_base = min(ni_candidates)
+        valuations.append(("normalized_net_income_pe", ni_base * pe_multiple + cash - debt))
+
+    clean = [(name, v) for name, v in valuations if v is not None and v > 0]
+
+    if not clean:
+        return None, "NO_VALID_VALUATION"
+
+    # V5 保守原则：取最低的有效估值
+    method, value = min(clean, key=lambda x: x[1])
+
+    return value, method
+
+
+def score_margin_of_safety(mos: float | None) -> float:
     if mos is None:
         return 0
     if mos >= 0.70:
@@ -196,260 +457,477 @@ def _score_mos(mos: Optional[float]) -> float:
     return 0
 
 
-def _score_cashflow(fcf_latest: Optional[float], fcf_5y_avg: Optional[float], fcf_yield: Optional[float], net_income_latest: Optional[float]) -> float:
+def score_cashflow(latest_fcf, fcf_5y_avg, fcf_yield, fcf_conversion) -> float:
     score = 0.0
-    if fcf_latest is not None and fcf_latest > 0:
+
+    if latest_fcf is not None and latest_fcf > 0:
         score += 5
     if fcf_5y_avg is not None and fcf_5y_avg > 0:
         score += 5
+
     if fcf_yield is not None:
         if fcf_yield >= 0.10:
-            score += 6
-        elif fcf_yield >= 0.07:
             score += 5
+        elif fcf_yield >= 0.07:
+            score += 4
         elif fcf_yield >= 0.05:
             score += 3
         elif fcf_yield >= 0.03:
+            score += 1.5
+
+    if fcf_conversion is not None:
+        if fcf_conversion >= 0.90:
+            score += 5
+        elif fcf_conversion >= 0.70:
+            score += 3
+        elif fcf_conversion >= 0.50:
             score += 1
-    if fcf_latest is not None and net_income_latest is not None and net_income_latest > 0:
-        conversion = fcf_latest / net_income_latest
-        if conversion >= 0.9:
-            score += 4
-        elif conversion >= 0.6:
-            score += 2
+
     return min(score, 20)
 
 
-def _score_balance(total_cash: Optional[float], total_debt: Optional[float], debt_to_ebitda: Optional[float], market_cap: Optional[float]) -> float:
+def score_balance(cash, debt, debt_to_ebitda, net_cash, market_cap) -> float:
     score = 0.0
-    cash = total_cash or 0
-    debt = total_debt or 0
-    if debt <= cash:
-        score += 6
-    elif market_cap and debt / market_cap < 0.25:
-        score += 3
+
+    if cash is not None and debt is not None:
+        if cash >= debt:
+            score += 6
+        elif debt > 0 and cash / debt >= 0.5:
+            score += 3
+
     if debt_to_ebitda is not None:
         if debt_to_ebitda <= 1:
-            score += 6
+            score += 5
         elif debt_to_ebitda <= 2.5:
             score += 4
         elif debt_to_ebitda <= 4:
             score += 2
-    elif debt == 0:
-        score += 4
-    if market_cap and cash / market_cap >= 0.10:
+    elif debt is not None and debt <= 0:
         score += 3
-    elif market_cap and cash / market_cap >= 0.05:
-        score += 1
+
+    if net_cash is not None and market_cap is not None and market_cap > 0:
+        if net_cash / market_cap >= 0.10:
+            score += 4
+        elif net_cash > 0:
+            score += 2
+
     return min(score, 15)
 
 
-def _score_quality(roe: Optional[float], gross_margin: Optional[float], operating_margin: Optional[float], revenue_cagr: Optional[float], profit_margin: Optional[float]) -> float:
+def score_quality(roe, gross_margin, operating_margin, net_margin) -> float:
     score = 0.0
+
     if roe is not None:
-        if roe >= 0.20:
+        if roe >= 0.25:
+            score += 5
+        elif roe >= 0.15:
             score += 4
         elif roe >= 0.10:
             score += 2
+
     if gross_margin is not None:
-        if gross_margin >= 0.55:
+        if gross_margin >= 0.60:
             score += 4
-        elif gross_margin >= 0.35:
-            score += 2
-    if operating_margin is not None:
-        if operating_margin >= 0.20:
+        elif gross_margin >= 0.40:
             score += 3
-        elif operating_margin >= 0.10:
-            score += 2
-    if profit_margin is not None:
-        if profit_margin >= 0.15:
-            score += 2
-        elif profit_margin >= 0.08:
+        elif gross_margin >= 0.25:
             score += 1
-    if revenue_cagr is not None:
-        if revenue_cagr >= 0.08:
-            score += 2
-        elif revenue_cagr >= 0.02:
+
+    if operating_margin is not None:
+        if operating_margin >= 0.25:
+            score += 4
+        elif operating_margin >= 0.15:
+            score += 3
+        elif operating_margin >= 0.08:
             score += 1
+
+    if net_margin is not None:
+        if net_margin >= 0.20:
+            score += 2
+        elif net_margin >= 0.10:
+            score += 1
+
     return min(score, 15)
 
 
-def _data_score(*fields: Any) -> float:
-    present = sum(1 for f in fields if _safe_float(f) is not None)
-    return min(5, 5 * present / max(1, len(fields)))
+def score_trend(revenue_cagr, share_dilution, fcf_latest, fcf_5y_avg) -> float:
+    score = 0.0
+
+    if revenue_cagr is not None:
+        if revenue_cagr >= 0.10:
+            score += 5
+        elif revenue_cagr >= 0.05:
+            score += 4
+        elif revenue_cagr >= 0:
+            score += 2
+        elif revenue_cagr >= -0.03:
+            score += 1
+
+    if share_dilution is not None:
+        if share_dilution <= 0:
+            score += 3
+        elif share_dilution <= 0.03:
+            score += 2
+        elif share_dilution <= 0.08:
+            score += 1
+
+    if fcf_latest is not None and fcf_5y_avg is not None and fcf_5y_avg > 0:
+        ratio = fcf_latest / fcf_5y_avg
+        if ratio >= 1.1:
+            score += 2
+        elif ratio >= 0.8:
+            score += 1
+
+    return min(score, 10)
 
 
-def _format_reason(result: StockResult) -> str:
-    parts = []
-    if result.margin_of_safety is not None:
-        parts.append(f"安全边际约 {result.margin_of_safety:.1%}")
-    if result.fcf_yield is not None:
-        parts.append(f"FCF Yield {result.fcf_yield:.1%}")
-    if result.debt_to_ebitda is not None:
-        parts.append(f"债务/EBITDA {result.debt_to_ebitda:.1f}")
-    if result.roe is not None:
-        parts.append(f"ROE {result.roe:.1%}")
-    if result.trap_flags:
-        parts.append(f"警告：{result.trap_flags}")
-    return "；".join(parts) if parts else "数据不足，需人工复核"
+def score_data_quality(*values) -> float:
+    total = len(values)
+    present = sum(1 for v in values if v is not None)
+    if total == 0:
+        return 0
+    return round(10 * present / total, 2)
 
 
-def analyze_ticker(ticker: str, sleep_seconds: float = 0.0) -> StockResult:
-    ticker = ticker.strip().upper()
-    r = StockResult(ticker=ticker)
-    if not ticker:
-        r.reason = "Empty ticker"
-        return r
+def detect_traps(
+    latest_fcf,
+    fcf_5y_avg,
+    revenue_cagr,
+    debt_to_ebitda,
+    operating_margin,
+    net_margin,
+    share_dilution,
+    fcf_conversion,
+    model_type,
+    latest_net_income,
+) -> list[str]:
+    flags = []
+
+    if latest_fcf is not None and latest_fcf < 0:
+        flags.append("latest_fcf_negative")
+
+    if fcf_5y_avg is not None and fcf_5y_avg <= 0:
+        flags.append("avg_fcf_not_positive")
+
+    if revenue_cagr is not None and revenue_cagr < -0.03:
+        flags.append("revenue_decline")
+
+    if debt_to_ebitda is not None and debt_to_ebitda > 4:
+        flags.append("high_debt_to_ebitda")
+
+    if operating_margin is not None and operating_margin < 0:
+        flags.append("negative_operating_margin")
+
+    if net_margin is not None and net_margin < 0:
+        flags.append("negative_net_margin")
+
+    if share_dilution is not None and share_dilution > 0.10:
+        flags.append("heavy_dilution")
+
+    if fcf_conversion is not None and fcf_conversion < 0.30 and latest_net_income is not None and latest_net_income > 0:
+        flags.append("weak_cash_conversion")
+
+    if model_type in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized"}:
+        if latest_fcf is not None and fcf_5y_avg is not None and fcf_5y_avg > 0 and latest_fcf > 2.5 * fcf_5y_avg:
+            flags.append("possible_cycle_peak_fcf")
+
+    return flags
+
+
+def apply_feedback(ticker: str, intrinsic_value: float | None, final_score: float, flags: list[str]) -> tuple[float | None, float, str, list[str]]:
+    feedback = get_feedback_map().get(ticker.upper(), {})
+    label = feedback.get("label", "").strip().lower()
+
+    if not label:
+        return intrinsic_value, final_score, "", flags
+
+    if label == "true_opportunity":
+        final_score += 5
+    elif label == "value_trap":
+        flags.append("manual_value_trap")
+        final_score -= 10
+    elif label == "too_strict":
+        if intrinsic_value is not None:
+            intrinsic_value *= 1.10
+    elif label == "too_loose":
+        if intrinsic_value is not None:
+            intrinsic_value *= 0.90
+
+    return intrinsic_value, final_score, label, flags
+
+
+def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
+    ticker = str(ticker).strip().upper().replace(".", "-").replace("/", "-")
+    result = AnalysisResult(ticker=ticker)
 
     try:
         t = yf.Ticker(ticker)
+
+        info = {}
         try:
             info = t.info or {}
         except Exception:
             info = {}
 
-        r.company_name = str(info.get("shortName") or info.get("longName") or "")
-        r.sector = str(info.get("sector") or "")
-        r.industry = str(info.get("industry") or "")
+        price, market_cap = get_price_and_cap(t, info)
 
-        sector_l = r.sector.lower()
-        industry_l = r.industry.lower()
-        if any(k in sector_l for k in EXCLUDED_SECTOR_KEYWORDS) or any(k in industry_l for k in EXCLUDED_INDUSTRY_KEYWORDS):
-            r.rating = "SKIP"
-            r.trap_flags = "V1暂不覆盖该行业估值模型"
-            r.reason = _format_reason(r)
-            return r
+        result.price = price
+        result.market_cap = market_cap
+        result.company_name = info.get("longName") or info.get("shortName") or ""
+        result.sector = info.get("sector") or ""
+        result.industry = info.get("industry") or ""
 
-        r.price = _first_not_none(
-            _get_fast_info(t, "last_price"),
-            info.get("currentPrice"),
-            info.get("regularMarketPrice"),
-            info.get("previousClose"),
+        if price is None or price <= 0:
+            result.rating = "NO_DATA"
+            result.reason = "无法获取有效股价"
+            return result
+
+        sector = result.sector
+        industry = result.industry
+        cfg = sector_config(sector, industry)
+        result.model_type = str(cfg.get("model", "normal_fcf"))
+
+        if result.model_type == "reit_needs_affo":
+            result.rating = "SKIP"
+            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V5 暂不自动估值"
+            return result
+
+        financials = None
+        balance = None
+        cashflow = None
+
+        try:
+            financials = t.financials
+        except Exception:
+            financials = None
+
+        try:
+            balance = t.balance_sheet
+        except Exception:
+            balance = None
+
+        try:
+            cashflow = t.cashflow
+        except Exception:
+            cashflow = None
+
+        revenue_s = row(financials, ["Total Revenue", "Operating Revenue"])
+        gross_profit_s = row(financials, ["Gross Profit"])
+        operating_income_s = row(financials, ["Operating Income", "Operating Income or Loss"])
+        net_income_s = row(financials, ["Net Income", "Net Income Common Stockholders"])
+        ebitda_s = row(financials, ["EBITDA"])
+
+        ocf_s = row(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
+        capex_s = row(cashflow, ["Capital Expenditure", "Capital Expenditures"])
+        sbc_s = row(cashflow, ["Stock Based Compensation"])
+        shares_s = row(balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
+
+        cash_s = row(balance, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"])
+        debt_s = row(balance, ["Total Debt", "Long Term Debt And Capital Lease Obligation"])
+        equity_s = row(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest", "Total Stockholder Equity"])
+
+        revenue_latest = series_latest(revenue_s) or safe_float(info.get("totalRevenue"))
+        revenue_oldest = None
+        if revenue_s is not None and len(pd.to_numeric(revenue_s, errors="coerce").dropna()) >= 4:
+            vals = pd.to_numeric(revenue_s, errors="coerce").dropna().head(5)
+            revenue_oldest = safe_float(vals.iloc[-1]) if len(vals) >= 2 else None
+
+        revenue_cagr = calc_cagr(revenue_latest, revenue_oldest, max(1, min(4, len(pd.to_numeric(revenue_s, errors="coerce").dropna()) - 1)) if revenue_s is not None else 4)
+
+        gross_profit = series_latest(gross_profit_s)
+        operating_income = series_latest(operating_income_s)
+        latest_net_income = series_latest(net_income_s) or safe_float(info.get("netIncomeToCommon"))
+        net_income_5y_avg = series_avg(net_income_s, 5)
+
+        if ocf_s is not None and capex_s is not None:
+            ocf_vals = pd.to_numeric(ocf_s, errors="coerce")
+            capex_vals = pd.to_numeric(capex_s, errors="coerce")
+            common_cols = ocf_vals.index.intersection(capex_vals.index)
+            fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
+        else:
+            fcf_s = None
+
+        latest_fcf = series_latest(fcf_s)
+        fcf_3y_avg = series_avg(fcf_s, 3)
+        fcf_5y_avg = series_avg(fcf_s, 5)
+
+        cash = series_latest(cash_s) or safe_float(info.get("totalCash"))
+        debt = series_latest(debt_s) or safe_float(info.get("totalDebt"))
+        equity = series_latest(equity_s)
+
+        ebitda = series_latest(ebitda_s) or safe_float(info.get("ebitda"))
+
+        result.revenue_ttm = revenue_latest
+        result.revenue_5y_cagr = revenue_cagr
+        result.net_income_ttm = latest_net_income
+        result.fcf_ttm = latest_fcf
+        result.fcf_3y_avg = fcf_3y_avg
+        result.fcf_5y_avg = fcf_5y_avg
+        result.cash = cash
+        result.total_debt = debt
+        result.net_cash = (cash or 0) - (debt or 0)
+        result.ebitda = ebitda
+        result.equity = equity
+
+        result.enterprise_value = (market_cap or 0) + (debt or 0) - (cash or 0) if market_cap is not None else None
+
+        if market_cap and latest_fcf is not None:
+            result.fcf_yield = latest_fcf / market_cap
+
+        if latest_net_income and latest_net_income != 0 and latest_fcf is not None:
+            result.fcf_conversion = latest_fcf / latest_net_income
+
+        if revenue_latest and revenue_latest > 0:
+            result.gross_margin = gross_profit / revenue_latest if gross_profit is not None else safe_float(info.get("grossMargins"))
+            result.operating_margin = operating_income / revenue_latest if operating_income is not None else safe_float(info.get("operatingMargins"))
+            result.net_margin = latest_net_income / revenue_latest if latest_net_income is not None else safe_float(info.get("profitMargins"))
+        else:
+            result.gross_margin = safe_float(info.get("grossMargins"))
+            result.operating_margin = safe_float(info.get("operatingMargins"))
+            result.net_margin = safe_float(info.get("profitMargins"))
+
+        if equity and equity > 0 and latest_net_income is not None:
+            result.roe = latest_net_income / equity
+        else:
+            result.roe = safe_float(info.get("returnOnEquity"))
+
+        if debt is not None and ebitda is not None and ebitda > 0:
+            result.debt_to_ebitda = debt / ebitda
+
+        if shares_s is not None:
+            vals = pd.to_numeric(shares_s, errors="coerce").dropna().head(4)
+            if len(vals) >= 2 and vals.iloc[-1] > 0:
+                result.share_dilution_3y = vals.iloc[0] / vals.iloc[-1] - 1
+
+        intrinsic, method = estimate_intrinsic_value(
+            cfg=cfg,
+            latest_fcf=latest_fcf,
+            fcf_3y_avg=fcf_3y_avg,
+            fcf_5y_avg=fcf_5y_avg,
+            latest_net_income=latest_net_income,
+            net_income_5y_avg=net_income_5y_avg,
+            revenue_cagr=revenue_cagr,
+            cash=cash,
+            debt=debt,
+            equity=equity,
+            roe=result.roe,
+            market_cap=market_cap,
         )
-        r.market_cap = _first_not_none(
-            _get_fast_info(t, "market_cap"),
-            info.get("marketCap"),
+
+        result.valuation_method = method
+
+        flags = detect_traps(
+            latest_fcf=latest_fcf,
+            fcf_5y_avg=fcf_5y_avg,
+            revenue_cagr=revenue_cagr,
+            debt_to_ebitda=result.debt_to_ebitda,
+            operating_margin=result.operating_margin,
+            net_margin=result.net_margin,
+            share_dilution=result.share_dilution_3y,
+            fcf_conversion=result.fcf_conversion,
+            model_type=result.model_type,
+            latest_net_income=latest_net_income,
         )
-        r.shares_outstanding = _first_not_none(
-            info.get("sharesOutstanding"),
-            (r.market_cap / r.price) if r.market_cap and r.price else None,
+
+        if intrinsic is not None:
+            result.intrinsic_value_total = intrinsic
+            if market_cap is not None and market_cap > 0:
+                result.intrinsic_value_per_share = price * intrinsic / market_cap
+                result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
+
+        result.mos_score = score_margin_of_safety(result.margin_of_safety)
+        result.cashflow_score = score_cashflow(latest_fcf, fcf_5y_avg, result.fcf_yield, result.fcf_conversion)
+        result.balance_sheet_score = score_balance(cash, debt, result.debt_to_ebitda, result.net_cash, market_cap)
+        result.quality_score = score_quality(result.roe, result.gross_margin, result.operating_margin, result.net_margin)
+        result.trend_score = score_trend(revenue_cagr, result.share_dilution_3y, latest_fcf, fcf_5y_avg)
+        result.data_quality_score = score_data_quality(
+            price,
+            market_cap,
+            revenue_latest,
+            latest_fcf,
+            fcf_5y_avg,
+            latest_net_income,
+            cash,
+            debt,
+            equity,
+            result.roe,
+            result.gross_margin,
+            result.operating_margin,
         )
-        r.enterprise_value = _safe_float(info.get("enterpriseValue"))
-        r.total_cash = _safe_float(info.get("totalCash"))
-        r.total_debt = _safe_float(info.get("totalDebt"))
-        r.ebitda = _safe_float(info.get("ebitda"))
-        r.roe = _safe_float(info.get("returnOnEquity"))
-        r.gross_margin = _safe_float(info.get("grossMargins"))
-        r.operating_margin = _safe_float(info.get("operatingMargins"))
-        r.profit_margin = _safe_float(info.get("profitMargins"))
-        r.pe = _safe_float(info.get("trailingPE"))
-        r.forward_pe = _safe_float(info.get("forwardPE"))
 
-        cashflow = _get_df(t, "cashflow")
-        financials = _get_df(t, "financials")
+        result.final_score = (
+            result.mos_score
+            + result.cashflow_score
+            + result.balance_sheet_score
+            + result.quality_score
+            + result.trend_score
+            + result.data_quality_score
+        )
 
-        fcf_values = _row_values(cashflow, ["Free Cash Flow", "FreeCashFlow"])
-        ocf_values = _row_values(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
-        capex_values = _row_values(cashflow, ["Capital Expenditure", "Capital Expenditures"])
-        revenue_values = _row_values(financials, ["Total Revenue", "Revenue"])
-        net_income_values = _row_values(financials, ["Net Income", "Net Income Common Stockholders"])
+        intrinsic_adjusted, final_adjusted, feedback_label, flags = apply_feedback(
+            ticker=ticker,
+            intrinsic_value=result.intrinsic_value_total,
+            final_score=result.final_score,
+            flags=flags,
+        )
 
-        r.fcf_latest = _first_not_none(info.get("freeCashflow"), _latest(fcf_values))
-        r.fcf_5y_avg = _avg_positive_or_all(fcf_values[:5])
-        r.operating_cashflow_latest = _first_not_none(info.get("operatingCashflow"), _latest(ocf_values))
-        r.capex_latest = _latest(capex_values)
-        r.revenue_latest = _first_not_none(info.get("totalRevenue"), _latest(revenue_values))
-        r.revenue_5y_avg = _avg_positive_or_all(revenue_values[:5])
-        r.revenue_5y_cagr = _cagr(revenue_values[:5])
-        r.net_income_latest = _latest(net_income_values)
-        r.normalized_net_income = _avg_positive_or_all(net_income_values[:5])
+        if intrinsic_adjusted != result.intrinsic_value_total and intrinsic_adjusted is not None and market_cap:
+            result.intrinsic_value_total = intrinsic_adjusted
+            result.intrinsic_value_per_share = price * intrinsic_adjusted / market_cap
+            result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
+            result.mos_score = score_margin_of_safety(result.margin_of_safety)
 
-        if r.total_cash is not None or r.total_debt is not None:
-            r.net_debt = (r.total_debt or 0) - (r.total_cash or 0)
-        if r.market_cap and r.fcf_latest is not None:
-            r.fcf_yield = r.fcf_latest / r.market_cap
-        if r.enterprise_value and r.ebitda and r.ebitda > 0:
-            r.ev_ebitda = r.enterprise_value / r.ebitda
-        if r.total_debt is not None and r.ebitda and r.ebitda > 0:
-            r.debt_to_ebitda = r.total_debt / r.ebitda
+        result.final_score = final_adjusted
+        result.feedback_label = feedback_label
 
-        fcf_mult = _sector_multiple(r.sector, SECTOR_FCF_MULTIPLE, default=10)
-        earn_mult = _sector_multiple(r.sector, SECTOR_EARNINGS_MULTIPLE, default=10)
-        valuation_candidates: List[float] = []
-        if r.fcf_5y_avg is not None and r.fcf_5y_avg > 0:
-            valuation_candidates.append(r.fcf_5y_avg * fcf_mult)
-        if r.fcf_latest is not None and r.fcf_latest > 0:
-            valuation_candidates.append(r.fcf_latest * min(fcf_mult, 10))
-        if r.normalized_net_income is not None and r.normalized_net_income > 0:
-            valuation_candidates.append(r.normalized_net_income * earn_mult)
-        if r.total_cash is not None and r.total_debt is not None and r.fcf_5y_avg is not None and r.fcf_5y_avg > 0:
-            valuation_candidates.append((r.total_cash - r.total_debt) + r.fcf_5y_avg * 8)
+        result.trap_count = len(flags)
+        result.trap_flags = ",".join(flags)
 
-        valuation_candidates = [v for v in valuation_candidates if v and v > 0]
-        if valuation_candidates:
-            # Conservative: use the lowest candidate, not the optimistic one.
-            r.intrinsic_equity_value = float(min(valuation_candidates))
-            if r.shares_outstanding and r.shares_outstanding > 0:
-                r.intrinsic_value_per_share = r.intrinsic_equity_value / r.shares_outstanding
-        if r.price and r.intrinsic_value_per_share:
-            r.margin_of_safety = (r.intrinsic_value_per_share - r.price) / r.price
+        # confidence = 数据质量 + 现金流稳定 + 非陷阱
+        result.confidence_score = clamp(
+            result.data_quality_score * 6
+            + min(result.cashflow_score, 15) * 1.5
+            + max(0, 20 - result.trap_count * 5),
+            0,
+            100,
+        )
 
-        flags = []
-        if r.fcf_latest is not None and r.fcf_latest <= 0:
-            flags.append("FCF为负")
-        if r.fcf_5y_avg is not None and r.fcf_5y_avg <= 0:
-            flags.append("5年FCF均值不佳")
-        if r.revenue_5y_cagr is not None and r.revenue_5y_cagr < -0.03:
-            flags.append("收入趋势下滑")
-        if r.debt_to_ebitda is not None and r.debt_to_ebitda > 4:
-            flags.append("债务/EBITDA偏高")
-        if r.profit_margin is not None and r.profit_margin < 0:
-            flags.append("利润率为负")
-        if r.market_cap is None or r.price is None:
-            flags.append("价格/市值数据缺失")
-        if r.intrinsic_value_per_share is None:
-            flags.append("保守估值数据不足")
+        if result.intrinsic_value_total is None or result.margin_of_safety is None:
+            result.rating = "NO_DATA"
+            result.reason = f"估值数据不足：{method}"
+        elif result.trap_count >= 3:
+            result.rating = "D_TRAP"
+            result.reason = f"疑似价值陷阱：{result.trap_flags}"
+        elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
+            result.rating = "S"
+            result.reason = f"安全边际很厚，V5模型={result.model_type}，估值法={method}"
+        elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
+            result.rating = "A"
+            result.reason = f"安全边际较厚，V5模型={result.model_type}，估值法={method}"
+        elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
+            result.rating = "B"
+            result.reason = f"有一定安全边际，V5模型={result.model_type}，估值法={method}"
+        elif result.margin_of_safety >= 0:
+            result.rating = "C_THIN"
+            result.reason = "安全边际偏薄，不优先"
+        else:
+            result.rating = "PASS"
+            result.reason = "当前价格高于保守内在价值，没有安全边际"
 
-        r.trap_flags = "、".join(flags)
-        r.mos_score = _score_mos(r.margin_of_safety)
-        r.cashflow_score = _score_cashflow(r.fcf_latest, r.fcf_5y_avg, r.fcf_yield, r.net_income_latest)
-        r.balance_sheet_score = _score_balance(r.total_cash, r.total_debt, r.debt_to_ebitda, r.market_cap)
-        r.quality_score = _score_quality(r.roe, r.gross_margin, r.operating_margin, r.revenue_5y_cagr, r.profit_margin)
-        r.data_score = _data_score(r.price, r.market_cap, r.fcf_latest, r.fcf_5y_avg, r.normalized_net_income, r.total_debt, r.total_cash, r.revenue_latest)
-        r.final_score = r.mos_score + r.cashflow_score + r.balance_sheet_score + r.quality_score + r.data_score
+        if feedback_label:
+            result.reason += f"；人工反馈标签={feedback_label}"
 
-        hard_trap_count = sum(1 for f in flags if f in {"FCF为负", "5年FCF均值不佳", "收入趋势下滑", "债务/EBITDA偏高", "利润率为负"})
-        if r.rating != "SKIP":
-            if r.margin_of_safety is None:
-                r.rating = "NO_DATA"
-            elif hard_trap_count >= 2:
-                r.rating = "D_TRAP"
-            elif r.margin_of_safety >= 0.50 and r.final_score >= 75:
-                r.rating = "S"
-            elif r.margin_of_safety >= 0.35 and r.final_score >= 65:
-                r.rating = "A"
-            elif r.margin_of_safety >= 0.20 and r.final_score >= 55:
-                r.rating = "B"
-            elif r.margin_of_safety >= 0:
-                r.rating = "C_THIN"
-            else:
-                r.rating = "PASS"
-        r.reason = _format_reason(r)
-        return r
+        return result
 
-    except Exception as exc:
-        r.rating = "ERROR"
-        r.trap_flags = f"抓取/计算失败：{type(exc).__name__}"
-        r.reason = str(exc)[:180]
-        return r
+    except Exception as e:
+        result.rating = "ERROR"
+        result.reason = f"分析失败：{type(e).__name__}: {e}"
+        return result
+
     finally:
-        if sleep_seconds:
-            time.sleep(sleep_seconds)
+        time.sleep(sleep_seconds)
 
 
-def results_to_dataframe(results: List[StockResult]) -> pd.DataFrame:
-    df = pd.DataFrame([asdict(x) for x in results])
-    numeric_cols = [c for c in df.columns if c not in {"ticker", "company_name", "sector", "industry", "rating", "trap_flags", "reason"}]
-    for c in numeric_cols:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
-    return df
+def results_to_dataframe(results: list[AnalysisResult]) -> pd.DataFrame:
+    rows = [asdict(r) if isinstance(r, AnalysisResult) else r for r in results]
+    return pd.DataFrame(rows)
