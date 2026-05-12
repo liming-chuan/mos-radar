@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from html import escape
 
 import pandas as pd
 
@@ -36,7 +37,7 @@ def num(x) -> str:
     try:
         if pd.isna(x):
             return "N/A"
-        return f"{float(x):.2f}"
+        return f"{float(x):.1f}"
     except Exception:
         return "N/A"
 
@@ -47,47 +48,21 @@ def is_true(v) -> bool:
     return bool(v)
 
 
-def row_line(row, i: int) -> str:
-    holding_tag = "【持仓池】" if is_true(row.get("is_holding", False)) else ""
-
-    return (
-        f"{i}. {row.get('ticker')} {holding_tag} {row.get('company_name', '')}\n"
-        f"   - 行业：{row.get('sector', 'N/A')}\n"
-        f"   - 评级：{row.get('rating', 'N/A')} | 最终分：{num(row.get('final_score'))}\n"
-        f"   - 当前价：{money(row.get('price'))} | 保守价值/股：{money(row.get('intrinsic_value_per_share'))}\n"
-        f"   - 安全边际：{pct(row.get('margin_of_safety'))} | FCF Yield：{pct(row.get('fcf_yield'))}\n"
-        f"   - 债务/EBITDA：{num(row.get('debt_to_ebitda'))} | ROE：{pct(row.get('roe'))}\n"
-        f"   - 理由：{row.get('reason', '')}\n"
-    )
-
-
-def table_block(df: pd.DataFrame, title: str, limit: int | None = None) -> str:
-    if df.empty:
-        return f"\n## {title}\n\n暂无符合条件的公司。\n"
-
-    if limit is not None:
-        df = df.head(limit)
-
-    lines = [f"\n## {title}\n"]
-    for i, (_, row) in enumerate(df.iterrows(), start=1):
-        lines.append(row_line(row, i))
-
-    return "\n".join(lines)
-
-
 def normalize_numeric(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-
     for c in [
         "margin_of_safety",
         "final_score",
         "fcf_yield",
+        "price",
+        "intrinsic_value_per_share",
+        "debt_to_ebitda",
+        "roe",
         "price_change_since_scan",
         "mos_change_since_scan",
     ]:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
-
     return df
 
 
@@ -106,19 +81,13 @@ def sort_for_report(df: pd.DataFrame) -> pd.DataFrame:
         "D_TRAP": 5,
         "NO_DATA": 6,
         "SKIP": 7,
+        "ERROR": 8,
     }
 
-    if "rating" in df.columns:
-        df["_rating_order"] = df["rating"].map(rating_order).fillna(9)
-    else:
-        df["_rating_order"] = 9
+    df["_rating_order"] = df.get("rating", pd.Series(index=df.index, dtype=object)).map(rating_order).fillna(9)
 
-    sort_cols = []
-    ascending = []
-
-    if "_rating_order" in df.columns:
-        sort_cols.append("_rating_order")
-        ascending.append(True)
+    sort_cols = ["_rating_order"]
+    ascending = [True]
 
     if "margin_of_safety" in df.columns:
         sort_cols.append("margin_of_safety")
@@ -128,27 +97,114 @@ def sort_for_report(df: pd.DataFrame) -> pd.DataFrame:
         sort_cols.append("final_score")
         ascending.append(False)
 
-    if sort_cols:
-        df = df.sort_values(sort_cols, ascending=ascending)
-
-    return df
+    return df.sort_values(sort_cols, ascending=ascending)
 
 
 def high_margin_candidates(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty or "rating" not in df.columns:
         return pd.DataFrame()
-
     out = df[df["rating"].isin(["S", "A", "B"])].copy()
     return sort_for_report(out)
 
 
-def all_holdings(df: pd.DataFrame) -> pd.DataFrame:
+def holdings_all(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty or "is_holding" not in df.columns:
         return pd.DataFrame()
+    mask = df["is_holding"].map(is_true)
+    return sort_for_report(df[mask].copy())
 
-    holding_mask = df["is_holding"].map(is_true)
-    out = df[holding_mask].copy()
-    return sort_for_report(out)
+
+def rating_badge(rating: str) -> str:
+    rating = str(rating or "N/A")
+    colors = {
+        "S": ("#064e3b", "#d1fae5"),
+        "A": ("#065f46", "#ecfdf5"),
+        "B": ("#1e40af", "#dbeafe"),
+        "C_THIN": ("#92400e", "#fef3c7"),
+        "PASS": ("#7f1d1d", "#fee2e2"),
+        "D_TRAP": ("#7f1d1d", "#fecaca"),
+        "NO_DATA": ("#374151", "#f3f4f6"),
+        "SKIP": ("#374151", "#f3f4f6"),
+        "ERROR": ("#7f1d1d", "#fee2e2"),
+    }
+    fg, bg = colors.get(rating, ("#374151", "#f3f4f6"))
+    return (
+        f'<span style="display:inline-block;padding:3px 8px;border-radius:999px;'
+        f'font-weight:700;color:{fg};background:{bg};font-size:12px;">{escape(rating)}</span>'
+    )
+
+
+def short_reason(x, limit: int = 80) -> str:
+    s = str(x or "")
+    s = s.replace("\n", " ").strip()
+    if len(s) > limit:
+        return escape(s[:limit] + "...")
+    return escape(s)
+
+
+def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_pool: bool = False) -> str:
+    if df.empty:
+        return f"""
+        <h2>{escape(title)}</h2>
+        <div class="empty">暂无符合条件的公司。</div>
+        """
+
+    if limit is not None:
+        df = df.head(limit)
+
+    rows = []
+
+    for _, r in df.iterrows():
+        ticker = escape(str(r.get("ticker", "")))
+        name = escape(str(r.get("company_name", "") or ""))
+        sector = escape(str(r.get("sector", "") or ""))
+        rating = rating_badge(str(r.get("rating", "N/A")))
+
+        rows.append(
+            f"""
+            <tr>
+                <td class="ticker">{ticker}</td>
+                <td>{name}<br><span class="sub">{sector}</span></td>
+                <td>{rating}</td>
+                <td class="num">{pct(r.get("margin_of_safety"))}</td>
+                <td class="num">{num(r.get("final_score"))}</td>
+                <td class="num">{money(r.get("price"))}</td>
+                <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
+                <td class="num">{pct(r.get("fcf_yield"))}</td>
+                <td class="num">{num(r.get("debt_to_ebitda"))}</td>
+                <td>{short_reason(r.get("reason"))}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <h2>{escape(title)}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>代码</th>
+                <th>公司 / 行业</th>
+                <th>评级</th>
+                <th>安全边际</th>
+                <th>分数</th>
+                <th>现价</th>
+                <th>保守价值/股</th>
+                <th>FCF Yield</th>
+                <th>债务/EBITDA</th>
+                <th>理由</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(rows)}
+        </tbody>
+    </table>
+    """
+
+
+def count_rating(df: pd.DataFrame, rating: str) -> int:
+    if df.empty or "rating" not in df.columns:
+        return 0
+    return int((df["rating"] == rating).sum())
 
 
 def generate_report(
@@ -161,8 +217,6 @@ def generate_report(
 ) -> str:
     df = normalize_numeric(df)
 
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     title_map = {
         "full_after_close": "盘后安全边际报告",
         "morning_email": "开盘前安全边际报告",
@@ -172,19 +226,9 @@ def generate_report(
     }
 
     title = title_map.get(mode, "安全边际报告")
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    lines = [
-        f"# 【MOS Radar】{title}",
-        "",
-        f"生成时间：{ts}",
-        "",
-        "说明：",
-        "- 我的持仓池：显示所有持仓公司的安全边际，包括 S / A / B / C_THIN / PASS / D_TRAP / NO_DATA。",
-        "- 全市场股票池：只显示安全边际较厚的 S / A / B。",
-        "- 本报告不是买卖建议，最终买卖由你人工判断。",
-    ]
-
-    holdings_all = all_holdings(df)
+    holdings_df = holdings_all(df)
 
     if "is_holding" in df.columns:
         market_df = df[~df["is_holding"].map(is_true)].copy()
@@ -193,65 +237,227 @@ def generate_report(
 
     market_high = high_margin_candidates(market_df)
 
-    lines.append(
-        table_block(
-            holdings_all,
-            "我的持仓池：全部持仓安全边际",
-            limit=None,
-        )
+    total_holdings = len(holdings_df)
+    market_high_count = len(market_high)
+
+    s_count = count_rating(market_high, "S")
+    a_count = count_rating(market_high, "A")
+    b_count = count_rating(market_high, "B")
+
+    holdings_s = count_rating(holdings_df, "S")
+    holdings_a = count_rating(holdings_df, "A")
+    holdings_b = count_rating(holdings_df, "B")
+    holdings_pass = count_rating(holdings_df, "PASS") + count_rating(holdings_df, "C_THIN") + count_rating(holdings_df, "D_TRAP")
+
+    holdings_html = html_table(
+        holdings_df,
+        "我的持仓池：全部持仓安全边际",
+        limit=None,
     )
 
-    lines.append(
-        table_block(
-            market_high,
-            f"全市场股票池：安全边际较厚候选 Top {top_mos_count}",
-            limit=top_mos_count,
-        )
+    market_html = html_table(
+        market_high,
+        f"全市场股票池：安全边际较厚候选 Top {top_mos_count}",
+        limit=top_mos_count,
     )
 
+    thicker_html = ""
     if "price_change_since_scan" in market_high.columns:
         thicker = market_high[
             pd.to_numeric(market_high["price_change_since_scan"], errors="coerce") < -0.01
         ].copy()
 
         if not thicker.empty:
-            thicker = thicker.sort_values(
-                ["price_change_since_scan", "margin_of_safety"],
-                ascending=[True, False],
-            )
+            thicker = thicker.sort_values(["price_change_since_scan", "margin_of_safety"], ascending=[True, False])
+            thicker_html = html_table(thicker, "盘中下跌后安全边际继续变厚的市场候选", limit=20)
 
-        lines.append(
-            table_block(
-                thicker,
-                "盘中下跌后安全边际继续变厚的市场候选",
-                limit=20,
-            )
-        )
+    html = f"""<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body {{
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, "Microsoft YaHei", sans-serif;
+        color: #111827;
+    }}
+    .wrap {{
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 22px;
+    }}
+    .card {{
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }}
+    h1 {{
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        color: #111827;
+    }}
+    h2 {{
+        margin: 26px 0 12px 0;
+        font-size: 18px;
+        color: #111827;
+    }}
+    .meta {{
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }}
+    .note {{
+        background: #f9fafb;
+        border-left: 4px solid #2563eb;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #374151;
+        margin-top: 10px;
+    }}
+    .summary {{
+        display: table;
+        width: 100%;
+        border-spacing: 10px;
+        margin: 10px -10px 0 -10px;
+    }}
+    .box {{
+        display: table-cell;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px;
+        width: 20%;
+    }}
+    .box .label {{
+        font-size: 12px;
+        color: #6b7280;
+    }}
+    .box .value {{
+        font-size: 22px;
+        font-weight: 800;
+        margin-top: 4px;
+        color: #111827;
+    }}
+    table {{
+        border-collapse: collapse;
+        width: 100%;
+        background: #fff;
+        font-size: 13px;
+    }}
+    th {{
+        text-align: left;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 9px 8px;
+        border: 1px solid #e5e7eb;
+        font-weight: 700;
+        white-space: nowrap;
+    }}
+    td {{
+        padding: 8px;
+        border: 1px solid #e5e7eb;
+        vertical-align: top;
+    }}
+    tr:nth-child(even) td {{
+        background: #fafafa;
+    }}
+    .ticker {{
+        font-weight: 800;
+        color: #111827;
+        white-space: nowrap;
+    }}
+    .num {{
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }}
+    .sub {{
+        color: #6b7280;
+        font-size: 12px;
+    }}
+    .empty {{
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        padding: 14px;
+        color: #6b7280;
+        border-radius: 10px;
+        font-size: 14px;
+    }}
+    .legend {{
+        font-size: 13px;
+        line-height: 1.8;
+        color: #374151;
+    }}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <h1>【MOS Radar】{escape(title)}</h1>
+        <div class="meta">生成时间：{escape(ts)} | 模式：{escape(mode)}</div>
 
-    lines.extend(
-        [
-            "\n## 评级解释",
-            "- S：安全边际很厚，且质量较高，优先人工研究。",
-            "- A：安全边际较厚，强候选。",
-            "- B：有一定安全边际，观察候选。",
-            "- C_THIN：安全边际偏薄，不优先。",
-            "- PASS：没有安全边际。",
-            "- D_TRAP：疑似价值陷阱。",
-            "- NO_DATA：数据不足，不能判断。",
-            "",
-            "## 使用建议",
-            "1. 持仓池部分用于帮你每天检查自己的持仓安全边际有没有变厚或变薄。",
-            "2. 如果持仓评级是 PASS / C_THIN，说明当前价格下安全边际不足，需要人工复核是否继续持有。",
-            "3. 如果持仓评级是 D_TRAP，不代表一定要卖，但必须检查财报、现金流、债务和业务是否恶化。",
-            "4. 半导体、能源、工业周期股，需要额外人工检查周期位置、库存、订单、毛利率和正常化利润。",
-            "5. 完整 CSV 保存在 data/results/mos_latest.csv。",
-        ]
-    )
+        <div class="summary">
+            <div class="box">
+                <div class="label">持仓池股票</div>
+                <div class="value">{total_holdings}</div>
+            </div>
+            <div class="box">
+                <div class="label">持仓 S/A/B</div>
+                <div class="value">{holdings_s + holdings_a + holdings_b}</div>
+            </div>
+            <div class="box">
+                <div class="label">持仓偏薄/无边际</div>
+                <div class="value">{holdings_pass}</div>
+            </div>
+            <div class="box">
+                <div class="label">市场 S/A/B 候选</div>
+                <div class="value">{market_high_count}</div>
+            </div>
+            <div class="box">
+                <div class="label">市场 S/A/B 分布</div>
+                <div class="value">S{s_count}/A{a_count}/B{b_count}</div>
+            </div>
+        </div>
 
-    report = "\n".join(lines)
+        <div class="note">
+            持仓池会显示所有持仓的安全边际；全市场部分只显示 S / A / B，避免安全边际低的股票干扰判断。
+            本报告只用于筛选和复核，不是自动买卖建议。
+        </div>
+    </div>
+
+    <div class="card">
+        {holdings_html}
+    </div>
+
+    <div class="card">
+        {market_html}
+    </div>
+
+    {f'<div class="card">{thicker_html}</div>' if thicker_html else ''}
+
+    <div class="card">
+        <h2>评级说明</h2>
+        <div class="legend">
+            <b>S</b>：安全边际很厚，优先人工研究。<br>
+            <b>A</b>：安全边际较厚，强候选。<br>
+            <b>B</b>：有一定安全边际，观察候选。<br>
+            <b>C_THIN</b>：安全边际偏薄。<br>
+            <b>PASS</b>：当前价格高于保守价值。<br>
+            <b>D_TRAP</b>：疑似价值陷阱，必须人工排雷。<br>
+            <b>NO_DATA</b>：数据不足，不能判断。
+        </div>
+    </div>
+</div>
+</body>
+</html>
+"""
 
     if output_path:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(output_path).write_text(report, encoding="utf-8")
+        Path(output_path).write_text(html, encoding="utf-8")
 
-    return report
+    return html
