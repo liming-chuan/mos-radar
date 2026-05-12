@@ -1,0 +1,49 @@
+name: Update Universe
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "How many tickers to keep"
+        required: true
+        default: "500"
+      min_market_cap:
+        description: "Minimum market cap"
+        required: true
+        default: "1000000000"
+      min_avg_volume:
+        description: "Minimum average volume"
+        required: true
+        default: "100000"
+
+permissions:
+  contents: write
+
+jobs:
+  update-universe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Build expanded universe
+        env:
+          UNIVERSE_LIMIT: ${{ github.event.inputs.limit }}
+          MIN_MARKET_CAP: ${{ github.event.inputs.min_market_cap }}
+          MIN_AVG_VOLUME: ${{ github.event.inputs.min_avg_volume }}
+          UNIVERSE_SLEEP_SECONDS: "0.05"
+        run: python src/update_universe.py
+
+      - name: Commit universe
+        run: |
+          git config user.name "mos-radar-bot"
+          git config user.email "bot@example.com"
+          git add data/universe.csv src/update_universe.py
+          git commit -m "update expanded universe" || echo "No changes"
+          git push
