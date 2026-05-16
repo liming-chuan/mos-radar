@@ -1,651 +1,1001 @@
 ticker,name,source,market_cap,avg_volume,last_price
-AAPL,Apple Inc. - Common Stock,nasdaq,4329832369510.9863,43807985.0,294.79998779296875
-AMZN,"Amazon.com, Inc. - Common Stock",nasdaq,2859454909064.9424,47536208.0,265.82000732421875
-AVGO,Broadcom Inc. - Common Stock,nasdaq,1985246311754.9575,24049254.0,419.29998779296875
-AMD,"Advanced Micro Devices, Inc. - Common Stock",nasdaq,730981974390.665,39099036.0,448.2900085449219
-ASML,ASML Holding N.V. - New York Registry Shares,nasdaq,586197120822.0337,1699760.0,1520.93994140625
-COST,Costco Wholesale Corporation - Common Stock,nasdaq,453359659741.47217,1832403.0,1021.8800048828125
-CSCO,"Cisco Systems, Inc. - Common Stock",nasdaq,392184883756.4151,21716957.0,99.29000091552734
-AMAT,"Applied Materials, Inc. - Common Stock",nasdaq,342204584338.02045,6763249.0,431.20001220703125
-ADI,"Analog Devices, Inc. - Common Stock",nasdaq,204874871505.2883,3790155.0,419.6499938964844
-AMGN,Amgen Inc. - Common Stock,nasdaq,181596604614.2578,2657409.0,336.2900085449219
-GILD,"Gilead Sciences, Inc. - Common Stock",nasdaq,167537441828.73645,6206383.0,134.94000244140625
-APP,Applovin Corporation - Class A Common Stock,nasdaq,164842164379.65485,4985565.0,490.69000244140625
-CRWD,"CrowdStrike Holdings, Inc. - Class A Common Stock",nasdaq,139022755175.49884,4021598.0,546.1799926757812
-BKNG,Booking Holdings Inc. - Common Stock,nasdaq,124414479792.36694,9951672.0,160.55999755859375
-EQIX,"Equinix, Inc. - Common Stock",nasdaq,106576321597.80371,610432.0,1080.6300048828125
-CEG,Constellation Energy Corporation - Common Stock When-Issued,nasdaq,106045404701.3292,3150088.0,293.6000061035156
-CME,CME Group Inc. - Class A Common Stock,nasdaq,103544183405.25,2341222.0,285.75
-CDNS,"Cadence Design Systems, Inc. - Common Stock",nasdaq,98753162996.82617,2559367.0,358.0400085449219
-ADBE,Adobe Inc. - Common Stock,nasdaq,97343486740.1123,5608611.0,240.8300018310547
-CMCSA,Comcast Corporation - Class A Common Stock,nasdaq,88948489706.60295,31802308.0,24.899999618530273
-ADP,"Automatic Data Processing, Inc. - Common Stock",nasdaq,85467185858.50623,3639549.0,213.80999755859375
-FTNT,"Fortinet, Inc. - Common Stock",nasdaq,83426674295.44891,6248521.0,113.87000274658203
-CSX,CSX Corporation - Common Stock,nasdaq,82742920989.44409,12646980.0,44.529998779296875
-ABNB,"Airbnb, Inc. - Class A Common Stock",nasdaq,80408044432.3134,4197929.0,135.47999572753906
-AEP,"American Electric Power Company, Inc. - Common Stock",nasdaq,71789209091.08124,3269140.0,131.94000244140625
-DDOG,"Datadog, Inc. - Class A Common Stock",nasdaq,71170681057.70343,5556288.0,199.94000244140625
-DASH,"DoorDash, Inc. - Common Stock",nasdaq,67619189530.94641,5044422.0,155.19000244140625
-CTAS,Cintas Corporation - Common Stock,nasdaq,66190642122.34749,2232867.0,165.4199981689453
-BKR,Baker Hughes Company - Common Stock,nasdaq,64722559672.99262,9219511.0,65.23999786376953
-CRWV,"CoreWeave, Inc. - Class A Common Stock",nasdaq,58785204781.5,28316908.0,107.75
-FANG,"Diamondback Energy, Inc. - Common Stock",nasdaq,55742228083.5499,3355193.0,198.14999389648438
-COIN,"Coinbase Global, Inc. - Class A Common Stock",nasdaq,54704993291.43631,11847152.0,207.63999938964844
-FLEX,Flex Ltd. - Ordinary Shares,nasdaq,51360371341.201416,4250103.0,139.69000244140625
-EA,Electronic Arts Inc. - Common Stock,nasdaq,50098291416.44098,2066759.0,200.19000244140625
-FAST,Fastenal Company - Common Stock,nasdaq,49732878492.1675,7610401.0,43.31999969482422
-ADSK,"Autodesk, Inc. - Common Stock",nasdaq,49591684071.38733,2072908.0,234.8699951171875
-FER,Ferrovial N.V. - Ordinary Shares,nasdaq,49417760798.39603,1333078.0,68.91000366210938
-EBAY,eBay Inc. - Common Stock,nasdaq,49017600677.490234,6059390.0,110.4000015258789
-EXC,Exelon Corporation - Common Stock,nasdaq,46023901758.772484,8662232.0,44.97999954223633
-FITB,Fifth Third Bancorp - Common Stock,nasdaq,44073931547.28517,8454844.0,48.630001068115234
-CCEP,Coca-Cola Europacific Partners plc - Ordinary Shares,nasdaq,41142842582.33101,1878934.0,92.91999816894531
-GFS,GlobalFoundries Inc. - Ordinary Share,nasdaq,39568246982.81708,4112359.0,72.1500015258789
-ALNY,"Alnylam Pharmaceuticals, Inc. - Common Stock",nasdaq,38989676530.210785,1138040.0,292.0299987792969
-ESLT,Elbit Systems Ltd. - Ordinary Shares,nasdaq,37525808485.18768,166498.0,802.2100219726562
-CRDO,Credo Technology Group Holding Ltd - Ordinary Shares,nasdaq,36626225936.75171,6990967.0,198.57000732421875
-ALAB,"Astera Labs, Inc. - Common Stock",nasdaq,35039210576.52269,5195726.0,204.4199981689453
-ACGL,Arch Capital Group Ltd. - Common Stock,nasdaq,32950931191.278076,1973578.0,94.30999755859375
-CPRT,"Copart, Inc. - Common Stock",nasdaq,32213031171.817245,8959401.0,33.439998626708984
-CASY,"Caseys General Stores, Inc. - Common Stock",nasdaq,32144073718.76544,585359.0,867.1900024414062
-AXON,"Axon Enterprise, Inc. - Common Stock",nasdaq,31729813926.99362,1120509.0,393.6600036621094
-BIIB,Biogen Inc. - Common Stock,nasdaq,29432935735.230545,1111263.0,199.36000061035156
-FISV,"Fiserv, Inc. - Common Stock",nasdaq,29264979321.256706,6669567.0,54.880001068115234
-GEHC,GE HealthCare Technologies Inc. - Common Stock,nasdaq,28335209766.40587,4390336.0,62.290000915527344
-FOXA,Fox Corporation - Class A Common Stock,nasdaq,27799528139.168243,3730788.0,66.16000366210938
-FTAI,FTAI Aviation Ltd. - Common Stock,nasdaq,27308612099.55652,1641609.0,266.2099914550781
-EXPE,"Expedia Group, Inc. - Common Stock",nasdaq,26582489101.170364,2387480.0,221.47999572753906
-CINF,Cincinnati Financial Corporation - Common Stock,nasdaq,25336140433.63376,784870.0,163.7899932861328
-FOX,Fox Corporation - Class B Common Stock,nasdaq,24988480665.972748,1630014.0,59.470001220703125
-FSLR,"First Solar, Inc. - Common Stock",nasdaq,24505813703.442688,2350457.0,228.05999755859375
-DXCM,"DexCom, Inc. - Common Stock",nasdaq,23592273578.261826,4528485.0,61.13999938964844
-EXE,Expand Energy Corporation - Common Stock,nasdaq,23068837982.07685,3860822.0,96.43000030517578
-FWONK,Liberty Media Corporation - Series C Liberty Formula One Common Stock,nasdaq,22727432270.35034,2180449.0,90.69000244140625
-CTSH,Cognizant Technology Solutions Corporation - Class A Common Stock,nasdaq,22576289783.477783,6843521.0,47.72999954223633
-ENTG,"Entegris, Inc. - Common Stock",nasdaq,22130712628.17383,2579786.0,145.30999755859375
-AFRM,"Affirm Holdings, Inc. - Class A Common Stock",nasdaq,21912413210.15293,5731393.0,65.43000030517578
-AKAM,"Akamai Technologies, Inc. - Common Stock",nasdaq,21743847696.61505,5497095.0,149.55999755859375
-CHTR,"Charter Communications, Inc. - Class A Common Stock",nasdaq,20883104231.894684,2306526.0,147.9199981689453
-FWONA,Liberty Media Corporation - Series A Liberty Formula One Common Stock,nasdaq,20807791629.32483,164478.0,83.02999877929688
-FFIV,"F5, Inc. - Common Stock",nasdaq,20027704919.90036,740890.0,354.9800109863281
-CHRW,"C.H. Robinson Worldwide, Inc. - Common Stock",nasdaq,19709552144.20395,1949968.0,167.2100067138672
-EVRG,"Evergy, Inc. - Common Stock",nasdaq,19201735685.969925,2041019.0,83.30000305175781
-AMKR,"Amkor Technology, Inc. - Common Stock",nasdaq,18206235690.653107,4446606.0,73.44999694824219
-CG,The Carlyle Group Inc. - Common Stock,nasdaq,18013120656.64643,3354578.0,50.040000915527344
-DLTR,"Dollar Tree, Inc. - Common Stock",nasdaq,17340297998.55478,3341518.0,89.05000305175781
-EWBC,"East West Bancorp, Inc. - Common Stock",nasdaq,16564218540.115295,1086339.0,120.91000366210938
-AAOI,"Applied Optoelectronics, Inc. - Common Stock",nasdaq,15108108072.807404,11808773.0,188.27999877929688
-ARXS,"Arxis, Inc. - Class A Common Stock",nasdaq,14881312386.307549,2393347.0,36.2599983215332
-ASND,Ascendis Pharma A/S - Ordinary Share,nasdaq,14681957210.42633,694996.0,237.64999389648438
-AUR,"Aurora Innovation, Inc.  - Class A Common Stock",nasdaq,14159885891.103216,21298770.0,7.21999979019165
-CSGP,"CoStar Group, Inc. - Common Stock",nasdaq,13496156069.199314,6537701.0,33.04999923706055
-ARCC,Ares Capital Corporation - Closed End Fund,nasdaq,13477289129.334774,7604131.0,18.770000457763672
-GEN,Gen Digital Inc. - Common Stock,nasdaq,13348830133.461746,7194309.0,22.040000915527344
-GH,"Guardant Health, Inc. - Common Stock",nasdaq,13252037227.990295,2030260.0,99.94000244140625
-APA,APA Corporation - Common Stock,nasdaq,13110210773.365276,8743498.0,37.09000015258789
-BBIO,"BridgeBio Pharma, Inc. - Common Stock",nasdaq,12917048312.178925,2538349.0,65.94999694824219
-AEIS,"Advanced Energy Industries, Inc. - Common Stock",nasdaq,12908366109.60556,660952.0,339.4200134277344
-ENLT,Enlight Renewable Energy Ltd. - Ordinary Shares,nasdaq,12721430635.721512,176196.0,91.30000305175781
-CDW,CDW Corporation - Common Stock,nasdaq,12685918074.172592,1819060.0,99.30000305175781
-APLD,Applied Digital Corporation - Common Stock,nasdaq,12553855935.479942,21317772.0,43.93000030517578
-EXEL,"Exelixis, Inc. - Common Stock",nasdaq,12432022175.057549,2823596.0,49.459999084472656
-AGNC,AGNC Investment Corp. - Common Stock,nasdaq,12328760118.53984,19004511.0,10.739999771118164
-DKNG,DraftKings Inc. - Class A Common Stock,nasdaq,12209730489.182999,14539508.0,24.610000610351562
-CHKP,Check Point Software Technologies Ltd. - Ordinary Shares,nasdaq,12102594685.418793,1486204.0,116.33999633789062
-ALGN,"Align Technology, Inc. - Common Stock",nasdaq,11873568794.495407,1162139.0,165.7899932861328
-COO,"The Cooper Companies, Inc.  - Common Stock",nasdaq,11697108308.960472,2115629.0,59.95000076293945
-FIVE,"Five Below, Inc. - Common Stock",nasdaq,11529545342.045883,1119175.0,208.50999450683594
-AXSM,"Axsome Therapeutics, Inc. - Common Stock",nasdaq,11528531314.162903,707344.0,224.02999877929688
-COKE,"Coca-Cola Consolidated, Inc. - Common Stock",nasdaq,11479678590.14383,548419.0,172.4600067138672
-DRS,"Leonardo DRS, Inc. - Common Stock",nasdaq,11436090384.75735,1159621.0,42.869998931884766
-ERIE,Erie Indemnity Company - Class A Common Stock,nasdaq,11425336158.0,242747.0,218.5
-ARWR,"Arrowhead Pharmaceuticals, Inc. - Common Stock",nasdaq,11133339068.798454,2115772.0,79.04000091552734
-AAON,"AAON, Inc. - Common Stock",nasdaq,10948319458.569641,1024045.0,133.66000366210938
-CGNX,Cognex Corporation - Common Stock,nasdaq,10930429592.467186,2264967.0,65.68000030517578
-DPZ,Domino's Pizza Inc - Common Stock,nasdaq,10316501721.008606,1045732.0,310.1600036621094
-FORM,"FormFactor, Inc. - Common Stock",nasdaq,10291589332.498718,1701388.0,132.02000427246094
-ENSG,"The Ensign Group, Inc. - Common Stock",nasdaq,10288727823.605347,406032.0,176.0399932861328
-BMRN,BioMarin Pharmaceutical Inc. - Common Stock,nasdaq,10220881287.890053,1979700.0,52.880001068115234
-CYTK,"Cytokinetics, Incorporated - Common Stock",nasdaq,10156997730.858826,2467432.0,74.80999755859375
-FCFS,"FirstCash Holdings, Inc. - Common Stock",nasdaq,10106109526.666306,349918.0,230.5399932861328
-BSY,"Bentley Systems, Incorporated - Class B Common Stock",nasdaq,9925036783.311676,2963203.0,32.66999816894531
-BPOP,"Popular, Inc. - Common Stock",nasdaq,9387655584.437607,526193.0,145.4600067138672
-CART,Maplebear Inc. - Common Stock,nasdaq,9180264857.604332,4492745.0,39.060001373291016
-DOCU,"DocuSign, Inc. - Common Stock",nasdaq,8778084878.773026,4515342.0,45.18000030517578
-FIGR,"Figure Technology Solutions, Inc. - Class A Common Stock",nasdaq,8713217033.5,5375788.0,39.5
-FRHC,Freedom Holding Corp. - Common Stock,nasdaq,8618687228.227386,102527.0,140.85000610351562
-AVAV,"AeroVironment, Inc. - Common Stock",nasdaq,8545172319.946884,1610906.0,168.86000061035156
-ALGM,"Allegro MicroSystems, Inc. - Common Stock",nasdaq,8499292008.987999,2208700.0,45.869998931884766
-CRUS,"Cirrus Logic, Inc. - Common Stock",nasdaq,8491200109.094879,639539.0,166.47000122070312
-COLB,"Columbia Banking System, Inc. - Common Stock",nasdaq,8421274791.112724,2881252.0,29.09000015258789
-AAL,"American Airlines Group, Inc. - Common Stock",nasdaq,8392977111.001752,66394383.0,12.6899995803833
-CIFR,Cipher Digital Inc. - Common Stock,nasdaq,8205526673.364161,26145606.0,20.059999465942383
-FROG,JFrog Ltd. - Ordinary shares,nasdaq,8181637725.828064,3527704.0,67.55000305175781
-CAMT,Camtek Ltd. - Ordinary Shares,nasdaq,8128783467.69812,480236.0,174.6300048828125
-AXTI,AXT Inc - Common Stock,nasdaq,8040509413.427856,11825278.0,122.9000015258789
-CHRD,Chord Energy Corporation - Common Stock,nasdaq,7995046668.569351,1079724.0,142.00999450683594
-BOKF,BOK Financial Corporation - Common Stock,nasdaq,7839254427.434692,344834.0,129.02000427246094
-CELH,"Celsius Holdings, Inc. - Common Stock",nasdaq,7569511215.630493,7567172.0,29.610000610351562
-CBSH,"Commerce Bancshares, Inc. - Common Stock",nasdaq,7455043771.144684,1294314.0,51.13999938964844
-CORZ,"Core Scientific, Inc. - Common Stock",nasdaq,7244606095.712677,13494496.0,22.790000915527344
-AUGO,Aura Minerals Inc. - Common Shares,nasdaq,7014833935.561768,911145.0,83.72000122070312
-CHYM,"Chime Financial, Inc. - Class A Common Stock",nasdaq,6952206888.522453,4866224.0,18.100000381469727
-BRKR,Bruker Corporation - Common Stock,nasdaq,6809052091.836639,2131940.0,44.72999954223633
-AVT,"Avnet, Inc. - Common Stock",nasdaq,6734997340.973526,1090680.0,82.11000061035156
-DOX,Amdocs Limited - Ordinary Shares,nasdaq,6705976156.414032,1185170.0,62.34000015258789
-EQPT,EquipmentShare.com Inc - Class A Common Stock,nasdaq,6531457280.422134,1582704.0,24.549999237060547
-CBC,"Central Bancompany, Inc. - Class A Common Stock",nasdaq,6527001975.351334,631260.0,27.219999313354492
-BZ,KANZHUN LIMITED - American Depository Shares,nasdaq,6457788185.658777,4096032.0,14.199999809265137
-ALKS,Alkermes plc - Ordinary Shares,nasdaq,6382016802.626259,2378591.0,38.290000915527344
-CGON,"CG Oncology, Inc. - Common stock",nasdaq,6356752202.192741,1198244.0,72.06999969482422
-ALM,Almonty Industries Inc. - Common Shares,nasdaq,6276369938.005636,5469137.0,22.1200008392334
-CENX,Century Aluminum Company - Common Stock,nasdaq,6262087998.996723,2189511.0,63.27000045776367
-APGE,"Apogee Therapeutics, Inc. - Common Stock",nasdaq,6252040891.757011,887367.0,82.93000030517578
-CPB,The Campbell's Company - Common Stock,nasdaq,6079206708.345825,8795472.0,20.389999389648438
-EMAT,Evolution Metals & Technologies Corp. - Common Stock,nasdaq,6040301674.436005,168118.0,10.180000305175781
-CHDN,"Churchill Downs, Incorporated - Common Stock",nasdaq,6034358422.25885,1072873.0,86.58000183105469
-CELC,Celcuity Inc. - Common Stock,nasdaq,6026616653.751183,832454.0,124.68000030517578
-DBX,"Dropbox, Inc. - Class A Common Stock",nasdaq,6021489626.094011,3990083.0,25.809999465942383
-FSV,FirstService Corporation - Common Shares,nasdaq,6012530643.5,203114.0,130.75
-ACT,"Enact Holdings, Inc. - Common Stock",nasdaq,5974911779.493084,310924.0,42.79999923706055
-COGT,"Cogent Biosciences, Inc. - Common Stock",nasdaq,5900071969.540894,2025924.0,34.529998779296875
-DSGX,The Descartes Systems Group Inc. - Common Stock,nasdaq,5776874313.661324,624504.0,67.2300033569336
-CACC,Credit Acceptance Corporation - Common Stock,nasdaq,5509528290.672607,192857.0,526.719970703125
-APPF,"AppFolio, Inc. - Class A Common Stock",nasdaq,5494009030.189087,372700.0,155.3800048828125
-CORT,Corcept Therapeutics Incorporated - Common Stock,nasdaq,5492107532.659447,1676808.0,51.15999984741211
-CWST,"Casella Waste Systems, Inc. - Class A Common Stock",nasdaq,5399211617.370079,905555.0,84.87999725341797
-CAR,"Avis Budget Group, Inc. - Common Stock",nasdaq,5317823155.272736,2848736.0,150.5399932861328
-BGC,"BGC Group, Inc. - Class A Common Stock",nasdaq,5279204359.034725,2677713.0,11.020000457763672
-APLS,"Apellis Pharmaceuticals, Inc. - Common Stock",nasdaq,5256553809.4304695,5322985.0,41.060001373291016
-CZR,"Caesars Entertainment, Inc. - Common Stock",nasdaq,5175430760.221367,5271311.0,25.40999984741211
-BCPC,Balchem Corporation - Common Stock,nasdaq,5123744986.140991,203840.0,159.47000122070312
-CRSP,CRISPR Therapeutics AG - Common Shares,nasdaq,5095389857.963013,1920783.0,52.83000183105469
-ACLS,"Axcelis Technologies, Inc. - Common Stock",nasdaq,4967827092.321518,882342.0,161.63999938964844
-ENPH,"Enphase Energy, Inc. - Common Stock",nasdaq,4939797225.267563,5901039.0,37.47999954223633
-DUOL,"Duolingo, Inc. - Class A Common Stock",nasdaq,4939336432.703636,2502149.0,106.01000213623047
-CROX,"Crocs, Inc. - Common Stock",nasdaq,4935175824.195923,1304031.0,99.31999969482422
-CIGI,Colliers International Group Inc.  - Subordinate Voting Shares,nasdaq,4875304601.3782425,368870.0,95.4000015258789
-DIOD,Diodes Incorporated - Common Stock,nasdaq,4752982592.087799,569362.0,103.44999694824219
-CAI,"Caris Life Sciences, Inc. - Common Stock",nasdaq,4737424318.896322,2429426.0,16.760000228881836
-DNTH,"Dianthus Therapeutics, Inc. - Common Stock",nasdaq,4709496056.364052,949744.0,86.1500015258789
-EXLS,"ExlService Holdings, Inc. - Common Stock",nasdaq,4542236468.6915245,2328600.0,29.729999542236328
-FFIN,"First Financial Bankshares, Inc. - Common Stock",nasdaq,4542037290.315437,765467.0,31.700000762939453
-FTDR,"Frontdoor, Inc. - Common Stock",nasdaq,4457810585.075989,711244.0,63.470001220703125
-BLLN,"BillionToOne, Inc. - Class A common stock",nasdaq,4334154611.723785,444265.0,94.2300033569336
-FELE,"Franklin Electric Co., Inc. - Common Stock",nasdaq,4322347837.460083,346118.0,97.83000183105469
-ACIW,"ACI Worldwide, Inc. - Common Stock",nasdaq,4288085053.624649,820531.0,42.18000030517578
-COCO,"The Vita Coco Company, Inc. - Common Stock",nasdaq,4261174329.088791,1552549.0,74.61000061035156
-CVLT,"Commvault Systems, Inc. - Common Stock",nasdaq,4217051736.6856155,1051044.0,102.2300033569336
-EBC,"Eastern Bankshares, Inc. - Common Stock",nasdaq,4212185727.9539757,2119747.0,19.489999771118164
-ACMR,"ACM Research, Inc. - Class A Common Stock",nasdaq,4171504798.436249,1244695.0,62.9900016784668
-DOO,BRP Inc. - Common Subordinate Voting Shares,nasdaq,4127833501.2855835,469522.0,55.97999954223633
-FULT,Fulton Financial Corporation - Common Stock,nasdaq,4038652511.774311,2054013.0,21.1299991607666
-AMRX,"Amneal Pharmaceuticals, Inc. - Class A Common Stock",nasdaq,4019687300.897537,1888314.0,12.600000381469727
-CRNX,"Crinetics Pharmaceuticals, Inc. - Common Stock",nasdaq,3891798061.191101,1206072.0,36.90999984741211
-CPRX,"Catalyst Pharmaceuticals, Inc. - Common Stock",nasdaq,3810944016.1845703,1819121.0,31.139999389648438
-ALHC,"Alignment Healthcare, Inc. - Common Stock",nasdaq,3799767493.242071,3764867.0,18.3799991607666
-BELFB,Bel Fuse Inc. - Class B Common Stock,nasdaq,3794165697.070648,190408.0,298.2200012207031
-CATY,Cathay General Bancorp - Common Stock,nasdaq,3786834095.266819,483945.0,56.4900016784668
-DLO,DLocal Limited - Class A Common Shares,nasdaq,3742686397.881626,1583839.0,12.6899995803833
-CALM,"Cal-Maine Foods, Inc. - Common Stock",nasdaq,3737065210.196312,874163.0,78.87999725341797
-BULL,Webull Corporation - Class A Ordinary Shares,nasdaq,3733367018.156364,12218659.0,7.019999980926514
-ACAD,ACADIA Pharmaceuticals Inc. - Common Stock,nasdaq,3719242978.821659,1909375.0,21.719999313354492
-BANF,BancFirst Corporation - Common Stock,nasdaq,3693495019.3890076,142906.0,109.97000122070312
-CVCO,"Cavco Industries, Inc. - Common Stock",nasdaq,3693304598.9136963,153632.0,475.8699951171875
-EWTX,"Edgewise Therapeutics, Inc. - Common Stock",nasdaq,3659237953.468712,1028395.0,34.0099983215332
-DORM,"Dorman Products, Inc. - Common Stock",nasdaq,3571590840.9654617,273988.0,119.5199966430664
-CVBF,CVB Financial Corporation - Common Stock,nasdaq,3500871115.564926,1730390.0,19.84000015258789
-FRMI,Fermi Inc. - Common Stock,nasdaq,3487530953.561601,13259670.0,5.46999979019165
-CLSK,"CleanSpark, Inc. - Common Stock",nasdaq,3456391279.0493784,20310532.0,13.470000267028809
-ADEA,Adeia Inc.  - Common Stock,nasdaq,3438959127.478981,1348592.0,31.18000030517578
-GBDC,"Golub Capital BDC, Inc. - Closed End Fund",nasdaq,3428116542.21159,2509567.0,13.15999984741211
-AMBA,"Ambarella, Inc. - Ordinary Shares",nasdaq,3423852555.916443,867029.0,78.19000244140625
-FIBK,"First Interstate BancSystem, Inc. - Common Stock",nasdaq,3360172199.432827,1240806.0,34.59000015258789
-ASO,"Academy Sports and Outdoors, Inc. - Common Stock",nasdaq,3297655741.1778793,1451522.0,51.119998931884766
-CHEF,"The Chefs' Warehouse, Inc. - Common Stock",nasdaq,3262210320.0,482540.0,80.0
-CSQ,Calamos Strategic Total Return Fund - Closed End Fund,nasdaq,3257107201.203375,276845.0,20.309999465942383
-BEAM,Beam Therapeutics Inc. - Common Stock,nasdaq,3248925570.270939,2078967.0,31.579999923706055
-FIZZ,National Beverage Corp. - Common Stock,nasdaq,3237798293.185501,243675.0,34.58000183105469
-ERAS,"Erasca, Inc. - Common Stock",nasdaq,3228019581.5493565,6684391.0,10.380000114440918
-FHB,"First Hawaiian, Inc. - Common Stock",nasdaq,3213965875.94108,1654714.0,26.420000076293945
-CLBT,Cellebrite DI Ltd. - Ordinary Shares,nasdaq,3177863211.4877567,1823314.0,12.739999771118164
-BATRK,"Atlanta Braves Holdings, Inc. - Series C Common Stock",nasdaq,3176402045.282711,369960.0,49.52000045776367
-FFBC,First Financial Bancorp. - Common Stock,nasdaq,3139486878.085476,847747.0,29.920000076293945
-BTDR,Bitdeer Technologies Group - Ordinary Shares,nasdaq,3121714149.4266415,8413437.0,12.829999923706055
-DNLI,Denali Therapeutics Inc. - Common Stock,nasdaq,3088491336.716896,1741481.0,19.459999084472656
-DAVE,Dave Inc.  - Class A Common Stock,nasdaq,3080026335.75,586886.0,242.25
-AEHR,Aehr Test Systems - Common Stock,nasdaq,3042158765.2750854,2849042.0,96.72000122070312
-DYN,"Dyne Therapeutics, Inc. - Common Stock",nasdaq,3036814571.256859,2049537.0,18.3700008392334
-AYA,Aya Gold & Silver Inc. - Common Shares,nasdaq,3028455109.096031,259188.0,21.18000030517578
-CAKE,The Cheesecake Factory Incorporated - Common Stock,nasdaq,3018385802.25,1333563.0,60.75
-COLM,Columbia Sportswear Company - Common Stock,nasdaq,2996850333.165344,632460.0,58.599998474121094
-ETOR,eToro Group Ltd. - Class A Common Shares,nasdaq,2991013903.4394836,1326603.0,37.61000061035156
-ALMS,Alumis Inc. - Common Stock,nasdaq,2990456347.943617,1383603.0,23.510000228881836
-EXTR,"Extreme Networks, Inc. - Common Stock",nasdaq,2980432745.2509155,2173075.0,22.790000915527344
-FSLY,"Fastly, Inc. - Class A Common Stock",nasdaq,2978195107.460022,14490098.0,19.030000686645508
-CRVL,CorVel Corp. - Common Stock,nasdaq,2956436475.123024,230704.0,57.689998626708984
-CECO,CECO Environmental Corp. - Common Stock,nasdaq,2885985234.4741974,743329.0,80.44999694824219
-CARG,"CarGurus, Inc. - Class A Common Stock",nasdaq,2847206656.337082,1336355.0,31.56999969482422
-FLNC,"Fluence Energy, Inc. - Class A Common Stock",nasdaq,2826228598.394413,6400436.0,21.280000686645508
-ATRO,Astronics Corporation - Common Stock,nasdaq,2807525611.9958496,567563.0,78.26000213623047
-CLMT,"Calumet, Inc - Common Stock",nasdaq,2799166268.5568047,1356567.0,32.119998931884766
-EXPO,"Exponent, Inc. - Common Stock",nasdaq,2774379995.8894157,499585.0,57.189998626708984
-EOSE,"Eos Energy Enterprises, Inc. - Common Stock",nasdaq,2749972987.7100487,25323386.0,8.100000381469727
-FA,First Advantage Corporation - Common Stock,nasdaq,2669116523.2998095,1350924.0,15.5600004196167
-EEFT,"Euronet Worldwide, Inc. - Common Stock",nasdaq,2664495205.935562,698960.0,69.9800033569336
-CCC,CCC Intelligent Solutions Holdings Inc. - Common Stock,nasdaq,2652971211.5249977,12573152.0,4.519999980926514
-AMSC,American Superconductor Corporation - Common Stock,nasdaq,2595345575.4343605,1148896.0,54.5099983215332
-ARQT,"Arcutis Biotherapeutics, Inc. - Common stock",nasdaq,2587975074.8617287,1450627.0,20.690000534057617
-ELVN,"Enliven Therapeutics, Inc.  - Common Stock",nasdaq,2576279169.333214,1100249.0,42.29999923706055
-FRPT,"Freshpet, Inc. - Common Stock",nasdaq,2519550917.0657845,1680950.0,51.27000045776367
-FRME,First Merchants Corporation - Common Stock,nasdaq,2516498067.363014,405568.0,39.93000030517578
-ARCB,ArcBest Corporation - Common Stock,nasdaq,2514025996.8338013,315211.0,112.91999816894531
-CLDX,"Celldex Therapeutics, Inc. - Common Stock",nasdaq,2511746304.0,1058980.0,32.0
-FBNC,First Bancorp - Common Stock,nasdaq,2431633040.950161,215137.0,58.77000045776367
-DJT,Trump Media & Technology Group Corp. - Common Stock,nasdaq,2417806791.6605988,3607601.0,8.729999542236328
-ANDE,"The Andersons, Inc. - Common Stock",nasdaq,2397746207.6696777,356913.0,70.41000366210938
-ACHC,"Acadia Healthcare Company, Inc. - Common Stock",nasdaq,2392982084.639164,3349003.0,26.020000457763672
-FRSH,Freshworks Inc. - Class A Common Stock,nasdaq,2349690419.5,7890893.0,8.5
-COHU,"Cohu, Inc. - Common Stock",nasdaq,2326688099.6432266,1015527.0,49.31999969482422
-DGII,Digi International Inc. - Common Stock,nasdaq,2319816258.446808,301508.0,61.529998779296875
-DFTX,"Definium Therapeutics, Inc.  - Common Shares",nasdaq,2307853111.6377296,1758085.0,21.15999984741211
-CSGS,"CSG Systems International, Inc. - Common Stock",nasdaq,2300464223.364258,376024.0,80.69000244140625
-BCRX,"BioCryst Pharmaceuticals, Inc. - Common Stock",nasdaq,2236631456.47768,5286263.0,8.800000190734863
-DXPE,"DXP Enterprises, Inc. - Common Stock",nasdaq,2229508708.3793945,177018.0,143.7899932861328
-CMPR,Cimpress plc - Ordinary Shares,nasdaq,2217478607.665329,129295.0,91.51000213623047
-BUSE,First Busey Corporation - Common Stock,nasdaq,2211692701.736374,586757.0,26.149999618530273
-BLBD,Blue Bird Corporation - Common Stock,nasdaq,2194058073.316635,398867.0,69.33000183105469
-BANR,Banner Corporation - Common Stock,nasdaq,2190932323.5,323200.0,64.5
-BRZE,"Braze, Inc. - Class A Common Stock",nasdaq,2185022026.486347,3128791.0,19.260000228881836
-ADPT,Adaptive Biotechnologies Corporation - Common Stock,nasdaq,2181405081.275627,1915013.0,13.630000114440918
-AXGN,"Axogen, Inc. - Common Stock",nasdaq,2176568352.548584,1053409.0,40.93000030517578
-EFSC,Enterprise Financial Services Corporation - Common Stock,nasdaq,2161123490.1848984,277178.0,59.06999969482422
-DRH,Diamondrock Hospitality Company - Common Stock,nasdaq,2159420726.767667,2120722.0,10.5600004196167
-CENTA,Central Garden & Pet Company - Class A Common Stock Nonvoting,nasdaq,2152434893.075432,299819.0,34.400001525878906
-AVPT,"AvePoint, Inc. - Class A Common Stock",nasdaq,2132893080.725956,1905191.0,10.0600004196167
-DRVN,Driven Brands Holdings Inc. - Common Stock,nasdaq,2111592184.2137222,2128839.0,12.84000015258789
-ALRM,"Alarm.com Holdings, Inc. - Common Stock",nasdaq,2083774414.6196022,488667.0,42.130001068115234
-EZPW,"EZCORP, Inc. - Class A Non-Voting Common Stock",nasdaq,2065762762.6807098,808516.0,33.56999969482422
-AUPH,Aurinia Pharmaceuticals Inc - Common Shares,nasdaq,2056340689.8554134,1153385.0,15.989999771118164
-FLYW,Flywire Corporation - Voting Common Stock,nasdaq,2056141861.967926,2022519.0,16.65999984741211
-CHRN,ChronoScale Corporation - Common Stock,nasdaq,2043373442.469945,122008.0,14.279999732971191
-ESTA,Establishment Labs Holdings Inc. - Common Shares,nasdaq,2035994389.1814423,538547.0,69.18000030517578
-DHC,Diversified Healthcare Trust  - Common Shares of Beneficial Interest,nasdaq,2024013818.2391834,1975714.0,8.359999656677246
-CLBK,"Columbia Financial, Inc. - Common Stock",nasdaq,1998751784.231697,273016.0,19.209999084472656
-GENB,"Generate Biomedicines, Inc. - Common Stock",nasdaq,1974203584.318964,571103.0,15.489999771118164
-BWIN,"The Baldwin Insurance Group, Inc. - Class A Common Stock",nasdaq,1956623347.0284271,1708818.0,20.06999969482422
-ADMA,ADMA Biologics Inc - Common Stock,nasdaq,1949208497.7842903,7241252.0,8.40999984741211
-AGYS,"Agilysys, Inc. - Common Stock",nasdaq,1946214962.2343063,305257.0,69.23999786376953
-ASTH,Astrana Health Inc. - Common Stock,nasdaq,1934249052.9558792,492355.0,39.0099983215332
-ANAB,"AnaptysBio, Inc. - Common Stock",nasdaq,1908437206.445343,838643.0,65.58000183105469
-ADUS,Addus HomeCare Corporation - Common Stock,nasdaq,1838293748.3677368,257511.0,98.48999786376953
-CAPR,"Capricor Therapeutics, Inc. - Common Stock",nasdaq,1823120041.5170975,1313463.0,31.520000457763672
-ANIP,"ANI Pharmaceuticals, Inc. - Common Stock",nasdaq,1807402131.0,373090.0,79.5
-ALKT,"Alkami Technology, Inc. - Common Stock",nasdaq,1796852029.43898,1970180.0,16.790000915527344
-EVCM,EverCommerce Inc. - Common Stock,nasdaq,1789674828.4849148,134375.0,10.109999656677246
-ECPG,Encore Capital Group Inc - Common Stock,nasdaq,1749752036.406189,333362.0,81.61000061035156
-CASH,"Pathward Financial, Inc. - Common Stock",nasdaq,1743477630.7527466,240204.0,82.58999633789062
-CRML,Critical Metals Corp. - Ordinary Shares,nasdaq,1735798037.3355045,12084760.0,11.829999923706055
-CLOV,"Clover Health Investments, Corp.  - Class A Common stock",nasdaq,1727524567.6514406,5781195.0,3.2799999713897705
-CHCO,City Holding Company - Common Stock,nasdaq,1716058905.8727722,119601.0,121.61000061035156
-AGIO,"Agios Pharmaceuticals, Inc. - Common Stock",nasdaq,1690183132.3173237,1062547.0,28.420000076293945
-FSUN,FirstSun Capital Bancorp - Common Stock,nasdaq,1680184580.4072762,219388.0,35.95000076293945
-EYE,"National Vision Holdings, Inc. - Common Stock",nasdaq,1677621062.7663555,1451167.0,20.940000534057617
-ARDX,"Ardelyx, Inc. - Common Stock",nasdaq,1632864281.0519814,3984949.0,6.610000133514404
-AMLX,"Amylyx Pharmaceuticals, Inc. - Common Stock",nasdaq,1605530370.8243647,1080708.0,14.4399995803833
-FIVN,"Five9, Inc. - Common Stock",nasdaq,1602484292.2054749,2940977.0,20.93000030517578
-GABC,"German American Bancorp, Inc. - Common Stock",nasdaq,1599112920.6562805,149368.0,42.56999969482422
-BAND,Bandwidth Inc. - Class A Common Stock,nasdaq,1582935614.11092,722114.0,49.439998626708984
-ALMR,"Alamar Biosciences, Inc. - Class A common stock",nasdaq,1566758960.414648,589583.0,22.969999313354492
-BL,"BlackLine, Inc. - Common Stock",nasdaq,1537502580.8643265,1219352.0,26.209999084472656
-AHCO,AdaptHealth Corp.  - Common Stock,nasdaq,1530609210.0,1562370.0,11.25
-ATAI,AtaiBeckley Inc. - Common Stock,nasdaq,1522705153.391922,5800650.0,4.150000095367432
-ENVX,Enovix Corporation - Common Stock,nasdaq,1518436765.2625794,5798206.0,6.96999979019165
-ABCL,AbCellera Biologics Inc. - Common Shares,nasdaq,1511608137.1042662,4933939.0,4.949999809265137
-APPN,Appian Corporation - Class A Common Stock,nasdaq,1506416736.0054016,968970.0,20.520000457763672
-GILT,Gilat Satellite Networks Ltd. - Ordinary Shares,nasdaq,1502626563.1640472,746334.0,19.90999984741211
-BRAI,Braiin Limited - Common Stock,nasdaq,1498261413.629179,137560.0,7.269999980926514
-AIP,"Arteris, Inc.  - Common Stock",nasdaq,1494783615.8063507,601091.0,32.43000030517578
-BLKB,"Blackbaud, Inc. - Common Stock",nasdaq,1491874781.8539505,588714.0,32.47999954223633
-AVAH,Aveanna Healthcare Holdings Inc. - Common Stock,nasdaq,1483418557.8780742,1246677.0,6.820000171661377
-CNOB,"ConnectOne Bancorp, Inc. - Common Stock",nasdaq,1481498987.1995087,352586.0,29.459999084472656
-GHRS,GH Research PLC - Ordinary Shares,nasdaq,1476721590.7259674,217598.0,21.540000915527344
-BCAX,Bicara Therapeutics Inc. - Common Stock,nasdaq,1470452465.9391212,559542.0,22.3799991607666
-CSWC,Capital Southwest Corporation - Common Stock,nasdaq,1430652876.9099808,662545.0,23.780000686645508
-ALGT,Allegiant Travel Company - Common Stock,nasdaq,1428705562.7136993,502988.0,77.48999786376953
-CNXC,Concentrix Corporation - Common Stock,nasdaq,1397010492.1285057,1710540.0,22.899999618530273
-GCT,GigaCloud Technology Inc - Class A Ordinary Shares,nasdaq,1392754945.5,741660.0,38.25
-DMRA,"Damora Therapeutics, Inc. - Common Stock",nasdaq,1392401174.28154,301104.0,23.09000015258789
-FTRE,Fortrea Holdings Inc. - Common Stock,nasdaq,1381882872.82691,1583367.0,14.609999656677246
-ATRC,"AtriCure, Inc. - Common Stock",nasdaq,1351607516.3451958,759600.0,26.690000534057617
-AVBP,"ArriVent BioPharma, Inc. - Common Stock",nasdaq,1349275632.179535,489854.0,28.969999313354492
-CRVS,"Corvus Pharmaceuticals, Inc. - Common Stock",nasdaq,1342924093.7345657,1264572.0,15.970000267028809
-CSIQ,Canadian Solar Inc. - Common Shares,nasdaq,1316322602.4919891,2531422.0,19.40999984741211
-ELE,Elemental Royalty Corporation - Common Stock,nasdaq,1293460503.9147491,309050.0,20.1299991607666
-CMPS,COMPASS Pathways Plc - American Depository Shares,nasdaq,1264231258.7092543,4474344.0,9.369999885559082
-ARRY,"Array Technologies, Inc. - Common Stock",nasdaq,1256761519.9960213,5988978.0,8.170000076293945
-BHRB,Burke & Herbert Financial Services Corp. - Common Stock,nasdaq,1255937444.8753967,114450.0,62.33000183105469
-BLDP,"Ballard Power Systems, Inc. - Common Shares",nasdaq,1254139485.8384361,4549326.0,4.159999847412109
-GIII,"G-III Apparel Group, LTD. - Common Stock",nasdaq,1251756148.5087872,537960.0,29.670000076293945
-AVLN,Avalyn Pharma Inc. - common stock,nasdaq,1250180189.3499699,1156800.0,29.899999618530273
-EVLV,"Evolv Technologies Holdings, Inc. - Class A Common Stock",nasdaq,1250140604.7718792,3062368.0,6.960000038146973
-ASST,"Strive, Inc. - Class A Common Stock",nasdaq,1246509944.8850174,3606321.0,17.06999969482422
-DSGR,"Distribution Solutions Group, Inc. - Common Stock",nasdaq,1246345530.5535316,144663.0,26.979999542236328
-ACDC,ProFrac Holding Corp. - Class A Common Stock,nasdaq,1237497978.126316,1449118.0,6.840000152587891
-AMAL,Amalgamated Financial Corp. - Common Stock,nasdaq,1221574537.8739548,148859.0,40.900001525878906
-ADTN,"ADTRAN Holdings, Inc. - Common Stock",nasdaq,1218211420.9101677,2208175.0,15.039999961853027
-ABTC,American Bitcoin Corp. - Class A Common Stock,nasdaq,1211835038.493474,15211434.0,1.1399999856948853
-AEVA,"Aeva Technologies, Inc. - Common Stock",nasdaq,1203449282.509266,1605209.0,19.09000015258789
-ATEC,"Alphatec Holdings, Inc. - Common Stock",nasdaq,1190329185.5004215,3255111.0,7.739999771118164
-COLL,"Collegium Pharmaceutical, Inc. - Common Stock",nasdaq,1157561527.9689827,540985.0,35.689998626708984
-ASTE,"Astec Industries, Inc. - Common Stock",nasdaq,1151011089.3755722,240454.0,50.060001373291016
-COAG,"Hemab Therapeutics Holdings, Inc. - Common Stock",nasdaq,1144596352.1417427,814325.0,25.899999618530273
-EYPT,"EyePoint, Inc. - Common Stock",nasdaq,1141918469.165125,1280400.0,13.619999885559082
-FMBH,"First Mid Bancshares, Inc. - Common Stock",nasdaq,1137547874.25,113036.0,42.75
-AOSL,Alpha and Omega Semiconductor Limited - Common Shares,nasdaq,1128943718.6951294,659896.0,37.720001220703125
-ALVO,Alvotech - Ordinary Shares,nasdaq,1107771421.720378,551690.0,3.549999952316284
-CDNA,"CareDx, Inc. - Common Stock",nasdaq,1105512873.693472,687957.0,21.399999618530273
-AKTS,"Aktis Oncology, Inc. - Common stock",nasdaq,1090595494.1566544,332177.0,19.729999542236328
-CCB,Coastal Financial Corporation - Common Stock,nasdaq,1071838728.2807007,168296.0,70.29000091552734
-ALNT,Allient Inc. - Common Stock,nasdaq,1070270381.3876953,189506.0,62.970001220703125
-AVTX,"Avalo Therapeutics, Inc. - Common Stock",nasdaq,1041383417.0716114,1313016.0,19.940000534057617
-BLFS,"BioLife Solutions, Inc. - Common Stock",nasdaq,1037242898.0848503,427006.0,21.229999542236328
-CRON,Cronos Group Inc. - Common Share,nasdaq,1035043840.9029622,1444119.0,2.7699999809265137
-CEVA,"CEVA, Inc. - Common Stock",nasdaq,1033025453.5320282,581659.0,37.08000183105469
-CHY,Calamos Convertible and High Income Fund - Closed End Fund,nasdaq,1029921985.3718634,212109.0,12.869999885559082
-APC,ARKO Petroleum Corp. - Class A Common Stock,nasdaq,1025138269.3568001,185668.0,21.549999237060547
-ATEX,Anterix Inc. - Common Stock,nasdaq,1016259228.25,364893.0,54.25
-DAKT,"Daktronics, Inc. - Common Stock",nasdaq,998842779.6625099,478060.0,20.489999771118164
-CGEM,"Cullinan Therapeutics, Inc. - Common Stock",nasdaq,992547419.455616,855127.0,16.149999618530273
-DSGN,"Design Therapeutics, Inc. - Common Stock",nasdaq,986195617.0774555,377960.0,15.789999961853027
-APEI,"American Public Education, Inc. - Common Stock",nasdaq,972204864.0,351637.0,53.0
-CFFN,"Capitol Federal Financial, Inc. - Common Stock",nasdaq,955336037.5265751,932349.0,7.679999828338623
-GDRX,"GoodRx Holdings, Inc. - Class A Common Stock",nasdaq,911036772.7491603,2378490.0,2.690000057220459
-ESQ,"Esquire Financial Holdings, Inc. - Common Stock",nasdaq,910336868.198906,101998.0,105.37000274658203
-CRAI,"CRA International,Inc. - Common Stock",nasdaq,909026255.2527466,185832.0,140.64999389648438
-FCEL,"FuelCell Energy, Inc. - Common Stock",nasdaq,905391738.0237808,4005518.0,17.09000015258789
-CCNE,CNB Financial Corporation - Common Stock,nasdaq,903684896.5,153344.0,30.5
-BRUN,Boost Run Inc. - Class A Common Stock,nasdaq,898503178.8015175,475568.0,18.420000076293945
-GERN,Geron Corporation - Common Stock,nasdaq,898129348.3049481,19003396.0,1.399999976158142
-AVO,"Mission Produce, Inc. - Common Stock",nasdaq,894789585.4277229,898363.0,12.630000114440918
-CRCT,"Cricut, Inc. - Class A common stock",nasdaq,894168228.8819847,579462.0,4.260000228881836
-ANNX,"Annexon, Inc. - common stock",nasdaq,891303416.0951452,2550126.0,5.440000057220459
-AEBI,Aebi Schmidt Holding AG - Common Stock,nasdaq,890502810.5,321186.0,11.5
-BFST,"Business First Bancshares, Inc. - Common Stock",nasdaq,884919370.9468689,186042.0,27.079999923706055
-AURA,"Aura Biosciences, Inc. - Common Stock",nasdaq,874674445.1058483,430224.0,7.929999828338623
-CDNL,Cardinal Infrastructure Group Inc. - Class A Common Stock,nasdaq,873076458.8935242,430983.0,57.09000015258789
-BJRI,"BJ's Restaurants, Inc. - Common Stock",nasdaq,870520953.5968628,389298.0,41.41999816894531
-DRTS,Alpha Tau Medical Ltd. - Ordinary Shares,nasdaq,869536211.6319151,418991.0,9.880000114440918
-AGNT,"eXp World Holdings, Inc. - Common Stock",nasdaq,856949288.733841,1100004.0,5.215000152587891
-ABUS,Arbutus Biopharma Corporation - Common Stock,nasdaq,848810005.2210212,2205139.0,4.309999942779541
-CTMX,"CytomX Therapeutics, Inc. - Common Stock",nasdaq,844687350.6341219,6787224.0,3.880000114440918
-ARHS,"Arhaus, Inc. - Class A Common Stock",nasdaq,835086391.0983124,1430850.0,5.900000095367432
-ABSI,Absci Corporation - Common Stock,nasdaq,834871577.853653,4331616.0,5.355000019073486
-FMNB,Farmers National Banc Corp. - Common Stock,nasdaq,826049531.6556311,420014.0,13.949999809265137
-AMPL,"Amplitude, Inc. - Class A Common Stock",nasdaq,819586917.5143976,2231173.0,6.179999828338623
-ETON,"Eton Pharmaceuticals, Inc. - Common Stock",nasdaq,812859365.5613632,401303.0,29.709999084472656
-BIOA,"BioAge Labs, Inc. - Common Stock",nasdaq,808595255.2003212,503426.0,18.190000534057617
-CSHR,CoinShares PLC - Ordinary Shares,nasdaq,808353017.6639557,710500.0,6.110000133514404
-AZTA,"Azenta, Inc. - Common Stock",nasdaq,808006885.7694168,1036959.0,17.530000686645508
-CCOI,"Cogent Communications Holdings, Inc. - Common Stock",nasdaq,806751181.4949799,1389306.0,16.110000610351562
-ESPR,"Esperion Therapeutics, Inc. - Common Stock",nasdaq,805762007.9207478,10508763.0,3.130000114440918
-CRSR,"Corsair Gaming, Inc. - Common Stock",nasdaq,801616582.5,2193783.0,7.5
-ADAM,"Adamas Trust, Inc. - Common Stock",nasdaq,797068017.6762123,783655.0,8.869999885559082
-ALLO,"Allogene Therapeutics, Inc. - Common Stock",nasdaq,793555990.8479569,9544249.0,2.299999952316284
-CERT,"Certara, Inc. - Common Stock",nasdaq,791823878.4572754,3766363.0,5.090000152587891
-CCBG,Capital City Bank Group - Common Stock,nasdaq,785809756.5973396,100932.0,45.95000076293945
-CGBD,"Carlyle Secured Lending, Inc. - Closed End Fund",nasdaq,781842690.0,819924.0,11.25
-CGNT,Cognyte Software Ltd. - Ordinary Shares,nasdaq,777632704.6381617,548239.0,10.699999809265137
-EGBN,"Eagle Bancorp, Inc. - Common Stock",nasdaq,774588634.7668457,300075.0,25.399999618530273
-AMPH,"Amphastar Pharmaceuticals, Inc. - Common Stock",nasdaq,771626082.5,580786.0,17.5
-ARKO,ARKO Corp. - Common Stock,nasdaq,760619211.917501,902704.0,6.78000020980835
-APOG,"Apogee Enterprises, Inc. - Common Stock",nasdaq,755882629.2738075,244806.0,35.619998931884766
-ASPI,ASP Isotopes Inc. - Common Stock,nasdaq,751643552.1744056,4412380.0,5.96999979019165
-BMM,Blue Moon Metals Inc. - Common Shares,nasdaq,732595444.0,123947.0,7.0
-BBSI,"Barrett Business Services, Inc. - Common Stock",nasdaq,717632926.9162273,270695.0,29.219999313354492
-FDUS,Fidus Investment Corporation - Closed End Fund,nasdaq,716198880.5325699,302773.0,18.8700008392334
-BLMN,"Bloomin' Brands, Inc. - Common Stock",nasdaq,712310841.7125931,3067854.0,8.319999694824219
-EH,EHang Holdings Limited - ADS,nasdaq,709050878.7600441,557637.0,9.850000381469727
-FOXF,Fox Factory Holding Corp. - Common Stock,nasdaq,705785115.190527,670319.0,16.829999923706055
-FWRG,"First Watch Restaurant Group, Inc. - Common Stock",nasdaq,699669468.2656574,1783780.0,11.350000381469727
-BVS,Bioventus Inc. - Class A Common Stock,nasdaq,686965229.9794464,441045.0,10.140000343322754
-FISI,"Financial Institutions, Inc. - Common Stock",nasdaq,682526411.8531799,128295.0,34.66999816894531
-AXG,Solowin Holdings - Class A Ordinary Share,nasdaq,682123295.6479547,368998.0,3.609999895095825
-ACRS,"Aclaris Therapeutics, Inc. - Common Stock",nasdaq,681558774.3832397,1847539.0,4.880000114440918
-ALRS,Alerus Financial Corporation - Common Stock,nasdaq,676965736.6601448,144726.0,26.940000534057617
-EVER,"EverQuote, Inc. - Class A Common Stock",nasdaq,676337105.0464363,1045959.0,19.1200008392334
-GCMG,GCM Grosvenor Inc. - Class A Common Stock,nasdaq,675687591.0122156,600578.0,11.1899995803833
-GAIN,Gladstone Investment Corporation - Business Development Company,nasdaq,673787684.678175,349780.0,16.920000076293945
-CBRL,"Cracker Barrel Old Country Store, Inc. - Common Stock",nasdaq,664719418.9042568,1098942.0,29.739999771118164
-DMII,Drugs Made In America Acquisition II Corp. - Ordinary Shares,nasdaq,657717232.4895859,143401.0,10.029999732971191
-CYRX,"CryoPort, Inc. - Common Stock",nasdaq,657246159.5973043,499024.0,13.039999961853027
-AVR,Anteris Technologies Global Corp. - Common Stock,nasdaq,651454743.2544575,862967.0,6.699999809265137
-BBOT,"BridgeBio Oncology Therapeutics, Inc. - Common Stock",nasdaq,651316544.7181749,317065.0,8.130000114440918
-BTBT,"Bit Digital, Inc. - Ordinary Share",nasdaq,640091361.6979322,20521116.0,1.9600000381469727
-CLYM,"Climb Bio, Inc. - Common Stock",nasdaq,639600046.2786312,710388.0,11.170000076293945
-CADL,"Candel Therapeutics, Inc. - Common Stock",nasdaq,638916503.6452646,1702113.0,8.720000267028809
-CBLL,"CeriBell, Inc. - Common Stock",nasdaq,634364224.25,297273.0,16.75
-DGICA,"Donegal Group, Inc. - Class A Common Stock",nasdaq,626879285.5866604,123124.0,16.920000076293945
-EIKN,"Eikon Therapeutics, Inc. - Common Stock",nasdaq,624217524.6934462,351155.0,11.529999732971191
-ARVN,"Arvinas, Inc. - Common Stock",nasdaq,617432187.3508301,899852.0,9.569999694824219
-ACHV,"Achieve Life Sciences, Inc.  - Common Shares",nasdaq,614927727.9332066,1092093.0,5.989999771118164
-CLFD,"Clearfield, Inc. - Common Stock",nasdaq,613564139.7358704,175506.0,45.150001525878906
-DGXX,Digi Power X Inc. - Common Subordinate Voting Shares,nasdaq,611043834.0742006,5777093.0,8.390000343322754
-EVGO,EVgo Inc. - Common Stock,nasdaq,602073582.7026064,4384868.0,1.9199999570846558
-BCAL,California BanCorp - Common Stock,nasdaq,601803827.5922241,195106.0,18.709999084472656
-ALT,"Altimmune, Inc. - Common Stock",nasdaq,598613930.3318768,4016434.0,3.0799999237060547
-AGMB,AgomAb Therapeutics NV - ADRs representing one common share.,nasdaq,594915534.2426777,155977.0,12.079999923706055
-FEIM,"Frequency Electronics, Inc. - Common Stock",nasdaq,593468190.5912056,186836.0,60.29999923706055
-CABA,"Cabaletta Bio, Inc. - Common Stock",nasdaq,591870778.1395683,3069411.0,3.630000114440918
-CRMD,CorMedix Inc. - Common Stock,nasdaq,589101615.8540154,1273632.0,7.510000228881836
-BWMN,Bowman Consulting Group Ltd. - Common Stock,nasdaq,584058016.9258728,153209.0,33.36000061035156
-CARE,"Carter Bankshares, Inc. - Common Stock",nasdaq,581550003.3954048,275973.0,26.170000076293945
-BETR,Better Home & Finance Holding Company - Class A Common Stock,nasdaq,573234188.9246712,538711.0,30.3799991607666
-DDI,"DoubleDown Interactive Co., Ltd. - American Depository Shares",nasdaq,572342241.4515686,111814.0,11.550000190734863
-AMSF,"AMERISAFE, Inc. - Common Stock",nasdaq,566911289.0211086,219572.0,30.309999465942383
-DNUT,"Krispy Kreme, Inc. - Common Stock",nasdaq,565471995.0675964,2444109.0,3.2799999713897705
-CSTL,"Castle Biosciences, Inc. - Common stock",nasdaq,565046980.3060913,397198.0,18.6299991607666
-CHW,Calamos Global Dynamic Income Fund - Closed End Fund,nasdaq,560729300.8063688,196678.0,8.779999732971191
-GDYN,"Grid Dynamics Holdings, Inc. - Class A Common Stock",nasdaq,556949506.8796768,1822465.0,6.659999847412109
-ALOY,REalloys Inc. - Common Stock,nasdaq,544459429.2236023,1567208.0,9.100000381469727
-FDMT,"4D Molecular Therapeutics, Inc. - Common Stock",nasdaq,540536474.3367233,750888.0,10.34000015258789
-CCSI,"Consensus Cloud Solutions, Inc. - Common Stock",nasdaq,539611872.0963478,162296.0,29.329999923706055
-FBYD,"Falcon's Beyond Global, Inc. - Class A Common Stock",nasdaq,531291643.17941666,102816.0,10.850000381469727
-AMWD,American Woodmark Corporation - Common Stock,nasdaq,529604756.0185623,237880.0,36.349998474121094
-FIP,FTAI Infrastructure Inc. - Common Stock,nasdaq,529372728.65379095,1058127.0,4.480000019073486
-ASTL,Algoma Steel Group Inc. - Common Shares,nasdaq,526834365.49510574,1367806.0,4.989999771118164
-FFIC,Flushing Financial Corporation - Common Stock,nasdaq,525535047.0153465,230134.0,15.510000228881836
-CTKB,"Cytek Biosciences, Inc. - Common Stock",nasdaq,521736046.55360126,706504.0,4.039999961853027
-AQST,"Aquestive Therapeutics, Inc. - Common Stock",nasdaq,517023675.7556839,1671450.0,4.159999847412109
-ARTV,"Artiva Biotherapeutics, Inc. - Common Stock",nasdaq,516492550.300478,335481.0,10.630000114440918
-BOT,"RoboStrategy, Inc. - Common Stock",nasdaq,514963859.4660187,743050.0,25.399999618530273
-ACIC,American Coastal Insurance Corporation - Common Stock,nasdaq,513234265.1250267,236244.0,10.59000015258789
-ELVA,Electrovaya Inc. - Common Shares,nasdaq,512606922.1315613,388265.0,10.380000114440918
-CERS,Cerus Corporation - Common Stock,nasdaq,510940874.1456628,2139011.0,2.549999952316284
-CTNM,"Contineum Therapeutics, Inc. - Common stock",nasdaq,510697904.1152916,281003.0,13.65999984741211
-CBIO,"Crescent Biopharma, Inc. - Common Stock",nasdaq,509031244.2544937,249706.0,18.459999084472656
-ELMT,The Elmet Group Co. - Common Stock,nasdaq,504432489.72302055,1332550.0,16.739999771118164
-FBRX,"Forte Biosciences, Inc.  - Common Stock",nasdaq,497430483.67891693,280206.0,24.290000915527344
-CURR,Currenc Group Inc. - Ordinary Shares,nasdaq,496285940.266428,176409.0,4.420000076293945
-ASMB,"Assembly Biosciences, Inc. - Common Stock",nasdaq,489810173.70996094,108549.0,30.81999969482422
-ALMU,"Aeluma, Inc. - Common Stock",nasdaq,489316696.6764221,1315880.0,27.110000610351562
-CCAP,"Crescent Capital BDC, Inc. - Common Stock",nasdaq,488733957.5718641,200716.0,13.220000267028809
-CWCO,Consolidated Water Co. Ltd. - Ordinary Shares,nasdaq,485445767.04143524,153024.0,30.34000015258789
-CVGW,"Calavo Growers, Inc. - Common Stock",nasdaq,484030057.956316,281891.0,27.079999923706055
-DVLT,Datavault AI Inc. - Common Stock,nasdaq,479114719.23981875,44417403.0,0.5600000023841858
-CD,Chaince Digital Holdings Inc. - American Ordinary Shares,nasdaq,474076489.3391609,131606.0,5.96999979019165
-EPRX,Eupraxia Pharmaceuticals Inc. - Common Stock,nasdaq,468039208.01156044,220549.0,7.610000133514404
-APPS,"Digital Turbine, Inc. - Common Stock",nasdaq,464012726.9885416,2171388.0,3.869999885559082
-FULC,"Fulcrum Therapeutics, Inc. - Common Stock",nasdaq,463767916.7018595,1081008.0,6.960000038146973
-CGC,Canopy Growth Corporation - Common Shares,nasdaq,460872751.36310756,10226891.0,1.090000033378601
-CLNE,Clean Energy Fuels Corp. - Common Stock,nasdaq,453662733.43864536,1361413.0,2.059999942779541
-ACTG,Acacia Research Corporation - Common Stock,nasdaq,453003034.60687447,326427.0,4.690000057220459
-BTQ,BTQ Technologies Corp. - Common Stock,nasdaq,452194982.7382302,2249467.0,3.200000047683716
-ANGO,"AngioDynamics, Inc. - Common Stock",nasdaq,450376157.7380848,396057.0,10.899999618530273
-ERII,"Energy Recovery, Inc. - Common Stock",nasdaq,449990087.474453,961388.0,8.729999542236328
-CRNC,Cerence Inc. - Common Stock,nasdaq,448989781.0459137,782316.0,9.9399995803833
-FLGT,"Fulgent Genetics, Inc. - Common Stock",nasdaq,448729848.81698895,647895.0,15.800000190734863
-ADUR,Aduro Clean Technologies Inc. - Common Stock,nasdaq,446886764.75,279221.0,13.25
-CMCO,Columbus McKinnon Corporation - Common Stock,nasdaq,444597999.69423866,414629.0,15.470000267028809
-ABAT,American Battery Technology Company - Common Stock,nasdaq,443346829.25,3730537.0,3.25
-DCBO,Docebo Inc. - Common Shares,nasdaq,440642836.8523407,208445.0,17.360000610351562
-AVIR,"Atea Pharmaceuticals, Inc. - common stock",nasdaq,440149044.5,445624.0,5.5
-AGCC,Agencia Comercial Spirits Ltd - Class A Ordinary Share,nasdaq,438867995.21541595,167480.0,19.260000228881836
-BMBL,Bumble Inc. - common stock,nasdaq,438248710.79722595,4341772.0,3.359999895095825
-BBNX,"Beta Bionics, Inc. - Common Stock",nasdaq,437595831.3008499,1110422.0,9.819999694824219
-AIOT,"PowerFleet, Inc. - Common Stock",nasdaq,434637178.7593281,1582275.0,3.240000009536743
-EOLS,"Evolus, Inc. - Common Stock",nasdaq,428055881.5,1113557.0,6.5
-BCAR,D. Boral ARC Acquisition I Corp. - Class A Ordinary Shares,nasdaq,427656004.7149658,379339.0,10.380000114440918
-CAEP,"Cantor Equity Partners III, Inc. - Class A Ordinary Shares",nasdaq,424818787.9562378,219832.0,12.109999656677246
-BLZE,"Backblaze, Inc. - Common Stock",nasdaq,421903571.52159166,1612113.0,7.03000020980835
-ENTA,"Enanta Pharmaceuticals, Inc. - Common Stock",nasdaq,421651060.57099915,164722.0,14.529999732971191
-BMRC,Bank of Marin Bancorp - Common Stock,nasdaq,416237352.14788055,105996.0,25.709999084472656
-GEVO,"Gevo, Inc. - Common Stock",nasdaq,416233381.8754053,4235016.0,1.7100000381469727
-ALLT,Allot Ltd. - Ordinary Shares,nasdaq,409975575.21880436,489422.0,8.380000114440918
-BYND,"Beyond Meat, Inc. - Common stock",nasdaq,409697210.24070406,57116711.0,0.7950000166893005
-CCRN,"Cross Country Healthcare, Inc. - Common Stock",nasdaq,406827239.3313961,596781.0,13.119999885559082
-BNTC,Benitec Biopharma Inc. - Common Stock,nasdaq,405578104.106884,154868.0,11.84000015258789
-ECX,ECARX Holdings Inc. - Class A Ordinary shares,nasdaq,403923561.2355728,3186534.0,1.059999942779541
-CCIX,Churchill Capital Corp IX - Ordinary Shares,nasdaq,395221740.2100563,140350.0,10.779999732971191
-DCTH,"Delcath Systems, Inc. - Common Stock",nasdaq,391475482.2475853,392267.0,11.34000015258789
-CDZI,"Cadiz, Inc. - Common Stock",nasdaq,386699931.741148,677388.0,4.619999885559082
-ALTI,"AlTi Global, Inc. - Class A Common Stock",nasdaq,382067057.1306889,150045.0,3.450000047683716
-GASS,"StealthGas, Inc. - common stock",nasdaq,380781416.1288719,167026.0,10.239999771118164
-CLPT,ClearPoint Neuro Inc. - Common Stock,nasdaq,379023252.5348816,741339.0,12.640000343322754
-CEPT,"Cantor Equity Partners II, Inc. - Class A ordinary share",nasdaq,372464409.3322754,513324.0,12.180000305175781
-FUFU,BitFuFu Inc. - Class A Ordinary Shares,nasdaq,368304457.93733025,194681.0,2.2100000381469727
-BBCP,"Concrete Pumping Holdings, Inc.  - Common Stock",nasdaq,368221586.8131771,120362.0,7.289999961853027
-GIX,GigCapital9 Corp. - Class A Ordinary Share,nasdaq,360717020.3875494,174455.0,9.869999885559082
-CLMB,"Climb Global Solutions, Inc. - Common Stock",nasdaq,358554028.76968384,257350.0,19.280000686645508
-CGCT,Cartesian Growth Corporation III - Class A Ordinary Shares,nasdaq,358110003.94821167,136234.0,10.380000114440918
-ALTO,"Alto Ingredients, Inc. - Common Stock",nasdaq,357985537.5124254,1989645.0,4.619999885559082
-CV,"CapsoVision, Inc. - Common Stock",nasdaq,356425559.9540405,293604.0,7.150000095367432
-ESOA,Energy Services of America Corporation - Common Stock,nasdaq,356026673.8963795,188936.0,19.079999923706055
-AMCX,AMC Global Media Inc. - Class A Common Stock,nasdaq,354935909.60858154,465036.0,8.079999923706055
-CCCC,"C4 Therapeutics, Inc. - Common Stock",nasdaq,350498102.1756096,2843377.0,3.1700000762939453
-FWDI,"Forward Industries, Inc. - Common Stock",nasdaq,348754200.0276089,866860.0,4.670000076293945
-EGHT,8x8 Inc - Common stock,nasdaq,345509510.65728664,1302332.0,2.4800000190734863
-FRST,Primis Financial Corp. - Common Stock,nasdaq,344827244.1299591,184886.0,13.920000076293945
-DMAC,DiaMedica Therapeutics Inc. - Common Stock,nasdaq,340542749.6496892,198411.0,6.320000171661377
-CMPX,"Compass Therapeutics, Inc. - Common Stock",nasdaq,336764401.9087261,6951931.0,1.8700000047683716
-API,"Agora, Inc. - ADS",nasdaq,327207662.1440449,362265.0,3.869999885559082
-ATOM,Atomera Incorporated - Common Stock,nasdaq,323278614.76898193,3489159.0,8.350000381469727
-ABEO,Abeona Therapeutics Inc. - Common Stock,nasdaq,323092720.8754678,1189073.0,5.679999828338623
-EU,enCore Energy Corp. - Common Stock,nasdaq,322078543.3460903,2890400.0,1.649999976158142
-AKBA,"Akebia Therapeutics, Inc. - Common Stock",nasdaq,316544712.6692952,3035265.0,1.1799999475479126
-FNKO,"Funko, Inc. - Class A Common Stock",nasdaq,309351293.2298889,1055724.0,5.539999961853027
-AZ,A2Z Cust2Mate Solutions Corp. - Common Shares,nasdaq,305133307.4018569,390408.0,6.849999904632568
-ASLE,AerSale Corporation - Common Stock,nasdaq,304308221.46382856,284224.0,6.440000057220459
-ASYS,"Amtech Systems, Inc. - Common Stock",nasdaq,303900871.2056885,228340.0,20.959999084472656
-ELDN,"Eledon Pharmaceuticals, Inc. - Common Stock",nasdaq,301032517.06120443,1447085.0,3.9000000953674316
-CXDO,"Crexendo, Inc. - Common Stock",nasdaq,296924811.7338066,254150.0,9.15999984741211
-AIRS,"AirSculpt Technologies, Inc. - Common Stock",nasdaq,293470022.19558334,2776701.0,4.159999847412109
-FWRD,Forward Air Corporation - Common Stock,nasdaq,290634159.4696026,995545.0,9.1899995803833
-EDIT,"Editas Medicine, Inc. - Common Stock",nasdaq,286865412.79594946,1606262.0,2.930000066757202
-DEFT,"Defi Technologies, Inc. - Common Stock",nasdaq,284240708.60582954,6142421.0,0.7329999804496765
-AVXL,Anavex Life Sciences Corp. - Common Stock,nasdaq,283575574.1772795,1342167.0,3.059999942779541
-ACIU,AC Immune SA - Common Stock,nasdaq,281912795.26882315,287419.0,2.7699999809265137
-FLWS,"1-800-FLOWERS.COM, Inc. - Class A Common Stock",nasdaq,281392331.8119292,795498.0,4.389999866485596
-CNCK,Coincheck Group N.V. - Ordinary Shares,nasdaq,280009863.5421877,1004934.0,2.059999942779541
-FVCB,"FVCBankcorp, Inc. - Common Stock",nasdaq,278770303.9608612,111413.0,15.489999771118164
-ALXO,ALX Oncology Holdings Inc. - Common Stock,nasdaq,273162717.66012406,920681.0,2.0299999713897705
-CGEN,Compugen Ltd. - Ordinary Shares,nasdaq,267588172.1960926,394880.0,2.8299999237060547
-CARL,"Carlsmed, Inc. - Common Stock",nasdaq,267227889.3159542,137834.0,9.829999923706055
-CHRS,"Coherus Oncology, Inc. - Common Stock",nasdaq,263767334.88416672,1458139.0,1.7100000381469727
-FATE,"Fate Therapeutics, Inc. - Common Stock",nasdaq,261633809.25,1975803.0,2.25
-AREC,American Resources Corporation - Class A Common Stock,nasdaq,257691232.96751666,2634478.0,2.4100000858306885
-AIRJ,AirJoule Technologies Corporation - Class A Common Stock,nasdaq,256772775.0,389685.0,3.75
-FHTX,Foghorn Therapeutics Inc. - Common Stock,nasdaq,248947015.84144974,148468.0,4.239999771118164
-DUOT,"Duos Technologies Group, Inc. - Common Stock",nasdaq,248719713.70476723,557678.0,8.489999771118164
-AIRO,"AIRO Group Holdings, Inc. - Common Stock",nasdaq,246162528.6614418,535237.0,7.829999923706055
-ASUR,Asure Software Inc - Common Stock,nasdaq,246088408.95176506,114540.0,8.579999923706055
-FENC,Fennec Pharmaceuticals Inc. - Common Stock,nasdaq,244030681.96302605,174373.0,7.03000020980835
-ADAG,"Adagene Inc. - ADS, each representing 1.25 ordinary shares",nasdaq,241825699.71105623,238178.0,3.6600000858306885
-ALEC,"Alector, Inc. - Common Stock",nasdaq,239814413.44936824,700654.0,2.1600000858306885
-DYNC,Dynamix Corporation - Class A Ordinary Share,nasdaq,237711991.3540821,221301.0,10.739999771118164
-CMRC,"Commerce.com, Inc. - Series 1 Common Stock",nasdaq,235985009.18412113,867332.0,2.859999895095825
-ARCT,Arcturus Therapeutics Holdings Inc. - Common Stock,nasdaq,234490319.25,467304.0,8.25
-CAMP,CAMP4 Therapeutics Corporation - Common Stock,nasdaq,233666100.0,187054.0,4.5
-FOSL,"Fossil Group, Inc. - Common Stock",nasdaq,233352592.56699204,766104.0,3.950000047683716
-BZAI,"Blaize Holdings, Inc. - Common Stock",nasdaq,231828279.89181387,8902024.0,1.6299999952316284
-CNDT,Conduent Incorporated - Common Stock,nasdaq,231094254.33911848,1389534.0,1.4900000095367432
-CDXS,"Codexis, Inc. - Common Stock",nasdaq,230877276.71257114,2402775.0,2.5399999618530273
-CRNT,Ceragon Networks Ltd. - Ordinary Shares,nasdaq,229961045.74951053,451427.0,2.5299999713897705
-CNTX,Context Therapeutics Inc. - Common Stock,nasdaq,227860360.71245623,860429.0,2.4800000190734863
-ARQQ,Arqit Quantum Inc. - Ordinary Shares,nasdaq,225386763.62928963,288972.0,14.399999618530273
-AUDC,AudioCodes Ltd. - Ordinary Shares,nasdaq,215846635.0682602,123937.0,8.479999542236328
-DTIL,"Precision BioSciences, Inc. - Common Stock",nasdaq,211608358.67791557,264145.0,8.199999809265137
-ANGI,Angi Inc. - Class A Common Stock,nasdaq,209520715.93663788,1285786.0,5.179999828338623
-CRBP,"Corbus Pharmaceuticals Holdings, Inc. - Common Stock",nasdaq,202727788.93273926,246011.0,11.430000305175781
-EMBC,Embecta Corp. - Common Stock,nasdaq,202307383.66213536,1494080.0,3.4100000858306885
-ELTX,"Elicio Therapeutics, Inc. - Common Stock",nasdaq,201358158.19038105,135032.0,10.550000190734863
-CRBU,"Caribou Biosciences, Inc. - Common Stock",nasdaq,201336564.412421,1366132.0,2.0299999713897705
-ACB,Aurora Cannabis Inc. - Common Shares,nasdaq,198665383.2373724,950283.0,3.359999895095825
-AVNW,"Aviat Networks, Inc. - Common Stock",nasdaq,198103183.95961475,185816.0,15.3100004196167
-BRCB,"Black Rock Coffee Bar, Inc. - Class A Common Stock",nasdaq,197651661.68118382,481518.0,10.970000267028809
-DSP,Viant Technology Inc. - common stock,nasdaq,197323109.88485146,220272.0,10.800000190734863
-DMRC,Digimarc Corporation - Common Stock,nasdaq,196851192.7088318,233537.0,8.90999984741211
-DPRO,Draganfly Inc. - Common Shares,nasdaq,196713106.33726645,1898095.0,5.389999866485596
-ANIK,Anika Therapeutics Inc. - Common Stock,nasdaq,195326564.3805542,135114.0,14.680000305175781
-FBLA,"FB Bancorp, Inc. - Common Stock",nasdaq,195207886.66991234,134042.0,13.920000076293945
-EGAN,eGain Corporation - Common Stock,nasdaq,188690294.24355984,187555.0,6.889999866485596
-EPSN,Epsilon Energy Ltd. - Common Shares,nasdaq,187238940.96083975,237390.0,6.190000057220459
-CNTN,"Canton Strategic Holdings, Inc. - Common Stock",nasdaq,185266005.0893674,588311.0,3.2699999809265137
-CVGI,"Commercial Vehicle Group, Inc. - Common Stock",nasdaq,181872651.21198654,1338031.0,5.400000095367432
-ENLV,Enlivex Ltd. - Ordinary Shares,nasdaq,180545497.3794067,549190.0,0.7490000128746033
-CURI,CuriosityStream Inc.  - Class A Common Stock,nasdaq,180234301.73835754,357490.0,3.0399999618530273
-ABOS,"Acumen Pharmaceuticals, Inc. - Common Stock",nasdaq,179124399.77763176,540422.0,2.4800000190734863
-APYX,Apyx Medical Corporation - Common Stock,nasdaq,171264465.97945786,159308.0,4.090000152587891
-DOMO,"Domo, Inc. - Class B Common Stock",nasdaq,167944601.8516488,1840121.0,3.7200000286102295
-ATLX,Atlas Lithium Corporation - Common Stock,nasdaq,166052126.24963093,540362.0,5.980000019073486
-BRR,"ProCap Financial, Inc. - Common Stock",nasdaq,164085872.49660695,875234.0,1.840000033378601
-BDTX,"Black Diamond Therapeutics, Inc. - Common Stock",nasdaq,162164016.0482216,746309.0,2.8299999237060547
-EMPD,Empery Digital Inc. - Common stock,nasdaq,159707698.6662135,778250.0,5.28000020980835
-BDSX,"Biodesix, Inc. - Common Stock",nasdaq,159210135.0,107644.0,15.75
-GIG,GigCapital7 Corp. - Class A Ordinary Share,nasdaq,158999997.77421713,149011.0,4.769999980926514
-AMTX,"Aemetis, Inc - Common Stock",nasdaq,158324573.25,1667524.0,2.25
-DIBS,"1stdibs.com, Inc. - Common Stock",nasdaq,157587460.40786648,187870.0,4.460000038146973
-BNAI,Brand Engagement Network Inc. - Common Stock,nasdaq,155213099.22444534,937722.0,23.799999237060547
-ANTX,"AN2 Therapeutics, Inc. - Common Stock",nasdaq,153789006.78304625,1470821.0,4.269999980926514
-BOOM,DMC Global Inc. - Common Stock,nasdaq,153720745.25493813,380936.0,7.510000228881836
-CNTB,Connect Biopharma Holdings Limited - Ordinary Shares,nasdaq,151477039.53320265,254777.0,2.680000066757202
-CRDL,Cardiol Therapeutics Inc. - Class A Common Shares,nasdaq,150768120.11266077,681042.0,1.350000023841858
-ANNA,"AleAnna, Inc. - Class A Common Stock",nasdaq,149431003.90434265,4600701.0,3.6500000953674316
-GAMB,Gambling.com Group Limited - Ordinary Shares,nasdaq,149163057.5,693914.0,4.25
-GALT,Galectin Therapeutics Inc. - Common Stock,nasdaq,148111758.0,325045.0,2.25
-ASRT,"Assertio Holdings, Inc. - Common Stock",nasdaq,145722154.06974792,224278.0,22.549999237060547
-EQ,"Equillium, Inc. - Common Stock",nasdaq,143524280.91404915,426578.0,2.2699999809265137
-AGEN,Agenus Inc. - Common Stock,nasdaq,142892628.13685513,782039.0,3.440000057220459
-DFDV,DeFi Development Corp. - Common Stock,nasdaq,141587496.8261814,1020252.0,4.800000190734863
-CVRX,"CVRx, Inc. - Common Stock",nasdaq,139290921.5458703,327688.0,5.269999980926514
-DERM,Journey Medical Corporation - Common Stock,nasdaq,137005700.71910477,223016.0,5.010000228881836
-CODA,"Coda Octopus Group, Inc. - Common stock",nasdaq,133396877.29969788,251449.0,11.829999923706055
-AARD,"Aardvark Therapeutics, Inc. - Common Stock",nasdaq,133298115.26280165,282757.0,6.110000133514404
-BNC,CEA Industries Inc. - Common Stock,nasdaq,132977103.00913382,256677.0,3.0999999046325684
-BLNK,Blink Charging Co. - Common Stock,nasdaq,129289323.77500248,2271703.0,0.8999999761581421
-ATLN,Atlantic International Corp. - Common Stock,nasdaq,126973235.49204862,389727.0,1.600000023841858
-AIFC,AI Financial Corporation - Common Stock,nasdaq,125852856.56603777,2747331.0,0.8999999761581421
-FFAI,Faraday Future Intelligent Electric Inc. - Class A Common Stock,nasdaq,124763813.43298435,37667888.0,0.41100001335144043
-ACNT,Ascent Industries Co. - Common Stock,nasdaq,124365840.46868324,120059.0,13.760000228881836
-FORR,"Forrester Research, Inc. - Common Stock",nasdaq,123654437.7784729,132273.0,6.369999885559082
-EDSA,"Edesa Biotech, Inc. - Common Shares",nasdaq,117913495.19755936,4711044.0,13.270000457763672
-ARQ,"Arq, Inc. - Common Stock",nasdaq,116330160.81750679,848437.0,2.7100000381469727
-BYRN,"Byrna Technologies, Inc. - Common Stock",nasdaq,115016274.74425077,532157.0,5.070000171661377
-BMEA,"Biomea Fusion, Inc. - Common Stock",nasdaq,114233118.30275536,1475591.0,1.5800000429153442
-DLTH,Duluth Holdings Inc. - Class B Common Stock,nasdaq,113242234.1508708,310603.0,2.9700000286102295
-CRDF,"Cardiff Oncology, Inc. - Common Stock",nasdaq,112126628.46196079,694968.0,1.6399999856948853
-CBUS,"Cibus, Inc. - Class A Common Stock",nasdaq,109084821.84879243,638239.0,1.4299999475479126
-CMTL,Comtech Telecommunications Corp. - Common Stock,nasdaq,108826878.0920999,257772.0,3.6600000858306885
-DWSN,Dawson Geophysical Company - Common Stock,nasdaq,108374411.89614296,168298.0,3.490000009536743
-ARBE,Arbe Robotics Ltd. - Ordinary Shares,nasdaq,107195876.96106678,1612213.0,0.8740000128746033
-CGTX,"Cognition Therapeutics, Inc. - Common Stock",nasdaq,105607653.0056423,1095221.0,1.1799999475479126
-CRGO,Freightos Limited - Ordinary shares,nasdaq,104917499.46132326,142952.0,2.0299999713897705
-CYPH,Cypherpunk Technologies Inc. - Common Stock,nasdaq,104516244.08345318,2667791.0,1.0700000524520874
-DTI,Drilling Tools International Corporation  - Common Stock,nasdaq,103308938.37067509,425313.0,2.940000057220459
-BWEN,"Broadwind, Inc. - Common Stock",nasdaq,103212147.98881531,517509.0,4.409999847412109
-CRMT,"America's Car-Mart, Inc. - Common Stock",nasdaq,103199456.03370667,141750.0,12.430000305175781
-ALDX,"Aldeyra Therapeutics, Inc. - Common Stock",nasdaq,103149028.58106613,3115236.0,1.7100000381469727
-FLL,"Full House Resorts, Inc. - Common Stock",nasdaq,102630465.12318611,139390.0,2.8299999237060547
-BTCS,BTCS Inc. - Common Stock,nasdaq,102039508.17652535,820088.0,2.049999952316284
-CLAR,Clarus Corporation - Common Stock,nasdaq,101101112.57927895,247416.0,2.630000114440918
-COYA,"Coya Therapeutics, Inc. - Common Stock",nasdaq,100631314.17517948,142352.0,4.289999961853027
+NVDA,NVIDIA Corporation - Common Stock,nasdaq,5457368921093.425,170635714.0,225.32000732421875
+GOOGL,Alphabet Inc. - Class A Common Stock,nasdaq,4807165916634.76,29115468.0,396.7799987792969
+GOOG,Alphabet Inc. - Class C Capital Stock,nasdaq,4765246583387.443,19276106.0,393.32000732421875
+AAPL,Apple Inc. - Common Stock,nasdaq,4409585053240.112,43790246.0,300.2300109863281
+MSFT,Microsoft Corporation - Common Stock,nasdaq,3134205270058.728,34141903.0,421.9200134277344
+AMZN,"Amazon.com, Inc. - Common Stock",nasdaq,2841383043999.8853,46748330.0,264.1400146484375
+TSM,Taiwan Semiconductor Manufacturing Company Ltd.,other,2097120871655.2734,13563341.0,404.3500061035156
+AVGO,Broadcom Inc. - Common Stock,nasdaq,2013133576714.2085,23877034.0,425.19000244140625
+TSLA,"Tesla, Inc.  - Common Stock",nasdaq,1585816810614.049,62496514.0,422.239990234375
+META,"Meta Platforms, Inc. - Class A Common Stock",nasdaq,1559175696437.3398,15334766.0,614.22998046875
+WMT,Walmart Inc. - Common Stock,nasdaq,1047786678871.2174,19699106.0,131.4499969482422
+BRK-B,Berkshire Hathaway Inc. New Common Stock,other,1041113354140.6816,4783919.0,482.70001220703125
+LLY,Eli Lilly and Company Common Stock,other,896128758477.7987,3087655.0,1004.9199829101562
+MU,"Micron Technology, Inc. - Common Stock",nasdaq,817223727111.8335,43906755.0,724.6599731445312
+JPM,JP Morgan Chase & Co. Common Stock,other,797985288852.8041,9475263.0,297.80999755859375
+AMD,"Advanced Micro Devices, Inc. - Common Stock",nasdaq,691537740952.2965,38803342.0,424.1000061035156
+XOM,Exxon Mobil Corporation Common Stock,other,654570048233.415,21259569.0,157.9199981689453
+V,Visa Inc.,other,619493042850.0,7322793.0,325.75
+ASML,ASML Holding N.V. - New York Registry Shares,nasdaq,578824126056.7163,1703917.0,1501.81005859375
+ORCL,Oracle Corporation Common Stock,other,554933066923.0042,27715547.0,192.9499969482422
+INTC,Intel Corporation - Common Stock,nasdaq,546678003128.05176,113341830.0,108.7699966430664
+JNJ,Johnson & Johnson Common Stock,other,545740175657.145,7994490.0,226.7100067138672
+CSCO,"Cisco Systems, Inc. - Common Stock",nasdaq,466916852878.5849,22802123.0,118.20999908447266
+COST,Costco Wholesale Corporation - Common Stock,nasdaq,465369310170.2783,1814928.0,1048.949951171875
+MA,Mastercard Incorporated Common Stock,other,436667151926.9357,3610319.0,494.20001220703125
+CAT,"Caterpillar, Inc. Common Stock",other,409148463294.23785,2549209.0,888.3099975585938
+CVX,Chevron Corporation Common Stock,other,380594338740.9479,12088946.0,191.10000610351562
+ABBV,AbbVie Inc. Common Stock,other,371715540531.82526,6771036.0,210.38999938964844
+NFLX,"Netflix, Inc. - Common Stock",nasdaq,366423673771.18896,44012873.0,87.0199966430664
+LRCX,Lam Research Corporation - Common Stock,nasdaq,356053465606.53687,9890146.0,284.7200012207031
+BAC,Bank of America Corporation Common Stock,other,353197319948.8314,38938280.0,49.77000045776367
+KO,Coca-Cola Company (The) Common Stock,other,347726627709.7466,15443233.0,80.81999969482422
+AMAT,"Applied Materials, Inc. - Common Stock",nasdaq,346505936254.4918,6863385.0,436.6199951171875
+PG,Procter & Gamble Company (The) Common Stock,other,329659774370.6283,9959671.0,141.57000732421875
+PLTR,Palantir Technologies Inc. - Class A Common Stock,nasdaq,321215844967.058,48517938.0,133.99000549316406
+MS,Morgan Stanley Common Stock,other,303643091456.38574,6483479.0,192.50999450683594
+HSBC,"HSBC Holdings, plc. Common Stock",other,303111683283.029,2038896.0,88.37999725341797
+HD,"Home Depot, Inc. (The) Common Stock",other,296328198258.4126,4186025.0,297.510009765625
+PM,Philip Morris International Inc Common Stock,other,295518343741.32886,4974752.0,189.61000061035156
+NVS,Novartis AG Common Stock,other,282550261671.02075,1959826.0,148.0800018310547
+GEV,GE Vernova Inc. Common Stock,other,281949075105.4126,2457287.0,1049.22998046875
+AZN,AstraZeneca PLC Ordinary Shares,other,281602997750.82764,1958066.0,181.5800018310547
+GS,"Goldman Sachs Group, Inc. (The) Common Stock",other,279805679953.07446,2174328.0,948.469970703125
+TXN,Texas Instruments Incorporated - Common Stock,nasdaq,275512400618.00806,7125141.0,302.7300109863281
+MRK,"Merck & Company, Inc. Common Stock (new)",other,275089036559.12463,9589811.0,111.37999725341797
+RY,Royal Bank Of Canada Common Stock,other,255020717796.3608,1486358.0,183.39999389648438
+TM,Toyota Motor Corporation Common Stock,other,248520549892.2647,364842.0,190.67999267578125
+KLAC,KLA Corporation  - Common Stock,nasdaq,235693841674.59338,967120.0,1804.3199462890625
+LIN,Linde plc - Ordinary Shares,nasdaq,233998590291.43433,2388115.0,506.1099853515625
+RTX,RTX Corporation Common Stock,other,230525259341.636,5829347.0,171.17999267578125
+WFC,Wells Fargo & Company Common Stock,other,224679107046.10568,17658109.0,73.41999816894531
+AXP,American Express Company Common Stock,other,213895700847.9022,3671387.0,313.4800109863281
+MUFG,"Mitsubishi UFJ Financial Group, Inc. Common Stock",other,212658336041.27066,3602274.0,18.84000015258789
+QCOM,QUALCOMM Incorporated - Common Stock,nasdaq,212370465789.79492,17015131.0,201.49000549316406
+C,"Citigroup, Inc. Common Stock",other,210502304663.09534,13697500.0,123.41999816894531
+SNDK,Sandisk Corporation - Common Stock When-Issued,nasdaq,208452622089.09644,17715855.0,1407.6099853515625
+IBM,International Business Machines Corporation Common Stock,other,206116844772.30225,6252130.0,219.3000030517578
+TTE,TotalEnergies SE Ordinary Shares,other,205277965198.21124,2003426.0,92.27999877929688
+PEP,"PepsiCo, Inc. - Common Stock",nasdaq,203838230175.40356,6245604.0,149.1199951171875
+ADI,"Analog Devices, Inc. - Common Stock",nasdaq,203820348738.31128,3774028.0,417.489990234375
+TMUS,"T-Mobile US, Inc. - Common Stock",nasdaq,200445959003.79068,5839104.0,185.22000122070312
+SAP,SAP  SE ADS,other,199805440150.17783,3303860.0,169.47999572753906
+NVO,Novo Nordisk A/S Common Stock,other,198325762164.67325,20172306.0,44.7400016784668
+PANW,"Palo Alto Networks, Inc. - Common Stock",nasdaq,196935131484.98535,9299019.0,242.8300018310547
+MCD,McDonald's Corporation Common Stock,other,196376724776.81067,3455617.0,276.3900146484375
+NEE,"NextEra Energy, Inc. Common Stock",other,194687479604.95142,9362411.0,93.36000061035156
+VZ,Verizon Communications Inc. Common Stock,other,193620662196.72192,25462828.0,46.369998931884766
+TD,Toronto Dominion Bank (The) Common Stock,other,180481147228.17694,2382090.0,107.63999938964844
+ANET,"Arista Networks, Inc. Common Stock",other,178764286649.93207,8591261.0,141.97000122070312
+DIS,Walt Disney Company (The) Common Stock,other,178374455593.04492,9902885.0,102.72000122070312
+STX,Seagate Technology Holdings PLC - Ordinary Shares (Ireland),nasdaq,178367429697.03125,3934049.0,795.469970703125
+AMGN,Amgen Inc. - Common Stock,nasdaq,176207398681.64062,2656531.0,326.30999755859375
+BA,Boeing Company (The) Common Stock,other,173812785292.46405,6803433.0,220.49000549316406
+SAN,"Banco Santander, S.A. Sponsored ADR (Spain)",other,169059975566.124,12179738.0,11.739999771118164
+RIO,Rio Tinto Plc Common Stock,other,168626029989.47076,2970041.0,103.69000244140625
+APP,Applovin Corporation - Class A Common Stock,nasdaq,168305700021.0,4951663.0,501.0
+BLK,"BlackRock, Inc. Common Stock",other,167947656488.9923,792149.0,1081.9000244140625
+T,AT&T Inc.,other,166968586976.09564,39209842.0,24.030000686645508
+WDC,Western Digital Corporation - Common Stock,nasdaq,166143676997.829,8426395.0,482.0199890136719
+GLW,Corning Incorporated Common Stock,other,165078939112.08344,13318149.0,191.80999755859375
+TJX,"TJX Companies, Inc. (The) Common Stock",other,163030188694.86444,4762357.0,147.42999267578125
+TMO,Thermo Fisher Scientific Inc Common Stock,other,162896551607.18155,2133420.0,438.3399963378906
+GILD,"Gilead Sciences, Inc. - Common Stock",nasdaq,160882626546.30234,6183641.0,129.5800018310547
+UNP,Union Pacific Corporation Common Stock,other,160635045459.78485,2956228.0,270.55999755859375
+SCHW,Charles Schwab Corporation (The) Common Stock,other,158052630099.48166,10454938.0,90.87999725341797
+DELL,Dell Technologies Inc. Class C Common Stock ,other,157339171924.3933,8146430.0,241.99000549316406
+BUD,Anheuser-Busch Inbev SA Sponsored ADR (Belgium),other,156731723442.24042,2038461.0,80.91999816894531
+ETN,"Eaton Corporation, PLC Ordinary Shares",other,155102552947.99805,2623731.0,399.44000244140625
+MRVL,"Marvell Technology, Inc. - Common Stock",nasdaq,154876600237.57477,24019642.0,176.88999938964844
+APH,Amphenol Corporation Common Stock,other,153779305625.0,9221833.0,125.0
+UBER,"Uber Technologies, Inc. Common Stock",other,152853122431.58377,17139573.0,75.08999633789062
+DE,Deere & Company Common Stock,other,151754378862.15125,1380184.0,561.8300170898438
+CRWD,"CrowdStrike Holdings, Inc. - Class A Common Stock",nasdaq,151215060745.66937,3988249.0,594.0800170898438
+WELL,Welltower Inc. Common Stock,other,150882158420.7039,3010184.0,213.74000549316406
+UBS,UBS Group AG Registered Ordinary Shares,other,149271250169.48026,2673687.0,45.540000915527344
+ISRG,"Intuitive Surgical, Inc. - Common Stock",nasdaq,149145054293.72925,1941474.0,421.1199951171875
+COP,ConocoPhillips Common Stock,other,149131373858.3959,9626753.0,122.41000366210938
+SCCO,Southern Copper Corporation Common Stock,other,147492094636.51602,1654362.0,176.77999877929688
+ABT,Abbott Laboratories Common Stock,other,147130959244.61676,12020128.0,84.47000122070312
+PFE,"Pfizer, Inc. Common Stock",other,144366920365.93692,37723122.0,25.329999923706055
+BX,Blackstone Inc. Common Stock,other,144092465372.98047,8429320.0,117.88999938964844
+VRT,"Vertiv Holdings, LLC Class A Common Stock",other,142481325144.80566,7434580.0,370.94000244140625
+CRM,"Salesforce, Inc. Common Stock",other,141940500627.73657,13408536.0,173.50999450683594
+BTI,"British American Tobacco  Industries, p.l.c. Common Stock ADR",other,140794747104.64133,4710846.0,65.08999633789062
+HON,Honeywell International Inc. - Common Stock,nasdaq,135120194576.32054,3760949.0,213.24000549316406
+PLD,"Prologis, Inc. Common Stock",other,131021458001.89209,3417960.0,140.52999877929688
+SHOP,Shopify Inc. - Class A Subordinate Voting Shares,nasdaq,130128802706.74896,10669712.0,100.27999877929688
+PBR,Petroleo Brasileiro S.A. Petrobras ADS,other,128436223939.99454,28059676.0,19.93000030517578
+CB,Chubb Limited  Common Stock,other,125724850992.58978,1661990.0,324.1499938964844
+HDB,HDFC Bank Limited Common Stock,other,125472744894.4099,9259338.0,24.450000762939453
+CVS,CVS Health Corporation Common Stock,other,122348668689.46577,8070726.0,95.88999938964844
+LOW,"Lowe's Companies, Inc. Common Stock",other,122328936063.55421,2666050.0,218.4199981689453
+BBVA,Banco Bilbao Vizcaya Argentaria S.A. Common Stock,other,122080734769.96353,1926723.0,21.889999389648438
+MO,"Altria Group, Inc.",other,122052344250.82565,9447292.0,73.08999633789062
+SBUX,Starbucks Corporation - Common Stock,nasdaq,121742753652.19116,7722293.0,106.81999969482422
+ENB,Enbridge Inc Common Stock,other,120780251712.50067,4726877.0,55.310001373291016
+BKNG,Booking Holdings Inc. - Common Stock,nasdaq,119432017124.26611,9694838.0,154.1300048828125
+SPGI,S&P Global Inc. Common Stock,other,119332398193.35938,2140253.0,403.1499938964844
+LMT,Lockheed Martin Corporation Common Stock,other,118973129615.67773,1559000.0,516.010009765625
+SYK,Stryker Corporation Common Stock,other,117599751094.87744,2229514.0,306.760009765625
+PGR,Progressive Corporation (The) Common Stock,other,116709519458.16528,2863723.0,199.72999572753906
+COF,Capital One Financial Corporation Common Stock,other,116474539054.65788,4920136.0,187.1699981689453
+NEM,Newmont Corporation,other,116427301835.51001,9411346.0,109.05999755859375
+BMY,Bristol-Myers Squibb Company Common Stock,other,116398061079.0,11785355.0,57.0
+PWR,"Quanta Services, Inc. Common Stock",other,115544812663.07886,1141606.0,769.989990234375
+DHR,Danaher Corporation Common Stock,other,114595144809.50345,4495644.0,161.91000366210938
+BP,BP p.l.c. Common Stock,other,114201126015.41595,13765395.0,44.349998474121094
+VRTX,Vertex Pharmaceuticals Incorporated - Common Stock,nasdaq,110900280056.36066,1283873.0,436.95001220703125
+INTU,Intuit Inc. - Common Stock,nasdaq,109361712261.0,3637379.0,393.0
+PH,Parker-Hannifin Corporation Common Stock,other,108777245824.14282,752065.0,862.719970703125
+CME,CME Group Inc. - Class A Common Stock,nasdaq,108294709136.42175,2348023.0,298.8599853515625
+BMO,Bank Of Montreal Common Stock,other,107486185322.49721,838153.0,152.47999572753906
+MFG,"Mizuho Financial Group, Inc. Sponosred ADR (Japan)",other,105951810279.67215,4554433.0,8.6899995803833
+EQIX,"Equinix, Inc. - Common Stock",nasdaq,104486467522.35547,598914.0,1059.43994140625
+SO,Southern Company (The) Common Stock,other,104331720060.14993,5605279.0,92.55000305175781
+ACN,Accenture plc Class A Ordinary Shares (Ireland),other,103897768049.96173,6889231.0,168.82000732421875
+TT,Trane Technologies plc,other,103144486917.41556,1308077.0,466.6000061035156
+CM,Canadian Imperial Bank of Commerce Common Stock,other,102434961926.78542,1417352.0,111.30000305175781
+BN,Brookfield Corporation Class A Limited Voting Shares,other,101878850287.01263,6172379.0,45.540000915527344
+ADBE,Adobe Inc. - Common Stock,nasdaq,100079922467.04102,5568512.0,247.60000610351562
+CNQ,Canadian Natural Resources Limited Common Stock,other,100072364845.23773,11350447.0,47.97999954223633
+EQNR,Equinor ASA,other,98381960770.79842,7291763.0,39.47999954223633
+NOW,"ServiceNow, Inc. Common Stock",other,98046451245.26978,22328933.0,95.06999969482422
+MDT,Medtronic plc. Ordinary Shares,other,97767841967.65298,8837419.0,76.1500015258789
+CEG,Constellation Energy Corporation - Common Stock When-Issued,nasdaq,96509989242.65839,3188053.0,267.20001220703125
+SNPS,"Synopsys, Inc. - Common Stock",nasdaq,96244596177.58401,1923430.0,502.4200134277344
+CMI,Cummins Inc. Common Stock,other,96113528880.15845,862880.0,696.530029296875
+CDNS,"Cadence Design Systems, Inc. - Common Stock",nasdaq,95774345146.48438,2520117.0,347.239990234375
+WMB,"Williams Companies, Inc. (The) Common Stock",other,95051426648.7178,6371649.0,77.72000122070312
+BNS,Bank Nova Scotia Halifax Pfd 3 Ordinary Shares,other,94918908767.62238,2402698.0,77.08000183105469
+DUK,Duke Energy Corporation (Holding Company) Common Stock,other,94292160067.01115,3927641.0,120.94999694824219
+HCA,"HCA Healthcare, Inc. Common Stock",other,93838235400.0,1118341.0,423.0
+IBN,ICICI Bank Limited Common Stock,other,93371935633.66907,6498425.0,26.049999237060547
+MAR,Marriott International - Class A Common Stock,nasdaq,93126914525.65079,1532741.0,353.1700134277344
+BK,The Bank of New York Mellon Corporation Common Stock,other,92674895512.52747,3679496.0,135.02000427246094
+MCK,McKesson Corporation Common Stock,other,91423595949.47076,872419.0,760.5700073242188
+FCX,"Freeport-McMoRan, Inc. Common Stock",other,90580644680.7535,17171974.0,63.0099983215332
+GD,General Dynamics Corporation Common Stock,other,90458897551.5,1377520.0,334.5
+AEM,Agnico Eagle Mines Limited Common Stock,other,90171535533.8037,2535309.0,180.3300018310547
+FTNT,"Fortinet, Inc. - Common Stock",nasdaq,89954568552.63382,6184498.0,122.77999877929688
+SPOT,Spotify Technology S.A. Ordinary Shares,other,89843629955.3421,2162258.0,436.94000244140625
+FDX,FedEx Corporation Common Stock,other,89663646478.41199,1759061.0,375.7799987792969
+CMCSA,Comcast Corporation - Class A Common Stock,nasdaq,88448379888.93823,31900658.0,24.760000228881836
+WM,"Waste Management, Inc. Common Stock",other,88274384745.86865,2130815.0,219.82000732421875
+JCI,Johnson Controls International plc Ordinary Share,other,87295341594.39503,3786419.0,143.0800018310547
+ICE,Intercontinental Exchange Inc. Common Stock,other,87292509073.36143,3325974.0,154.36000061035156
+KKR,KKR & Co. Inc. Common Stock,other,87066740184.8063,6922771.0,96.97000122070312
+ADP,"Automatic Data Processing, Inc. - Common Stock",nasdaq,85735007095.5109,3605771.0,214.47999572753906
+PNC,"PNC Financial Services Group, Inc. (The) Common Stock",other,85469014804.3064,2325242.0,212.83999633789062
+ELV,"Elevance Health, Inc. Common Stock",other,85275321787.85522,1917855.0,392.67999267578125
+MNST,Monster Beverage Corporation - Common Stock,nasdaq,85174722718.32733,5723901.0,87.08999633789062
+EPD,Enterprise Products Partners L.P. Common Stock,other,84874820780.94994,4481411.0,39.22999954223633
+CSX,CSX Corporation - Common Stock,nasdaq,84842619881.43051,12741993.0,45.65999984741211
+ING,"ING Group, N.V. Common Stock",other,84419341400.18198,2915949.0,29.420000076293945
+SLB,SLB Limited Common Shares,other,82796294863.07387,16614925.0,55.380001068115234
+USB,U.S. Bancorp Common Stock,other,82458160796.36499,9755895.0,53.119998931884766
+E,ENI S.p.A. Common Stock,other,81578022957.74973,582477.0,55.4900016784668
+SU,Suncor Energy  Inc. Common Stock,other,80633090037.81451,4780509.0,68.29000091552734
+AMT,American Tower Corporation (REIT) Common Stock,other,79495336638.3385,3120019.0,170.6300048828125
+ABNB,"Airbnb, Inc. - Class A Common Stock",nasdaq,78847132643.01657,4031157.0,132.85000610351562
+BE,Bloom Energy Corporation Class A Common Stock,other,78492288846.81519,10393982.0,275.95001220703125
+MELI,"MercadoLibre, Inc. - Common Stock",nasdaq,78418911059.95801,594168.0,1546.81005859375
+CIEN,Ciena Corporation Common Stock,other,78399774941.31903,2736409.0,554.4600219726562
+BSX,Boston Scientific Corporation Common Stock,other,78301191283.31961,16154155.0,52.68000030517578
+APO,"Apollo Global Management, Inc. (New) Common Stock",other,78048943724.96692,5326944.0,135.3800048828125
+MRSH,Marsh Common Stock,other,77593005856.37013,3034695.0,161.0500030517578
+MDLZ,"Mondelez International, Inc. - Class A Common Stock",nasdaq,77583790094.2153,9084803.0,60.439998626708984
+NOC,Northrop Grumman Corporation Common Stock,other,76796080485.20142,818725.0,540.6900024414062
+BCS,Barclays PLC Common Stock,other,76795502687.41202,8158819.0,22.530000686645508
+BAM,Brookfield Asset Management Inc Class A Limited Voting Shares,other,76518003041.39671,3842966.0,47.91999816894531
+MMM,3M Company Common Stock,other,76263565540.09879,3892350.0,146.22000122070312
+MPWR,"Monolithic Power Systems, Inc. - Common Stock",nasdaq,76151347394.896,575079.0,1550.02001953125
+LITE,Lumentum Holdings Inc. - Common Stock,nasdaq,75520460949.70703,6422082.0,970.7000122070312
+CP,Canadian Pacific Kansas City Limited Common Shares,other,75519735617.36435,2829322.0,85.06999969482422
+CI,The Cigna Group Common Stock,other,75463155982.84021,1682306.0,285.2699890136719
+MCO,Moody's Corporation Common Stock,other,74918723192.05963,1259201.0,428.8999938964844
+COHR,Coherent Corp. Common Stock,other,74822260704.6253,7511717.0,382.45001220703125
+KMI,"Kinder Morgan, Inc. Common Stock",other,74820892584.28029,12888939.0,33.630001068115234
+EOG,"EOG Resources, Inc. Common Stock",other,74706474691.9841,4923388.0,140.25999450683594
+EMR,Emerson Electric Company Common Stock,other,74521306709.28955,2975403.0,133.0500030517578
+VLO,Valero Energy Corporation Common Stock,other,74452927389.78049,3650649.0,250.74000549316406
+MPC,Marathon Petroleum Corporation Common Stock,other,74452599667.68204,2587901.0,255.02999877929688
+DDOG,"Datadog, Inc. - Class A Common Stock",nasdaq,74032598587.394,5516788.0,207.97999572753906
+SHW,Sherwin-Williams Company (The) Common Stock,other,74015351367.44437,1781815.0,300.1000061035156
+NXPI,NXP Semiconductors N.V. - Common Stock,nasdaq,73595319528.5,3178655.0,291.5
+ORLY,"O'Reilly Automotive, Inc. - Common Stock",nasdaq,73332995570.3836,5670877.0,88.48999786376953
+REGN,"Regeneron Pharmaceuticals, Inc. - Common Stock",nasdaq,73203854094.0,686093.0,698.25
+RKLB,Rocket Lab Corporation - Common Stock,nasdaq,72210759079.47136,23337301.0,124.7699966430664
+HLT,Hilton Worldwide Holdings Inc. Common Stock ,other,71975588832.04187,1750265.0,316.1700134277344
+ITW,Illinois Tool Works Inc. Common Stock,other,71257533892.82227,1306725.0,247.67999267578125
+TRP,TC Energy Corporation Common Stock,other,71090170757.58582,2564852.0,68.23999786376953
+NSC,Norfolk Southern Corporation Common Stock,other,70960477357.57599,1308069.0,315.95001220703125
+PSX,Phillips 66 Common Stock,other,70644749300.44342,3197185.0,176.1999969482422
+CL,Colgate-Palmolive Company Common Stock,other,70520681692.51442,5996388.0,88.12999725341797
+FIX,"Comfort Systems USA, Inc. Common Stock",other,70149278057.98633,436088.0,1992.739990234375
+NET,"Cloudflare, Inc. Class A Common Stock",other,69830790894.3653,4493976.0,197.55999755859375
+RCL,Royal Caribbean Cruises Ltd. Common Stock,other,69808473115.32513,2609660.0,260.2900085449219
+ECL,Ecolab Inc. Common Stock,other,69689552871.03345,1508114.0,247.6199951171875
+HOOD,"Robinhood Markets, Inc. - Class A Common Stock",nasdaq,69464959547.35533,29070219.0,77.13999938964844
+DASH,"DoorDash, Inc. - Common Stock",nasdaq,69366419212.69199,5016028.0,159.1999969482422
+CRH,CRH PLC Ordinary Shares,other,68964943681.60443,5253050.0,103.20999908447266
+ROST,"Ross Stores, Inc. - Common Stock",nasdaq,68812908432.0,2577873.0,212.75
+B,Barrick Mining Corporation Common Shares,other,68206055855.20889,13629884.0,40.61000061035156
+AEP,"American Electric Power Company, Inc. - Common Stock",nasdaq,68094745585.03839,3586773.0,125.1500015258789
+CNI,Canadian National Railway Company Common Stock,other,67811814555.35889,1608403.0,111.79000091552734
+AON,Aon plc Class A Ordinary Shares (Ireland),other,67750880022.49405,1398679.0,317.2200012207031
+WBD,"Warner Bros. Discovery, Inc. - Series A Common Stock",nasdaq,67642547072.2839,23348182.0,26.979999542236328
+GM,General Motors Company Common Stock,other,67498657048.03276,7321774.0,74.86000061035156
+CTAS,Cintas Corporation - Common Stock,nasdaq,67347037464.21332,2232041.0,168.30999755859375
+IMO,Imperial Oil Limited Common Stock,other,66992869438.9402,708379.0,134.72999572753906
+DLR,"Digital Realty Trust, Inc. Common Stock",other,66243556325.368805,2018901.0,188.50999450683594
+APD,"Air Products and Chemicals, Inc. Common Stock",other,65775422117.98804,1285625.0,295.3800048828125
+MSI,"Motorola Solutions, Inc. Common Stock",other,65282742286.328674,1062793.0,393.2799987792969
+SPG,"Simon Property Group, Inc. Common Stock",other,64864469583.75598,1536144.0,200.02000427246094
+TDG,Transdigm Group Incorporated Common Stock,other,64266007220.83081,384266.0,1148.969970703125
+RSG,"Republic Services, Inc. Common Stock",other,64092584857.239075,1574115.0,208.32000732421875
+TRV,"The Travelers Companies, Inc. Common Stock",other,63742375250.28833,1423004.0,299.760009765625
+BKR,Baker Hughes Company - Common Stock,nasdaq,63611447576.43806,9114303.0,64.12000274658203
+MFC,Manulife Financial Corporation Common Stock,other,62700216101.67503,2410190.0,37.56999969482422
+MSTR,Strategy Inc - Class A Common Stock,nasdaq,62217502312.207214,18930207.0,177.4199981689453
+NKE,"Nike, Inc. Common Stock",other,62019550523.798004,21278207.0,41.880001068115234
+CBRS,Cerebras Systems Inc. - Class A Common Stock,nasdaq,60255380499.24893,25193057.0,279.9599914550781
+GWW,"W.W. Grainger, Inc. Common Stock",other,60077276150.733154,256744.0,1272.469970703125
+TEL,TE Connectivity plc Ordinary Shares,other,59870747511.04906,2479517.0,205.11000061035156
+KEYS,Keysight Technologies Inc. Common Stock,other,59856087454.77905,1498785.0,349.010009765625
+AFL,AFLAC Incorporated Common Stock,other,59454525393.601074,2274542.0,116.80999755859375
+OXY,Occidental Petroleum Corporation Common Stock,other,59300119811.23552,17136619.0,59.619998931884766
+NU,Nu Holdings Ltd. Class A Ordinary Shares,other,59264623809.622185,53211080.0,12.1899995803833
+WPM,Wheaton Precious Metals Corp Common Shares (Canada),other,59222454519.545746,2386019.0,130.41000366210938
+DB,Deutsche Bank AG Common Stock,other,59116755777.08599,3350903.0,30.899999618530273
+SRE,DBA Sempra Common Stock,other,59113191059.27037,3492366.0,90.43000030517578
+CRWV,"CoreWeave, Inc. - Class A Common Stock",nasdaq,58539699790.748566,28216831.0,107.30000305175781
+TFC,Truist Financial Corporation Common Stock,other,58506489613.36346,8878741.0,46.959999084472656
+TRGP,"Targa Resources, Inc. Common Stock",other,58380993080.838135,1463387.0,271.989990234375
+OKE,"ONEOK, Inc. Common Stock",other,58164632704.36923,4938319.0,92.31999969482422
+PCAR,PACCAR Inc. - Common Stock,nasdaq,58059896622.67019,2871431.0,110.31999969482422
+CVE,Cenovus Energy Inc Common Stock,other,57473721010.902405,12965571.0,30.81999969482422
+FANG,"Diamondback Energy, Inc. - Common Stock",nasdaq,57264134050.51996,3307412.0,203.55999755859375
+DVN,Devon Energy Corporation Common Stock,other,57061473669.93532,15377809.0,49.4900016784668
+O,Realty Income Corporation Common Stock,other,56993942437.59052,6030757.0,61.119998931884766
+RACE,Ferrari N.V. Common Shares,other,56623970493.56311,625176.0,321.20001220703125
+LHX,"L3Harris Technologies, Inc. Common Stock",other,56520027912.81995,1423055.0,303.3900146484375
+ALL,Allstate Corporation (The) Common Stock,other,55955586297.161865,1463996.0,217.3699951171875
+NBIS,Nebius Group N.V. - Class A Ordinary Shares,nasdaq,55842369408.22864,16876425.0,219.94000244140625
+TGT,Target Corporation Common Stock,other,55200581476.19077,5538506.0,121.54000091552734
+CTVA,"Corteva, Inc. Common Stock ",other,54983691587.677,3951844.0,82.20999908447266
+AZO,"AutoZone, Inc. Common Stock",other,54862075236.81641,184888.0,3321.14990234375
+STM,STMicroelectronics N.V. Common Stock,other,54580847387.68078,9854425.0,61.40999984741211
+SNOW,Snowflake Inc. Common Stock,other,54437379421.99707,6887623.0,157.47000122070312
+D,"Dominion Energy, Inc. Common Stock",other,54288781624.60727,4954152.0,61.72999954223633
+CARR,Carrier Global Corporation Common Stock ,other,53713634434.57182,6511293.0,64.66999816894531
+F,Ford Motor Company Common Stock,other,53394879721.96039,56759565.0,13.399999618530273
+TER,"Teradyne, Inc. - Common Stock",nasdaq,52892466460.926025,3470236.0,337.8800048828125
+AME,"AMETEK, Inc.",other,52235362756.855896,1317177.0,227.89999389648438
+NUE,Nucor Corporation Common Stock,other,51701751442.01431,1514923.0,227.02000427246094
+EBAY,eBay Inc. - Common Stock,nasdaq,51561718780.51758,6051512.0,116.12999725341797
+NDAQ,"Nasdaq, Inc. - Common Stock",nasdaq,51498143685.16516,3501655.0,91.05999755859375
+COIN,"Coinbase Global, Inc. - Class A Common Stock",nasdaq,51488135569.73572,11581438.0,195.42999267578125
+AJG,Arthur J. Gallagher & Co. Common Stock,other,51375552115.875244,2151719.0,199.9499969482422
+PSA,Public Storage Common Stock,other,51341865131.84924,1156882.0,292.4700012207031
+MET,"MetLife, Inc. Common Stock",other,51333385443.17471,3681473.0,79.77999877929688
+MCHP,Microchip Technology Incorporated - Common Stock,nasdaq,50785561907.59282,9530433.0,93.8499984741211
+FLEX,Flex Ltd. - Ordinary Shares,nasdaq,50687527387.050354,4337777.0,137.86000061035156
+LNG,"Cheniere Energy, Inc. Common Stock",other,50678022989.71814,3126155.0,241.83999633789062
+EA,Electronic Arts Inc. - Common Stock,nasdaq,50310777596.71344,2047741.0,200.63999938964844
+COR,"Cencora, Inc. Common Stock",other,50140329110.09094,1620423.0,257.7099914550781
+ADSK,"Autodesk, Inc. - Common Stock",nasdaq,49961188260.63733,2043065.0,236.6199951171875
+ROK,"Rockwell Automation, Inc. Common Stock",other,49933072582.5603,911177.0,448.739990234375
+ETR,Entergy Corporation Common Stock,other,49923402369.466095,3187300.0,109.02999877929688
+FAST,Fastenal Company - Common Stock,nasdaq,49663994811.921265,7482468.0,43.2599983215332
+XEL,Xcel Energy Inc. - Common Stock,nasdaq,48643082972.128296,4731001.0,77.91999816894531
+CVNA,Carvana Co. Class A Common Stock,other,48113089508.886795,16076106.0,67.16999816894531
+FER,Ferrovial N.V. - Ordinary Shares,nasdaq,47954884516.85579,1339450.0,66.88999938964844
+VST,Vistra Corp. Common Stock,other,47097644660.641846,4534760.0,139.67999267578125
+EW,Edwards Lifesciences Corporation Common Stock,other,46858602418.51807,4944661.0,81.37999725341797
+CCJ,Cameco Corporation Common Stock,other,46824151395.17882,3348207.0,107.51000213623047
+AU,AngloGold Ashanti PLC Ordinary Shares,other,46637446871.90094,2881503.0,92.23999786376953
+DAL,"Delta Air Lines, Inc. Common Stock",other,46140714703.68637,11422476.0,70.2300033569336
+MT,Arcelor Mittal NY Registry Shares NEW,other,45739734473.17077,1857252.0,60.150001525878906
+CAH,"Cardinal Health, Inc. Common Stock",other,45716982181.26045,1906309.0,195.1999969482422
+DEO,Diageo plc Common Stock,other,45411177374.57892,1899180.0,81.69000244140625
+TTWO,"Take-Two Interactive Software, Inc. - Common Stock",nasdaq,44893938004.728516,1811204.0,242.44000244140625
+WAB,Westinghouse Air Brake Technologies Corporation Common Stock,other,44777850573.77167,982179.0,263.8999938964844
+EXC,Exelon Corporation - Common Stock,nasdaq,44386770292.864204,8615846.0,43.380001068115234
+ON,ON Semiconductor Corporation - Common Stock,nasdaq,43977529171.316635,9635479.0,113.11000061035156
+HPE,Hewlett Packard Enterprise Company Common Stock,other,43918868321.281334,17384125.0,33.099998474121094
+GRMN,Garmin Ltd. Common Stock (Switzerland),other,43537288504.5,894606.0,225.75
+FNV,Franco-Nevada Corporation,other,43465780293.07739,821087.0,225.3800048828125
+FERG,Ferguson Enterprises Inc. Common Stock,other,43407165635.76306,1401879.0,223.82000732421875
+FITB,Fifth Third Bancorp - Common Stock,nasdaq,42913850414.87833,8335800.0,47.349998474121094
+VTR,"Ventas, Inc. Common Stock",other,42515540792.67775,3805115.0,87.44999694824219
+STT,State Street Corporation Common Stock,other,42303842683.30191,2102265.0,152.85000610351562
+AMP,"Ameriprise Financial, Inc. Common Stock",other,42285790810.870605,668161.0,470.3800048828125
+ODFL,"Old Dominion Freight Line, Inc. - Common Stock",nasdaq,42242516627.48987,2114165.0,203.1199951171875
+CMG,"Chipotle Mexican Grill, Inc. Common Stock",other,41881267057.29675,15756928.0,32.650001525878906
+XYZ,"Block, Inc. Class A Common Stock,",other,41876935523.26965,7567388.0,70.36000061035156
+IDXX,"IDEXX Laboratories, Inc. - Common Stock",nasdaq,41712538250.36102,549088.0,528.7899780273438
+FMX,Fomento Economico Mexicano S.A.B. de C.V. Common Stock,other,41351915650.1304,416601.0,121.37999725341797
+YUM,"Yum! Brands, Inc.",other,41334912000.39166,1712188.0,149.97000122070312
+CLS,"Celestica, Inc. Common Stock",other,41223606111.36969,2101366.0,358.54998779296875
+MSCI,MSCI Inc. Common Stock,other,40852540847.54883,597892.0,561.719970703125
+KR,Kroger Company (The) Common Stock,other,40705333825.78675,5873428.0,66.0199966430664
+EME,"EMCOR Group, Inc. Common Stock",other,40663131601.037476,383536.0,913.1099853515625
+AIG,"American International Group, Inc. New Common Stock",other,40353995803.922195,4293552.0,76.11000061035156
+HEI,Heico Corporation Common Stock,other,40298493856.22836,740215.0,288.8399963378906
+ALAB,"Astera Labs, Inc. - Common Stock",nasdaq,39883197991.09076,5177341.0,232.67999267578125
+SLF,Sun Life Financial Inc. Common Stock,other,39849719546.24191,722796.0,71.91999816894531
+WCN,"Waste Connections, Inc. Common Shares",other,39791611783.39868,1572658.0,156.61000061035156
+SATS,EchoStar Corporation - Common stock,nasdaq,39771103720.02319,5979793.0,137.22999572753906
+CCEP,Coca-Cola Europacific Partners plc - Ordinary Shares,nasdaq,39566557368.88966,1843060.0,89.36000061035156
+BDX,"Becton, Dickinson and Company Common Stock",other,39531785398.04306,2856511.0,143.47000122070312
+KDP,Keurig Dr Pepper Inc. - Common Stock,nasdaq,39360985911.2398,10953047.0,28.93000030517578
+LYV,"Live Nation Entertainment, Inc. Common Stock",other,39298209230.837036,3095203.0,168.8699951171875
+PYPL,"PayPal Holdings, Inc. - Common Stock",nasdaq,39174304809.53139,18951565.0,44.40999984741211
+GFS,GlobalFoundries Inc. - Ordinary Share,nasdaq,38954019063.74634,4060741.0,71.02999877929688
+ED,"Consolidated Edison, Inc. Common Stock",other,38828289943.73268,2238696.0,105.36000061035156
+IBKR,"Interactive Brokers Group, Inc. - Class A Common Stock",nasdaq,38757174468.0,4548069.0,87.0
+ADM,Archer-Daniels-Midland Company Common Stock,other,38749305506.2073,3933188.0,80.4000015258789
+DHI,"D.R. Horton, Inc. Common Stock",other,38393843630.98674,2565865.0,135.38999938964844
+PUK,Prudential Public Limited Company Common Stock,other,38353824967.85511,878526.0,30.59000015258789
+ALNY,"Alnylam Pharmaceuticals, Inc. - Common Stock",nasdaq,38315439666.352936,1126334.0,286.9800109863281
+PEG,Public Service Enterprise Group Incorporated Common Stock,other,38091689185.484985,2821347.0,76.44000244140625
+CBRE,CBRE Group Inc Common Stock Class A,other,38051513547.44472,2218553.0,129.9499969482422
+CBOE,"Cboe Global Markets, Inc. Common Stock",other,37991415517.91919,904466.0,363.0199890136719
+HSY,The Hershey Company Common Stock,other,37927652829.91962,1907358.0,186.97999572753906
+CCI,Crown Castle Inc. Common Stock,other,37822930445.1149,3205826.0,86.66000366210938
+RKT,"Rocket Companies, Inc. Class A Common Stock",other,37772887868.04178,25871746.0,13.350000381469727
+UI,Ubiquiti Inc. Common Stock,other,37720389476.25,105977.0,623.25
+VIK,Viking Holdings Ltd Ordinary Shares,other,37343349917.23651,2958430.0,83.69999694824219
+IRM,Iron Mountain Incorporated (Delaware)Common Stock REIT,other,37211411761.87267,1625084.0,125.06999969482422
+KB,KB Financial Group Inc,other,36951368236.36211,247758.0,104.18000030517578
+HIG,"The Hartford Insurance Group, Inc. Common Stock",other,36711598912.45148,1512398.0,133.9199981689453
+HUM,Humana Inc. Common Stock,other,36633164293.76221,1821757.0,305.1199951171875
+TRI,Thomson Reuters Corp - Common Shares,nasdaq,36114859450.44189,2574279.0,82.7300033569336
+JBL,Jabil Inc. Common Stock,other,35851901780.76428,1216463.0,339.82000732421875
+WEC,"WEC Energy Group, Inc. Common Stock",other,35556216203.32306,1925158.0,109.16000366210938
+PCG,Pacific Gas & Electric Co. Common Stock,other,35521883014.45946,21919277.0,16.1299991607666
+PRU,"Prudential Financial, Inc. Common Stock",other,35402848262.50521,2341738.0,101.93000030517578
+VG,"Venture Global, Inc. Class A common stock",other,35352413629.651146,26828542.0,14.229999542236328
+EQT,EQT Corporation Common Stock,other,35164373923.52295,8519241.0,56.220001220703125
+ESLT,Elbit Systems Ltd. - Ordinary Shares,nasdaq,35087998790.60889,165714.0,750.010009765625
+HAL,Halliburton Company Common Stock,other,34886208011.41264,14497807.0,41.7599983215332
+VMC,Vulcan Materials Company (Holding Company) Common Stock,other,34752249107.23587,1261980.0,267.8299865722656
+SYY,Sysco Corporation Common Stock,other,34701711716.63025,4666338.0,72.56999969482422
+NTR,Nutrien Ltd. Common Shares,other,34350483922.94751,3699234.0,71.55999755859375
+CCL,Carnival Corporation Ltd. Common Shares,other,34129838331.857895,28090715.0,24.639999389648438
+HMC,"Honda Motor Company, Ltd. Common Stock",other,33969252386.49376,1734885.0,26.18000030517578
+LVS,Las Vegas Sands Corp. Common Stock,other,33900525445.88957,4242903.0,51.15999984741211
+KGC,Kinross Gold Corporation Common Stock,other,33888825557.80346,9891042.0,28.3799991607666
+CHT,"Chunghwa Telecom Co., Ltd.",other,33581986825.165443,181463.0,43.290000915527344
+MLM,"Martin Marietta Materials, Inc. Common Stock",other,33545240881.43921,524539.0,558.6599731445312
+STLD,"Steel Dynamics, Inc. - Common Stock",nasdaq,33073758666.417023,1159414.0,229.33999633789062
+Q,"Qnity Electronics, Inc. Common Stock",other,32914402622.216415,2135396.0,157.22999572753906
+KVUE,Kenvue Inc. Common Stock,other,32851349481.36029,23337784.0,17.110000610351562
+ACGL,Arch Capital Group Ltd. - Common Stock,nasdaq,32835634653.117645,2015138.0,93.9800033569336
+PAYX,"Paychex, Inc. - Common Stock",nasdaq,32797947574.7651,3901944.0,91.54000091552734
+MTZ,"MasTec, Inc. Common Stock",other,32784798402.10901,982936.0,414.8999938964844
+TSEM,Tower Semiconductor Ltd. - Ordinary Shares,nasdaq,32491619922.7619,2847388.0,273.9800109863281
+ROP,"Roper Technologies, Inc. - Common Stock",nasdaq,32384379887.149323,1355515.0,320.8999938964844
+WAT,Waters Corporation Common Stock,other,32324747302.95578,1130904.0,329.2200012207031
+KMB,Kimberly-Clark Corporation - Common Stock,nasdaq,31835023875.549316,4835895.0,95.91000366210938
+CRDO,Credo Technology Group Holding Ltd - Ordinary Shares,nasdaq,31756745832.062073,6969152.0,172.1699981689453
+CASY,"Caseys General Stores, Inc. - Common Stock",nasdaq,31608827115.75,587407.0,852.75
+AXON,"Axon Enterprise, Inc. - Common Stock",nasdaq,31586342328.32483,1121792.0,391.8800048828125
+A,"Agilent Technologies, Inc. Common Stock",other,31566677946.46617,2234460.0,111.69999694824219
+SUNB,"Sunbelt Rentals Holdings, Inc. Common Stock",other,31518243859.68363,3825700.0,76.26000213623047
+HBAN,Huntington Bancshares Incorporated - Common Stock,nasdaq,31238082036.35442,24949933.0,15.40999984741211
+WDAY,"Workday, Inc. - Class A Common Stock",nasdaq,31213191263.89588,5405039.0,125.01000213623047
+ZTS,Zoetis Inc. Class A Common Stock,other,31115111429.713074,5176514.0,74.22000122070312
+CPRT,"Copart, Inc. - Common Stock",nasdaq,31114860197.454025,8887773.0,32.29999923706055
+ALC,Alcon Inc. Ordinary Shares,other,31037227702.331543,1808077.0,63.63999938964844
+RVMD,"Revolution Medicines, Inc. - Common Stock",nasdaq,30966801433.471497,2912044.0,145.66000366210938
+RBLX,Roblox Corporation Class A Common Stock,other,30679688130.753136,10685698.0,42.849998474121094
+MDLN,Medline Inc. - Class A common stock,nasdaq,30602486746.26662,6735404.0,36.189998626708984
+RDDT,"Reddit, Inc. Class A Common Stock",other,30449154504.30542,4871419.0,158.1699981689453
+NTRS,Northern Trust Corporation - Common Stock,nasdaq,30321843808.823883,1094012.0,163.86000061035156
+HEI-A,Heico Corporation Common Stock,other,30184806475.20273,345973.0,216.35000610351562
+TWLO,Twilio Inc. Class A Common Stock,other,30095237680.41046,2401933.0,198.2899932861328
+TECK,Teck Resources Ltd Ordinary Shares,other,30055014189.38063,3827412.0,61.349998474121094
+VICI,VICI Properties Inc. Common Stock,other,30042166806.540955,8640457.0,27.899999618530273
+RJF,"Raymond James Financial, Inc. Common Stock",other,30033424488.687164,1349657.0,154.11000061035156
+MTB,M&T Bank Corporation Common Stock,other,30006591900.170288,1121114.0,204.89999389648438
+ZM,"Zoom Communications, Inc. - Class A Common Stock",nasdaq,29521314126.41577,4569887.0,100.16000366210938
+FISV,"Fiserv, Inc. - Common Stock",nasdaq,29504944021.79721,6603796.0,55.33000183105469
+ATO,Atmos Energy Corporation Common Stock,other,29458009473.40158,1030096.0,176.47999572753906
+AEE,Ameren Corporation Common Stock,other,29435302046.67578,1709077.0,106.36000061035156
+RMD,ResMed Inc. Common Stock,other,29283983510.203125,1142050.0,201.8800048828125
+DTE,DTE Energy Company Common Stock,other,29078197337.19919,1360849.0,139.77999877929688
+EL,"Estee Lauder Companies, Inc. (The) Common Stock",other,29044895334.555817,4452438.0,80.27999877929688
+CPNG,"Coupang, Inc. Class A Common Stock",other,28936436426.59783,22629573.0,16.1200008392334
+CNC,Centene Corporation Common Stock,other,28773551416.042328,6515812.0,58.27000045776367
+MTSI,"MACOM Technology Solutions Holdings, Inc. - Common Stock",nasdaq,28656693180.07245,1199257.0,375.6000061035156
+TDY,Teledyne Technologies Incorporated Common Stock,other,28565620699.79773,314020.0,616.5800170898438
+BIIB,Biogen Inc. - Common Stock,nasdaq,28486581274.597275,1139226.0,192.9499969482422
+PBA,Pembina Pipeline Corp. Ordinary Shares (Canada),other,28484501625.919342,1366604.0,48.9900016784668
+FTI,TechnipFMC plc Ordinary Share,other,28419470731.46335,4110806.0,71.27999877929688
+DOV,Dover Corporation Common Stock,other,28382586804.11563,1078422.0,210.77000427246094
+CRCL,"Circle Internet Group, Inc. Class A Common Stock",other,28337667420.0,18092323.0,114.0
+IQV,"IQVIA Holdings, Inc. Common Stock",other,28226127185.058594,1839569.0,169.1199951171875
+DOW,Dow Inc. Common Stock ,other,27928730722.5,14042773.0,38.75
+FTS,Fortis Inc. Common Shares,other,27854665690.32482,757393.0,54.709999084472656
+ARES,Ares Management Corporation Class A Common Stock,other,27831218177.992798,3873611.0,123.41000366210938
+GEHC,GE HealthCare Technologies Inc. - Common Stock,nasdaq,27639224153.83924,4374292.0,60.7599983215332
+IR,Ingersoll Rand Inc. Common Stock,other,27530545674.76738,3473636.0,70.3499984741211
+NVT,nVent Electric plc Ordinary Shares ,other,27332372704.163025,2286844.0,169.00999450683594
+FOXA,Fox Corporation - Class A Common Stock,nasdaq,27249081886.596565,3659558.0,64.8499984741211
+OTIS,Otis Worldwide Corporation Common Stock ,other,27247679376.465973,3830555.0,71.01000213623047
+KHC,The Kraft Heinz Company - Common Stock,nasdaq,27178023553.427654,15259434.0,22.920000076293945
+CNP,"CenterPoint Energy, Inc (Holding Co) Common Stock",other,27167657705.85327,5197666.0,41.529998779296875
+AMRZ,Amrize Ltd Ordinary Shares,other,27128828277.99718,3083257.0,49.0099983215332
+VRSN,"VeriSign, Inc. - Common Stock",nasdaq,27078870666.503906,826957.0,297.57000732421875
+NRG,"NRG Energy, Inc. Common Stock",other,26966180215.596313,2899053.0,127.80999755859375
+P,"Everpure, Inc. Class A common stock",other,26964148494.08493,3088633.0,81.18000030517578
+NTRA,"Natera, Inc. - Common Stock",nasdaq,26689618676.931732,1369371.0,186.36000061035156
+EIX,Edison International Common Stock,other,26612350368.7175,3180792.0,69.16000366210938
+TPL,Texas Pacific Land Corporation Common Stock,other,26566881744.10031,536126.0,385.1700134277344
+QSR,Restaurant Brands International Inc. Common Shares,other,26315263241.62674,3635053.0,75.83999633789062
+PPL,PPL Corporation Common Stock,other,26241981430.156883,8793579.0,34.880001068115234
+EXPE,"Expedia Group, Inc. - Common Stock",nasdaq,26132406312.420364,2288246.0,217.72999572753906
+TPR,"Tapestry, Inc. Common Stock",other,26128423894.299683,2107679.0,129.32000732421875
+STRL,"Sterling Infrastructure, Inc. - Common Stock",nasdaq,26047466017.44568,560457.0,848.8400268554688
+VEEV,Veeva Systems Inc. Class A Common Stock,other,25925745263.88858,2857196.0,158.86000061035156
+ZS,"Zscaler, Inc. - Common Stock",nasdaq,25895343208.844284,3103590.0,161.0500030517578
+FN,Fabrinet Ordinary Shares,other,25870504682.32544,738944.0,722.0399780273438
+CINF,Cincinnati Financial Corporation - Common Stock,nasdaq,25742967320.400116,780065.0,166.4199981689453
+CFG,"Citizens Financial Group, Inc. Common Stock",other,25736595248.226654,4804287.0,60.86000061035156
+ROL,"Rollins, Inc. Common Stock",other,25719699158.416748,2994719.0,53.41999816894531
+XYL,Xylem Inc. Common Stock New,other,25699421116.004677,2180138.0,108.12000274658203
+FICO,Fair Isaac Corporation Common Stock,other,25477296629.88208,370104.0,1098.5899658203125
+HUBB,Hubbell Inc Common Stock,other,25362467771.194122,550288.0,479.9700012207031
+FE,FirstEnergy Corp. Common Stock,other,25346853911.976814,4981796.0,43.81999969482422
+ES,Eversource Energy (D/B/A) Common Stock,other,25261294590.626907,2460958.0,67.16999816894531
+BAP,Credicorp Ltd. Common Stock,other,25104445256.513916,410687.0,316.30999755859375
+MDB,"MongoDB, Inc. - Class A Common Stock",nasdaq,25088151842.642,1919188.0,312.1600036621094
+FSLR,"First Solar, Inc. - Common Stock",nasdaq,25076390798.635376,2342607.0,233.3699951171875
+WRB,W.R. Berkley Corporation Common Stock,other,24737787705.301575,2104177.0,66.44999694824219
+JBHT,"J.B. Hunt Transport Services, Inc. - Common Stock",nasdaq,24726193212.850677,944450.0,262.2099914550781
+STZ,"Constellation Brands, Inc. Common Stock",other,24512452828.466034,1967230.0,142.35000610351562
+FTAI,FTAI Aviation Ltd. - Common Stock,nasdaq,24411669972.063354,1625466.0,237.97000122070312
+FOX,Fox Corporation - Class B Common Stock,nasdaq,24316181600.242596,1585007.0,57.869998931884766
+AWK,"American Water Works Company, Inc. Common Stock",other,24271416133.874657,1901484.0,124.29000091552734
+LYB,LyondellBasell Industries NV Ordinary Shares Class A (Netherlands),other,24228224273.331238,7989015.0,75.05999755859375
+TW,Tradeweb Markets Inc. - Class A Common Stock,nasdaq,24187807302.03009,1402803.0,110.94000244140625
+SQM,Sociedad Quimica y Minera S.A. Common Stock,other,24067842312.26819,1277671.0,84.26000213623047
+PHG,Koninklijke Philips N.V. NY Registry Shares,other,24019413704.200745,1074547.0,25.229999542236328
+SYF,Synchrony Financial Common Stock,other,24010106950.091537,3998203.0,71.37999725341797
+XPO,"XPO, Inc. Common Stock",other,23978639918.000443,1439176.0,204.22999572753906
+LPLA,LPL Financial Holdings Inc. - Common Stock,nasdaq,23973263806.247955,942642.0,299.7300109863281
+EQR,Equity Residential Common Shares of Beneficial Interest,other,23934030831.992588,2588631.0,63.880001068115234
+DXCM,"DexCom, Inc. - Common Stock",nasdaq,23781351984.666805,4566674.0,61.630001068115234
+PAAS,Pan American Silver Corp. Common Stock,other,23764140642.929077,6620907.0,56.400001525878906
+BG,Bunge Limited Common Shares,other,23757517589.6537,1703339.0,122.44999694824219
+NTAP,"NetApp, Inc. - Common Stock",nasdaq,23753377596.08322,2268987.0,119.93000030517578
+INSM,Insmed Incorporated - Common Stock,nasdaq,23656362369.844803,2807974.0,109.13999938964844
+WTW,Willis Towers Watson Public Limited Company - Ordinary Shares,nasdaq,23458988740.051758,747092.0,248.3800048828125
+RPRX,Royalty Pharma plc - Class A Ordinary Shares,nasdaq,23427035720.017395,3323774.0,52.849998474121094
+TSN,"Tyson Foods, Inc. Common Stock",other,23166593679.964096,2956001.0,65.79000091552734
+EXE,Expand Energy Corporation - Common Stock,nasdaq,23131037993.864807,3779568.0,96.69000244140625
+PPG,"PPG Industries, Inc. Common Stock",other,22878455863.952637,2108300.0,102.63999938964844
+KEY,KeyCorp Common Stock,other,22812109468.158264,14882160.0,21.040000915527344
+RF,Regions Financial Corporation Common Stock,other,22751098352.864616,12828988.0,26.65999984741211
+DG,Dollar General Corporation Common Stock,other,22546770036.730347,3294098.0,102.37999725341797
+FWONK,Liberty Media Corporation - Series C Liberty Formula One Common Stock,nasdaq,22439235323.75638,2172961.0,89.54000091552734
+DRI,"Darden Restaurants, Inc. Common Stock",other,22436261667.763382,1322938.0,195.88999938964844
+CTSH,Cognizant Technology Solutions Corporation - Class A Common Stock,nasdaq,22292490505.218506,6813822.0,47.130001068115234
+CHD,"Church & Dwight Company, Inc. Common Stock",other,22284546491.19449,2049920.0,94.05000305175781
+NI,NiSource Inc Common Stock,other,22198036677.716885,4276033.0,46.29999923706055
+TEAM,Atlassian Corporation  - Class A Common Stock,nasdaq,22194536978.188583,7779906.0,87.45999908447266
+BCE,"BCE, Inc. Common Stock",other,22184790040.182884,3265758.0,23.790000915527344
+CMS,CMS Energy Corporation Common Stock,other,22131000098.73044,2911384.0,71.63999938964844
+AFRM,"Affirm Holdings, Inc. - Class A Common Stock",nasdaq,22043023446.09707,5625719.0,65.81999969482422
+AER,AerCap Holdings N.V. Ordinary Shares,other,22039647240.473434,1393268.0,139.77000427246094
+AKAM,"Akamai Technologies, Inc. - Common Stock",nasdaq,21935757556.769897,5510490.0,150.8800048828125
+TROW,"T. Rowe Price Group, Inc. - Common Stock",nasdaq,21857336935.782852,2320373.0,102.01000213623047
+L,Loews Corporation Common Stock,other,21770347391.356766,704376.0,105.80000305175781
+PFG,Principal Financial Group Inc - Common Stock,nasdaq,21715724699.833008,1566712.0,100.52999877929688
+STLA,Stellantis N.V. Common Shares,other,21702332496.6631,19949626.0,7.489999771118164
+ULTA,"Ulta Beauty, Inc. - Common Stock",nasdaq,21618141917.290558,723623.0,494.2799987792969
+FIS,"Fidelity National Information Services, Inc. Common Stock",other,21605548117.452503,6249525.0,41.79999923706055
+ILMN,"Illumina, Inc. - Common Stock",nasdaq,21566300984.191895,1706579.0,142.5399932861328
+CPAY,"Corpay, Inc. Common Stock",other,21453743391.45749,615287.0,328.2300109863281
+NXT,Nextpower Inc. - Class A Common Stock,nasdaq,21423578389.62291,1997514.0,144.2899932861328
+WST,"West Pharmaceutical Services, Inc. Common Stock",other,21398451084.42688,900558.0,302.8900146484375
+VRSK,"Verisk Analytics, Inc. - Common Stock",nasdaq,21297600491.846924,2035884.0,162.5500030517578
+ALB,Albemarle Corporation Common Stock,other,21273052923.232788,2133838.0,180.3800048828125
+SBAC,SBA Communications Corporation - Class A Common Stock,nasdaq,21172298935.654175,1215768.0,199.6199951171875
+ATI,ATI Inc. Common Stock,other,21046469418.529877,2025231.0,154.22000122070312
+PHM,"PulteGroup, Inc. Common Stock",other,20974452445.093643,1867980.0,110.11000061035156
+ROIV,Roivant Sciences Ltd. - Common Shares,nasdaq,20962886957.97396,5409180.0,29.290000915527344
+MTD,"Mettler-Toledo International, Inc. Common Stock",other,20846969791.64978,169409.0,1031.6400146484375
+VLTO,Veralto Corp Common Stock ,other,20834186184.485687,2008233.0,84.83000183105469
+STE,STERIS plc (Ireland) Ordinary Shares,other,20817962138.89418,820058.0,212.11000061035156
+WWD,"Woodward, Inc. - Common Stock",nasdaq,20806930380.679108,683153.0,349.2099914550781
+DGX,Quest Diagnostics Incorporated Common Stock,other,20657060683.25374,898669.0,186.61000061035156
+FWONA,Liberty Media Corporation - Series A Liberty Formula One Common Stock,nasdaq,20567210379.081207,163860.0,82.06999969482422
+MAIR,Madison Air Solutions Corporation Class A Common Stock,other,20554007660.0,5248190.0,41.0
+LH,Labcorp Holdings Inc. Common Stock,other,20532799499.51172,654723.0,250.39999389648438
+MKSI,MKS Inc. - Common Stock,nasdaq,20477354495.894623,1315582.0,303.1700134277344
+FFIV,"F5, Inc. - Common Stock",nasdaq,20456489819.677338,742304.0,362.5799865722656
+SITM,SiTime Corporation - Common Stock,nasdaq,20432728617.23462,456800.0,774.0599975585938
+EXPD,"Expeditors International of Washington, Inc. Common Stock",other,20331481225.707138,1280258.0,155.4499969482422
+CRS,Carpenter Technology Corporation Common Stock,other,20317936951.25171,701960.0,408.92999267578125
+LEN,Lennar Corporation Class A Common Stock,other,20270350512.44275,2919895.0,82.30000305175781
+ENTG,"Entegris, Inc. - Common Stock",nasdaq,20266562115.478516,2591812.0,133.07000732421875
+DD,"DuPont de Nemours, Inc. Common Stock",other,20213220161.801247,3834074.0,49.310001373291016
+OMC,Omnicom Group Inc. Common Stock,other,20186989384.54193,5185650.0,70.83000183105469
+SOFI,"SoFi Technologies, Inc.  - Common Stock",nasdaq,20023589691.60576,66195841.0,15.609999656677246
+ULS,UL Solutions Inc. Class A Common Stock,other,19954748385.0,798415.0,99.0
+WSM,"Williams-Sonoma, Inc. Common Stock (DE)",other,19856123796.935577,1194785.0,168.63999938964844
+RL,Ralph Lauren Corporation Common Stock,other,19817973619.741516,592576.0,326.80999755859375
+WIT,Wipro Limited Common Stock,other,19816854712.77932,13330828.0,1.8899999856948853
+CHTR,"Charter Communications, Inc. - Class A Common Stock",nasdaq,19811560920.605316,2417676.0,140.3300018310547
+SW,Smurfit WestRock plc Ordinary Shares,other,19656913403.359398,5640111.0,37.47999954223633
+MRNA,"Moderna, Inc. - Common Stock",nasdaq,19458398504.62867,8065549.0,49.040000915527344
+IONQ,"IonQ, Inc. Common Stock",other,19391374083.38237,27780809.0,51.95000076293945
+RGLD,"Royal Gold, Inc. - Common Stock",nasdaq,19376743190.221558,1016041.0,228.32000732421875
+DKS,Dick's Sporting Goods Inc Common Stock,other,19363897706.313065,1149533.0,216.47999572753906
+CHRW,"C.H. Robinson Worldwide, Inc. - Common Stock",nasdaq,19282850509.116028,1929544.0,163.58999633789062
+CF,"CF Industries Holdings, Inc. Common Stock",other,19240529947.572464,4772107.0,125.23999786376953
+VTRS,Viatris Inc. - Common Stock,nasdaq,19191827204.8301,11342395.0,16.479999542236328
+AS,"Amer Sports, Inc. Ordinary Shares",other,19107035356.938995,4541325.0,32.84000015258789
+EFX,"Equifax, Inc. Common Stock",other,19104900537.85388,1650371.0,158.3699951171875
+HPQ,HP Inc. Common Stock,other,19103257454.183372,18509050.0,20.809999465942383
+RCI,"Rogers Communication, Inc. Common Stock",other,19091561406.951836,1266738.0,35.34000015258789
+BRO,"Brown & Brown, Inc. Common Stock",other,19075984077.72531,3332411.0,56.279998779296875
+TU,Telus Corporation Ordinary Shares,other,19064069933.200733,5662998.0,12.210000038146973
+INCY,Incyte Corporation - Common Stock,nasdaq,19041236705.3006,1540373.0,95.30999755859375
+RBA,"RB Global, Inc. Common Stock",other,19019366317.749023,1271380.0,102.08999633789062
+IREN,IREN Limited - Ordinary Shares,nasdaq,18919626510.775078,39197580.0,52.939998626708984
+PKG,Packaging Corporation of America Common Stock,other,18896041218.904495,972560.0,212.0800018310547
+LUV,Southwest Airlines Company Common Stock,other,18817787950.5,8559595.0,38.5
+BWXT,"BWX Technologies, Inc. Common Stock",other,18755351055.11429,1017331.0,204.72000122070312
+APG,APi Group Corporation Common Stock,other,18737110524.25,3102044.0,43.25
+SMCI,"Super Micro Computer, Inc. - Common Stock",nasdaq,18668030231.895065,37497680.0,31.040000915527344
+IFF,"International Flavors & Fragrances, Inc. Common Stock",other,18662683486.737816,1735544.0,73.0999984741211
+SNA,Snap-On Incorporated Common Stock,other,18630558773.226196,393523.0,359.6499938964844
+SNX,TD SYNNEX Corporation Common Stock,other,18567450811.785126,739561.0,230.2899932861328
+EVRG,"Evergy, Inc. - Common Stock",nasdaq,18556298512.5,2033457.0,80.5
+RIVN,"Rivian Automotive, Inc. - Class A Common Stock",nasdaq,18518127701.30371,27750946.0,13.789999961853027
+GPN,Global Payments Inc. Common Stock,other,18486070703.93312,3620439.0,67.58000183105469
+RS,"Reliance, Inc. Common Stock",other,18465782423.895813,350239.0,361.7300109863281
+BURL,"Burlington Stores, Inc. Common Stock",other,18446967949.08554,743766.0,293.6000061035156
+YPF,YPF Sociedad Anonima Common Stock,other,18421736566.957638,2300065.0,43.65999984741211
+ROKU,"Roku, Inc. - Class A Common Stock",nasdaq,18316978503.221886,2908084.0,124.0199966430664
+LNT,Alliant Energy Corporation - Common Stock,nasdaq,18311842317.399483,2471998.0,70.9000015258789
+CDE,"Coeur Mining, Inc. Common Stock",other,18217735220.675262,25509187.0,17.610000610351562
+USFD,US Foods Holding Corp. Common Stock,other,18141859416.423157,2470928.0,82.37999725341797
+CX,"Cemex, S.A.B. de C.V. Sponsored ADR",other,18123483415.166946,6483880.0,12.5600004196167
+BCH,Banco De Chile ADS,other,18122464906.769417,413038.0,35.880001068115234
+RBC,RBC Bearings Incorporated Common Stock,other,17993085869.46527,196404.0,569.0599975585938
+FTV,Fortive Corporation Common Stock ,other,17901439525.2648,3180442.0,58.720001220703125
+GIS,"General Mills, Inc. Common Stock",other,17606144277.586205,9368771.0,32.9900016784668
+ITT,ITT Inc. Common Stock ,other,17480135213.686523,906665.0,194.57000732421875
+WCC,"WESCO International, Inc. Common Stock",other,17471418917.694214,604496.0,358.7200012207031
+PR,Permian Resources Corporation Class A Common Stock,other,17449084631.92003,13706569.0,20.84000015258789
+DLTR,"Dollar Tree, Inc. - Common Stock",nasdaq,17443502226.032867,3353606.0,89.58000183105469
+AMKR,"Amkor Technology, Inc. - Common Stock",nasdaq,17437831263.076553,4282317.0,70.3499984741211
+WMG,Warner Music Group Corp. - Class A Common Stock,nasdaq,17437607260.224426,2401931.0,33.43000030517578
+LII,"Lennox International, Inc. Common Stock",other,17399635660.476562,461269.0,499.989990234375
+TTMI,"TTM Technologies, Inc. - Common Stock",nasdaq,17379308007.500458,2020607.0,167.35000610351562
+CG,The Carlyle Group Inc. - Common Stock,nasdaq,17285972149.323215,3354419.0,48.02000045776367
+IOT,Samsara Inc. Class A Common Stock,other,17224909712.719242,6930000.0,29.559999465942383
+ESS,"Essex Property Trust, Inc. Common Stock",other,17161739860.450989,476519.0,267.05999755859375
+AMCR,Amcor plc Ordinary Shares,other,16963462731.164818,5425944.0,36.689998626708984
+THC,Tenet Healthcare Corporation Common Stock,other,16939702735.443115,1245693.0,196.66000366210938
+AGI,Alamos Gold Inc. Class A Common Shares,other,16895208292.285091,3622542.0,40.22999954223633
+OVV,Ovintiv Inc. (DE),other,16861116060.0,4655015.0,60.0
+BR,"Broadridge Financial Solutions, Inc. Common Stock",other,16842160644.402222,1554122.0,145.6199951171875
+KEP,Korea Electric Power Corporation Common Stock,other,16691066002.0,764468.0,13.0
+KSPI,Joint Stock Company Kaspi.kz - American Depository Shares,nasdaq,16629286453.602036,570469.0,87.51000213623047
+INVH,Invitation Homes Inc. Common Stock,other,16591592012.367218,6381542.0,27.93000030517578
+BEN,"Franklin Resources, Inc. Common Stock",other,16540050826.81483,5241984.0,31.829999923706055
+AA,Alcoa Corporation Common Stock ,other,16501033561.618805,5692331.0,62.529998779296875
+PS,Pershing Square Inc. Common Stock,other,16467999267.578125,1339723.0,41.16999816894531
+LSCC,Lattice Semiconductor Corporation - Common Stock,nasdaq,16456013787.89296,1982055.0,120.11000061035156
+MGA,"Magna International, Inc. Common Stock",other,16442363235.381699,1852695.0,60.400001525878906
+TLK,"PT Telekomunikasi Indonesia, Tbk",other,16413126735.553406,821444.0,16.56999969482422
+PTC,PTC Inc. - Common Stock,nasdaq,16391427223.80484,1220271.0,141.91000366210938
+WSO,"Watsco, Inc. Common Stock",other,16391084583.946106,459346.0,403.1499938964844
+EWBC,"East West Bancorp, Inc. - Common Stock",nasdaq,16358724147.115295,1080971.0,119.41000366210938
+WY,Weyerhaeuser Company Common Stock,other,16353246592.164742,5364620.0,22.68000030517578
+NWS,News Corporation - Class B Common Stock,nasdaq,16256300799.94998,1495039.0,29.739999771118164
+WPC,W. P. Carey Inc. REIT,other,16235453227.50084,1323912.0,72.88999938964844
+NVMI,Nova Ltd. - Ordinary Shares,nasdaq,16194106679.0206,359614.0,509.1499938964844
+ZBH,"Zimmer Biomet Holdings, Inc. Common Stock",other,16192809152.99936,2260031.0,83.69999694824219
+DOCN,"DigitalOcean Holdings, Inc. Common Stock",other,16162880201.879272,4561298.0,154.8699951171875
+CLH,"Clean Harbors, Inc. Common Stock",other,16052511196.394531,566825.0,303.760009765625
+TSCO,Tractor Supply Company - Common Stock,nasdaq,16032424601.070679,8585387.0,30.56999969482422
+IP,International Paper Company Common Stock,other,16023183754.436817,6954233.0,30.260000228881836
+FLUT,Flutter Entertainment plc Ordinary Shares,other,16013093942.5691,3690887.0,92.37999725341797
+YUMC,"Yum China Holdings, Inc. Common Stock",other,15975591793.499794,1569819.0,45.5099983215332
+NBIX,"Neurocrine Biosciences, Inc. - Common Stock",nasdaq,15929128122.747482,1148660.0,158.4199981689453
+H,Hyatt Hotels Corporation Class A Common Stock,other,15892595745.736633,851022.0,168.77999877929688
+NLY,Annaly Capital Management Inc. Common Stock,other,15886588868.345558,6997865.0,21.68000030517578
+EMA,Emera Incorporated Common Shares,other,15790557673.26355,379841.0,51.619998931884766
+LDOS,"Leidos Holdings, Inc. Common Stock",other,15558404596.633423,1218422.0,123.69000244140625
+SSNC,"SS&C Technologies Holdings, Inc. - Common Stock",nasdaq,15553062679.600296,2657223.0,64.58000183105469
+GNRC,Generac Holdlings Inc. Common Stock,other,15522493374.912903,950974.0,263.67999267578125
+KIM,Kimco Realty Corporation (HC) Common Stock,other,15510965216.0,5441926.0,23.0
+TXT,Textron Inc. Common Stock,other,15436124259.636238,1444168.0,88.7699966430664
+IEX,IDEX Corporation Common Stock,other,15372186330.58081,758307.0,207.69000244140625
+NDSN,Nordson Corporation - Common Stock,nasdaq,15333795690.62085,358198.0,274.8800048828125
+AAOI,"Applied Optoelectronics, Inc. - Common Stock",nasdaq,15275013175.096298,12010771.0,190.36000061035156
+TLN,Talen Energy Corporation - Common Stock,nasdaq,15273099027.679688,722719.0,334.239990234375
+AUR,"Aurora Innovation, Inc.  - Class A Common Stock",nasdaq,15120875891.00396,22698469.0,7.710000038146973
+DTM,"DT Midstream, Inc. Common Stock ",other,15106250780.233429,872888.0,148.0800018310547
+MLI,"Mueller Industries, Inc. Common Stock",other,15086254707.667786,715190.0,136.44000244140625
+PFGC,Performance Food Group Company Common Stock,other,15075913192.230072,1770807.0,95.97000122070312
+SN,"SharkNinja, Inc. Ordinary Shares",other,14948797245.07267,2030423.0,105.62999725341797
+ASND,Ascendis Pharma A/S - Ordinary Share,nasdaq,14858029875.0,680601.0,240.5
+PL,Planet Labs PBC Class A Common Stock,other,14833084436.850998,12863903.0,41.619998931884766
+LOGI,Logitech International S.A. - Registered Shares,nasdaq,14779270673.446655,1026758.0,102.98999786376953
+LAMR,Lamar Advertising Company - Class A Common Stock,nasdaq,14768685518.24965,642292.0,145.5399932861328
+BALL,Ball Corporation Common Stock,other,14696807610.329967,2348744.0,55.20000076293945
+SKM,"SK Telecom Co., Ltd. Common Stock",other,14683628683.308952,1862455.0,38.2599983215332
+HST,"Host Hotels & Resorts, Inc. - Common Stock",nasdaq,14642718453.006433,8963779.0,21.3799991607666
+GRAB,Grab Holdings Limited - Class A Ordinary Shares,nasdaq,14519499804.973602,48778628.0,3.549999952316284
+OKTA,"Okta, Inc. - Class A Common Stock",nasdaq,14513424332.943642,3724160.0,82.7699966430664
+JBS,JBS N.V. Class A Common Shares,other,14435419623.031475,5015904.0,13.479999542236328
+JAZZ,Jazz Pharmaceuticals plc - Ordinary Shares,nasdaq,14353675199.466248,999792.0,228.77000427246094
+MOD,Modine Manufacturing Company Common Stock,other,14303865013.173096,1004333.0,271.260009765625
+LECO,"Lincoln Electric Holdings, Inc. - Common Shares",nasdaq,14295053476.86676,344692.0,260.9200134277344
+TKO,"TKO Group Holdings, Inc. Class A Common Stock",other,14249106156.189636,1378536.0,190.07000732421875
+BSAC,Banco Santander - Chile ADS,other,14218260410.832985,445207.0,30.18000030517578
+PNFP,"Pinnacle Financial Partners, Inc. Common stock",other,14207061956.984467,1449877.0,94.0199966430664
+GEN,Gen Digital Inc. - Common Stock,nasdaq,14202815962.384789,7307977.0,23.450000762939453
+ARXS,"Arxis, Inc. - Class A Common Stock",nasdaq,14195935508.56295,2168804.0,34.59000015258789
+PAC,"Grupo Aeroportuario Del Pacifico, S.A. B. de C.V. Grupo Aeroportuario Del Pacifico, S.A. de C.V. (each representing 10 Series B shares)",other,14188208797.414856,136269.0,238.4499969482422
+NWSA,News Corporation - Class A Common Stock,nasdaq,14168235414.18334,4432426.0,25.920000076293945
+RGC,Regencell Bioscience Holdings Limited - Ordinary Shares,nasdaq,14132492981.49349,133619.0,28.579999923706055
+OHI,"Omega Healthcare Investors, Inc. Common Stock",other,14094969205.291748,2052468.0,47.33000183105469
+LULU,lululemon athletica inc. - Common Stock,nasdaq,13976446526.918976,2877469.0,119.13999938964844
+ARMK,Aramark Common Stock,other,13957575658.602356,2701879.0,53.08000183105469
+REG,Regency Centers Corporation - Common Stock,nasdaq,13926341400.386353,1395830.0,76.05999755859375
+EG,"Everest Group, Ltd. Common Stock",other,13916145806.69696,343066.0,351.6700134277344
+LGN,Legence Corp. - Class A Common stock,nasdaq,13846055815.443268,1642530.0,84.30000305175781
+APA,APA Corporation - Common Stock,nasdaq,13778269286.654171,8666641.0,38.97999954223633
+RGA,"Reinsurance Group of America, Incorporated Common Stock",other,13767590804.589386,346561.0,210.14999389648438
+RMBS,"Rambus, Inc. - Common Stock",nasdaq,13738801987.357834,2239906.0,127.05000305175781
+IESC,"IES Holdings, Inc. - Common Stock",nasdaq,13592075954.611511,214215.0,682.2000122070312
+ARCC,Ares Capital Corporation - Closed End Fund,nasdaq,13570631496.596022,7514268.0,18.899999618530273
+ONTO,Onto Innovation Inc. Common Stock,other,13518808657.09085,912088.0,271.7699890136719
+SOLS,Solstice Advanced Materials Inc. - Common Stock,nasdaq,13515831771.956436,2715160.0,85.11000061035156
+HAS,"Hasbro, Inc. - Common Stock",nasdaq,13476988413.0,1711579.0,95.25
+GFL,"GFL Environmental Inc. Subordinate voting shares, no par value",other,13388425164.089848,2155441.0,37.09000015258789
+CSL,Carlisle Companies Incorporated Common Stock,other,13386656738.695068,408033.0,330.82000732421875
+JLL,Jones Lang LaSalle Incorporated Common Stock,other,13372020631.945038,472300.0,288.2300109863281
+TOST,"Toast, Inc. Class A Common Stock",other,13368999557.495117,11067255.0,23.049999237060547
+DOC,"Healthpeak Properties, Inc. Common Stock",other,13347165851.508392,8634360.0,19.360000610351562
+CSGP,"CoStar Group, Inc. - Common Stock",nasdaq,13345064890.820274,7102407.0,32.68000030517578
+TIGO,Millicom International Cellular S.A. - Common Stock,nasdaq,13281009703.454498,1410979.0,79.2699966430664
+DECK,Deckers Outdoor Corporation Common Stock,other,13280838940.202454,1966898.0,93.55999755859375
+MAS,Masco Corporation Common Stock,other,13262965392.628098,2896790.0,65.13999938964844
+GIB,CGI Inc. Common Stock,other,13216499104.659851,500888.0,63.11000061035156
+SGI,Somnigroup International Inc. Common Stock,other,13184150376.510864,2835387.0,62.68000030517578
+GLPI,"Gaming and Leisure Properties, Inc. - Common Stock",nasdaq,13135829288.093563,2210985.0,46.380001068115234
+DY,"Dycom Industries, Inc. Common Stock",other,13129234498.05481,419733.0,437.3699951171875
+RRX,Regal Rexnord Corporation Common Stock,other,13124857256.465057,1133122.0,197.16000366210938
+RBRK,"Rubrik, Inc. Class A Common Stock",other,13124493335.932266,3678341.0,63.77000045776367
+SMMT,Summit Therapeutics Inc.  - Common Stock,nasdaq,13093864472.531614,3314780.0,16.8700008392334
+PAYP,PayPay Corporation - American Depository Shares,nasdaq,13056891109.84623,2239739.0,19.290000915527344
+J,Jacobs Solutions Inc. Common Stock,other,13049118190.537971,1065988.0,110.51000213623047
+UNM,Unum Group Common Stock,other,13044131727.880325,1574326.0,81.63999938964844
+CDW,CDW Corporation - Common Stock,nasdaq,13039794704.58274,1847253.0,102.06999969482422
+BWA,BorgWarner Inc. Common Stock,other,12965315232.821663,2773733.0,63.209999084472656
+BBIO,"BridgeBio Pharma, Inc. - Common Stock",nasdaq,12952303395.511032,2540969.0,66.12999725341797
+CNH,CNH Industrial N.V. Common Shares,other,12932684479.312874,16300530.0,10.430000305175781
+GPC,Genuine Parts Company Common Stock,other,12920270552.070282,1960607.0,92.87000274658203
+EVR,Evercore Inc. Class A Common Stock,other,12902929268.600342,642871.0,333.55999755859375
+CHKP,Check Point Software Technologies Ltd. - Ordinary Shares,nasdaq,12902568775.22293,1488665.0,124.02999877929688
+FNF,"Fidelity National Financial, Inc. Common Stock",other,12900720974.340363,2039260.0,47.93000030517578
+ALLY,Ally Financial Inc. Common Stock,other,12870903887.868782,3607550.0,41.9900016784668
+SOLV,Solventum Corporation Common Stock,other,12859954483.061096,1420536.0,74.26000213623047
+HII,"Huntington Ingalls Industries, Inc. Common Stock",other,12852412668.036835,516265.0,326.1700134277344
+TRMB,Trimble Inc. - Common Stock,nasdaq,12851438291.459965,1910277.0,55.130001068115234
+TYL,"Tyler Technologies, Inc. Common Stock",other,12831328301.594849,618919.0,311.8900146484375
+DVA,DaVita Inc. Common Stock,other,12820312252.578735,865053.0,199.74000549316406
+SMTC,Semtech Corporation - Common Stock,nasdaq,12816279860.807419,2402249.0,137.63999938964844
+TRU,TransUnion Common Stock,other,12774928411.865234,2411319.0,66.26000213623047
+WSE,Wise Group plc - Class A Ordinary Shares,nasdaq,12753373165.5,1469840.0,12.75
+AEG,Aegon Ltd. New York Registry Shares,other,12690089069.954403,5823673.0,8.390000343322754
+PEN,"Penumbra, Inc. Common Stock",other,12677305194.07196,566977.0,322.32000732421875
+DINO,HF Sinclair Corporation Common Stock,other,12621083729.479881,2984331.0,70.01000213623047
+AIZ,"Assurant, Inc. Common Stock",other,12615323886.811478,401953.0,254.61000061035156
+SANM,Sanmina Corporation - Common Stock,nasdaq,12613690758.619232,812738.0,235.33999633789062
+SNN,"Smith & Nephew SNATS, Inc. Common Stock",other,12608398277.189568,1014206.0,29.540000915527344
+EXEL,"Exelixis, Inc. - Common Stock",nasdaq,12600430579.266193,2824046.0,50.130001068115234
+CRBG,Corebridge Financial Inc. Common Stock,other,12587564570.838198,5836823.0,27.559999465942383
+GH,"Guardant Health, Inc. - Common Stock",nasdaq,12586385017.882278,2023787.0,94.91999816894531
+GGG,Graco Inc. Common Stock,other,12567110565.037872,1176373.0,75.72000122070312
+BF-A,Brown Forman Inc Class A Common Stock,other,12550131569.410477,253522.0,27.360000610351562
+RNR,RenaissanceRe Holdings Ltd. Common Stock,other,12543920121.810577,343466.0,294.2300109863281
+NTNX,"Nutanix, Inc. - Class A Common Stock",nasdaq,12481627418.339378,4190841.0,46.34000015258789
+VICR,Vicor Corporation - Common Stock,nasdaq,12474264265.745026,928293.0,273.6700134277344
+MKC,"McCormick & Company, Incorporated Common Stock",other,12460881678.02784,4108647.0,46.349998474121094
+ONON,On Holding AG Class A Ordinary Shares,other,12419865441.137104,6963433.0,37.2599983215332
+DKNG,DraftKings Inc. - Class A Common Stock,nasdaq,12403220425.0,13532719.0,25.0
+ZBRA,Zebra Technologies Corporation - Class A Common Stock,nasdaq,12353720505.931152,831831.0,259.3500061035156
+BJ,"BJ's Wholesale Club Holdings, Inc. Common Stock",other,12304442440.017273,1887080.0,96.36000061035156
+AEIS,"Advanced Energy Industries, Inc. - Common Stock",nasdaq,12301395988.251007,694811.0,323.4599914550781
+IONS,"Ionis Pharmaceuticals, Inc. - Common Stock",nasdaq,12267440086.655426,2084987.0,74.2300033569336
+SAIA,"Saia, Inc. - Common Stock",nasdaq,12246992980.252197,506326.0,460.3800048828125
+RPM,RPM International Inc. Common Stock,other,12197927870.560822,942374.0,95.23999786376953
+APLD,Applied Digital Corporation - Common Stock,nasdaq,12162351972.28474,21068104.0,42.560001373291016
+BF-B,Brown Forman Inc Class B Common Stock,other,12100601348.060595,5972955.0,26.3799991607666
+FIG,"Figma, Inc. Class A Common Stock",other,12078218106.004839,18108447.0,22.920000076293945
+MDGL,"Madrigal Pharmaceuticals, Inc. - Common Stock",nasdaq,12074018117.99823,347784.0,523.6900024414062
+NYT,New York Times Company (The) Common Stock,other,12055534364.882332,2235846.0,74.4800033569336
+GL,Globe Life Inc. Common Stock,other,12038043224.143387,506877.0,155.0399932861328
+VIAV,Viavi Solutions Inc. - Common Stock,nasdaq,12029881825.483017,6287944.0,51.43000030517578
+IVZ,Invesco Ltd Common Stock,other,12022204950.509336,5484561.0,27.1200008392334
+UDR,"UDR, Inc. Common Stock",other,11995885313.82167,3574977.0,36.91999816894531
+EQH,"Equitable Holdings, Inc. Common Stock",other,11987096141.677399,4030604.0,42.58000183105469
+ENLT,Enlight Renewable Energy Ltd. - Ordinary Shares,nasdaq,11963479024.316055,174839.0,85.87000274658203
+TOL,"Toll Brothers, Inc. Common Stock",other,11953917655.60913,1176207.0,126.22000122070312
+AVY,Avery Dennison Corporation Common Stock,other,11948563554.396286,640133.0,156.2100067138672
+PNW,Pinnacle West Capital Corporation Common Stock,other,11924817319.31694,1259422.0,98.4000015258789
+AGNC,AGNC Investment Corp. - Common Stock,nasdaq,11869588847.640106,18740460.0,10.34000015258789
+MEDP,"Medpace Holdings, Inc. - Common Stock",nasdaq,11859981737.263885,389782.0,415.2699890136719
+BBY,"Best Buy Co., Inc. Common Stock",other,11857924867.163727,4319780.0,56.279998779296875
+ELS,"Equity Lifestyle Properties, Inc. Common Stock",other,11851523982.200089,1691644.0,61.11000061035156
+AR,Antero Resources Corporation Common Stock,other,11848129160.049438,5618420.0,38.2400016784668
+QXO,"QXO, Inc. Common Stock",other,11841993874.57407,11271196.0,16.329999923706055
+HL,Hecla Mining Company Common Stock,other,11831366379.549637,16910093.0,17.639999389648438
+CNA,CNA Financial Corporation Common Stock,other,11830339091.410542,501580.0,43.72999954223633
+FIVE,"Five Below, Inc. - Common Stock",nasdaq,11813208597.810654,1113836.0,213.63999938964844
+PNR,Pentair plc. Ordinary Share,other,11745490769.198097,1720093.0,72.68000030517578
+AXSM,"Axsome Therapeutics, Inc. - Common Stock",nasdaq,11718417976.337097,709863.0,227.72000122070312
+TXRH,"Texas Roadhouse, Inc. - Common Stock",nasdaq,11697899661.786346,1143361.0,177.97000122070312
+SWK,"Stanley Black & Decker, Inc. Common Stock",other,11680930984.077454,2035015.0,75.13999938964844
+COO,"The Cooper Companies, Inc.  - Common Stock",nasdaq,11630769383.868378,2117233.0,59.61000061035156
+TFII,TFI International Inc. Common Shares,other,11600557774.026276,389007.0,141.14999389648438
+GDDY,GoDaddy Inc. Class A Common Stock,other,11543490501.868279,2363033.0,87.18000030517578
+HUT,Hut 8 Corp. - Common Stock,nasdaq,11537518794.083984,4821550.0,102.47000122070312
+WBS,Webster Financial Corporation Common Stock,other,11529806191.038757,3905128.0,71.16000366210938
+APTV,Aptiv PLC Ordinary Shares,other,11499459469.47073,2850136.0,54.34000015258789
+SF,Stifel Financial Corporation Common Stock,other,11431537587.625946,1486568.0,74.33000183105469
+RDY,Dr. Reddy's Laboratories Ltd Common Stock,other,11362935117.181185,2543720.0,13.609999656677246
+AIT,"Applied Industrial Technologies, Inc. Common Stock",other,11352862705.2529,290507.0,307.1700134277344
+WLK,Westlake Corporation Common Stock,other,11350411139.759766,1262977.0,88.58999633789062
+COKE,"Coca-Cola Consolidated, Inc. - Common Stock",nasdaq,11333902623.773346,558739.0,170.27000427246094
+BMNR,"BitMine Immersion Technologies, Inc. Common Stock",other,11317491871.53789,42132252.0,19.8700008392334
+DT,"Dynatrace, Inc. Common Stock",other,11302887380.201889,7358768.0,38.36000061035156
+LFUS,"Littelfuse, Inc. - Common Stock",nasdaq,11281632592.99707,309030.0,446.1099853515625
+BLD,TopBuild Corp. Common Stock,other,11278252717.185791,625388.0,400.760009765625
+ALGN,"Align Technology, Inc. - Common Stock",nasdaq,11261950470.75,1139876.0,157.25
+KNX,Knight-Swift Transportation Holdings Inc.,other,11221835243.286133,3462069.0,69.05999755859375
+FHN,First Horizon Corporation Common Stock,other,11186741707.568138,5123526.0,23.56999969482422
+JHX,James Hardie Industries plc. Ordinary Shares,other,11179893315.881157,6465028.0,19.270000457763672
+AFG,"American Financial Group, Inc. Common Stock",other,11158461200.458603,599090.0,134.3000030517578
+ERIE,Erie Indemnity Company - Class A Common Stock,nasdaq,11140356536.976013,241041.0,213.0500030517578
+AAON,"AAON, Inc. - Common Stock",nasdaq,11098218037.854462,1032496.0,135.49000549316406
+DRS,"Leonardo DRS, Inc. - Common Stock",nasdaq,11070626610.5,1142926.0,41.5
+PSKY,Paramount Skydance Corporation - Class B Common Stock,nasdaq,11068621927.857576,13613925.0,9.890000343322754
+GWRE,"Guidewire Software, Inc. Common Stock",other,11064395512.748413,1514950.0,130.13999938964844
+WULF,TeraWulf Inc. - Common Stock,nasdaq,11060288485.175438,31039495.0,22.31999969482422
+AMH,American Homes 4 Rent Common Shares of Beneficial Interest,other,11037831291.210083,3810944.0,30.610000610351562
+FPS,"Forgent Power Solutions, Inc. Class A Common Stock",other,10990230738.748741,4103588.0,45.02000045776367
+CLX,Clorox Company (The) Common Stock,other,10937335828.927322,2644419.0,90.44999694824219
+MP,MP Materials Corp. Common Stock,other,10907420152.952095,5804684.0,61.27000045776367
+PINS,"Pinterest, Inc. Class A Common Stock",other,10906262772.060488,19652247.0,19.469999313354492
+SEIC,SEI Investments Company - Common Stock,nasdaq,10894326386.306396,913733.0,90.58000183105469
+HRL,Hormel Foods Corporation Common Stock,other,10862610120.22994,4788661.0,19.739999771118164
+OKLO,Oklo Inc. Class A common stock,other,10830938940.75,11118396.0,62.25
+ARWR,"Arrowhead Pharmaceuticals, Inc. - Common Stock",nasdaq,10799507542.153091,2106957.0,76.66999816894531
+ALLE,Allegion plc Ordinary Shares,other,10797841065.777718,1009904.0,125.6500015258789
+EGP,"EastGroup Properties, Inc. Common Stock",other,10791899478.753708,361830.0,200.75999450683594
+CACI,"CACI International, Inc. Class A Common Stock",other,10757581694.031525,288842.0,486.9599914550781
+CCK,"Crown Holdings, Inc.",other,10736615165.974167,1114530.0,96.08000183105469
+SCI,Service Corporation International Common Stock,other,10725865089.78215,1226420.0,77.73999786376953
+SJM,The J.M. Smucker Company Common Stock,other,10722422089.899452,2227085.0,100.54000091552734
+CGNX,Cognex Corporation - Common Stock,nasdaq,10694114276.770302,2227600.0,64.26000213623047
+JEF,Jefferies Financial Group Inc. Common Stock,other,10677499301.028316,3051485.0,52.22999954223633
+PAG,"Penske Automotive Group, Inc. Common Stock",other,10664970428.018738,302412.0,162.17999267578125
+POWL,"Powell Industries, Inc. - Common Stock",nasdaq,10661721857.488861,688655.0,292.6499938964844
+ARW,"Arrow Electronics, Inc. Common Stock",other,10654780078.34253,625585.0,208.3699951171875
+EHC,Encompass Health Corporation Common Stock,other,10578589830.653687,979858.0,106.63999938964844
+WMS,"Advanced Drainage Systems, Inc. Common Stock",other,10565757101.856308,863646.0,135.63999938964844
+GSAT,"Globalstar, Inc. - Common Stock",nasdaq,10558116995.715889,1337947.0,81.9800033569336
+WTRG,"Essential Utilities, Inc. Common Stock",other,10497256224.761456,2569373.0,37.0099983215332
+RVTY,"Revvity, Inc. Common Stock",other,10483272004.991364,1185163.0,93.97000122070312
+GIL,"Gildan Activewear, Inc. Class A Sub. Vot. Common Stock",other,10460872345.790081,1339452.0,56.4900016784668
+HLI,"Houlihan Lokey, Inc. Class A Common Stock",other,10447311936.912598,651225.0,150.35000610351562
+AM,Antero Midstream Corporation Common Stock,other,10440060182.571411,2754161.0,21.979999542236328
+EQX,Equinox Gold Corp. Common Shares,other,10439873791.595879,9712669.0,13.229999542236328
+GMED,"Globus Medical, Inc. Class A Common Stock",other,10403468053.788055,1253695.0,76.63999938964844
+ENSG,"The Ensign Group, Inc. - Common Stock",nasdaq,10383994110.983276,418966.0,177.6699981689453
+MUSA,Murphy USA Inc. Common Stock,other,10374614215.516663,356147.0,561.6799926757812
+LUMN,"Lumen Technologies, Inc. Common Stock",other,10354626450.016241,13284960.0,10.050000190734863
+AES,The AES Corporation Common Stock,other,10319392297.543655,13692368.0,14.470000267028809
+ESI,Element Solutions Inc. Common Stock,other,10314328800.491508,3258084.0,42.34000015258789
+SWKS,"Skyworks Solutions, Inc. - Common Stock",nasdaq,10307320460.78897,3628514.0,68.52999877929688
+CYTK,"Cytokinetics, Incorporated - Common Stock",nasdaq,10298199271.880516,2457566.0,75.8499984741211
+PODD,Insulet Corporation - Common Stock,nasdaq,10213769293.073822,1224473.0,147.4600067138672
+MICC,The Magnum Ice Cream Company N.V. Ordinary Shares,other,10209866775.508472,1624207.0,16.65999984741211
+UHS,"Universal Health Services, Inc. Common Stock",other,10208850195.691544,833503.0,168.63999938964844
+JOBY,"Joby Aviation, Inc. Common Stock",other,10190539609.013027,26083163.0,10.359999656677246
+CPT,Camden Property Trust Common Stock,other,10165703880.7594,1130379.0,102.58999633789062
+HUBS,"HubSpot, Inc. Common Stock",other,10155212902.994629,1700347.0,198.3800048828125
+AGX,"Argan, Inc. Common Stock",other,10083783440.066833,426646.0,722.3099975585938
+AG,First Majestic Silver Corp. Ordinary Shares (Canada),other,10082774616.231628,18542225.0,20.420000076293945
+SPXC,"SPX Technologies, Inc. Common Stock",other,10062532265.624374,486582.0,200.99000549316406
+DPZ,Domino's Pizza Inc - Common Stock,nasdaq,10054730966.52008,1034479.0,302.2900085449219
+BMRN,BioMarin Pharmaceutical Inc. - Common Stock,nasdaq,10014066998.215782,1969766.0,51.810001373291016
+RRC,Range Resources Corporation Common Stock,other,10004520519.281387,3490122.0,42.459999084472656
+TTD,"The Trade Desk, Inc. - Class A Common Stock",nasdaq,9942791655.817892,20729682.0,21.149999618530273
+FCFS,"FirstCash Holdings, Inc. - Common Stock",nasdaq,9930762778.666306,348019.0,226.5399932861328
+CR,Crane Company Common Stock,other,9925328791.641357,503057.0,171.8800048828125
+GTLS,"Chart Industries, Inc. Common Stock",other,9923259600.884827,1608047.0,207.3000030517578
+EMBJ,Embraer S.A. Common Stock,other,9922950884.903011,1622063.0,55.7599983215332
+ELAN,Elanco Animal Health Incorporated Common Stock,other,9919069023.219833,5547101.0,19.860000610351562
+HMY,Harmony Gold Mining Company Limited,other,9919060573.485432,5269384.0,15.710000038146973
+DAR,Darling Ingredients Inc. Common Stock,other,9912299460.557262,3017798.0,62.369998931884766
+WTS,"Watts Water Technologies, Inc. Class A Common Stock",other,9910749979.379272,240980.0,296.80999755859375
+HBM,Hudbay Minerals Inc. Ordinary Shares (Canada),other,9910043472.08659,5897176.0,24.950000762939453
+WYNN,"Wynn Resorts, Limited - Common Stock",nasdaq,9903329491.140823,1708696.0,95.41999816894531
+FORM,"FormFactor, Inc. - Common Stock",nasdaq,9843348798.751007,1745812.0,126.2699966430664
+SFD,"Smithfield Foods, Inc. - Common Stock",nasdaq,9840866437.689798,1607244.0,25.010000228881836
+VMI,"Valmont Industries, Inc. Common Stock",other,9837867644.25,208733.0,506.75
+IAG,Iamgold Corporation Ordinary Shares,other,9814439735.412598,7442119.0,16.979999542236328
+IT,"Gartner, Inc. Common Stock",other,9790374442.42067,1560420.0,146.22999572753906
+FRT,Federal Realty Investment Trust Common Stock,other,9775801848.886688,870374.0,113.16000366210938
+KTOS,"Kratos Defense & Security Solutions, Inc. - Common Stock",nasdaq,9767915995.173279,4472377.0,52.09000015258789
+WTFC,Wintrust Financial Corporation - Common Stock,nasdaq,9751596685.98053,460163.0,144.5800018310547
+BSY,"Bentley Systems, Incorporated - Class B Common Stock",nasdaq,9742759242.468613,2956626.0,32.06999969482422
+JKHY,"Jack Henry & Associates, Inc. - Common Stock",nasdaq,9724719911.672363,1038450.0,136.8699951171875
+CTRE,"CareTrust REIT, Inc. Common Stock",other,9718923123.710403,2727395.0,41.13999938964844
+ALSN,"Allison Transmission Holdings, Inc. Common Stock",other,9702680240.01963,890639.0,116.98999786376953
+GME,GameStop Corporation Common Stock,other,9680419708.04662,7359273.0,21.59000015258789
+MOH,Molina Healthcare Inc Common Stock,other,9637979286.193848,1563358.0,184.99000549316406
+MOG-A,Moog Inc. Class A Common Stock,other,9619140363.060059,319709.0,303.6099853515625
+ORI,Old Republic International Corporation Common Stock,other,9576544935.753204,1726546.0,39.31999969482422
+PRAX,"Praxis Precision Medicines, Inc. - Common Stock",nasdaq,9550710022.571228,414517.0,342.5799865722656
+OGE,OGE Energy Corp Common Stock,other,9548939927.140667,1667495.0,46.27000045776367
+FIGR,"Figure Technology Solutions, Inc. - Class A Common Stock",nasdaq,9532159315.387482,5422444.0,43.279998779296875
+VNOM,"Viper Energy, Inc.  - Class A Common Stock",nasdaq,9512651345.795422,2989626.0,48.97999954223633
+AHR,"American Healthcare REIT, Inc. Common Stock",other,9510845605.729095,2462676.0,49.349998474121094
+DCI,"Donaldson Company, Inc. Common Stock",other,9489819354.169617,684946.0,81.94000244140625
+UMBF,UMB Financial Corporation - Common Stock,nasdaq,9470748436.484337,636398.0,124.6500015258789
+MGM,MGM Resorts International Common Stock,other,9458820470.268402,4718806.0,36.970001220703125
+VSAT,"ViaSat, Inc. - Common Stock",nasdaq,9440282369.5,1550363.0,69.5
+KT,KT Corporation Common Stock,other,9389463964.693726,1529458.0,19.579999923706055
+MASI,Masimo Corporation - Common Stock,nasdaq,9346310842.347107,1652709.0,178.47000122070312
+CART,Maplebear Inc. - Common Stock,nasdaq,9333033698.763779,4303192.0,39.709999084472656
+BXP,"BXP, Inc. Common Stock",other,9329427373.5,2416682.0,58.5
+BPOP,"Popular, Inc. - Common Stock",nasdaq,9296011171.062393,524236.0,144.0399932861328
+DOCU,"DocuSign, Inc. - Common Stock",nasdaq,9269641848.180923,4465723.0,47.709999084472656
+UHAL,U-Haul Holding Company Common Stock,other,9246223071.740112,223682.0,48.66999816894531
+OC,Owens Corning Inc Common Stock New,other,9186670778.971756,1393914.0,114.08000183105469
+ACM,AECOM Common Stock,other,9164969111.42334,1330139.0,71.30999755859375
+SNAP,Snap Inc. Class A Common Stock,other,9164100312.7062,50096385.0,5.53000020980835
+LLYVK,"Liberty Live Holdings, Inc. - Series C Liberty Live Group Common Stock",nasdaq,9155360926.332664,349703.0,99.51000213623047
+ICLR,ICON plc - Ordinary Shares,nasdaq,9051120275.792465,1304166.0,116.37999725341797
+GGB,Gerdau S.A. Common Stock,other,9049730315.18053,18381649.0,4.599999904632568
+KRYS,"Krystal Biotech, Inc. - Common Stock",nasdaq,9029354717.142212,305444.0,306.2900085449219
+XP,XP Inc. - Class A Common Stock,nasdaq,9026354347.325764,5635203.0,17.469999313354492
+SSB,SouthState Bank Corporation Common Stock,other,9006947044.683685,902296.0,92.22000122070312
+ONB,Old National Bancorp - Common Stock,nasdaq,8998627523.735046,3222871.0,23.290000915527344
+BRX,Brixmor Property Group Inc. Common Stock,other,8971902610.850672,2669726.0,29.239999771118164
+VFS,VinFast Auto Ltd. - Ordinary Shares,nasdaq,8960422739.807568,736095.0,3.8299999237060547
+CAVA,"CAVA Group, Inc. Common Stock",other,8948620200.94616,3232558.0,76.87000274658203
+ADC,Agree Realty Corporation Common Stock,other,8942858771.182549,1152919.0,74.45999908447266
+BAX,Baxter International Inc. Common Stock,other,8934913444.365417,8862700.0,17.299999237060547
+R,"Ryder System, Inc. Common Stock",other,8934143108.07074,397469.0,230.91000366210938
+RIOT,"Riot Platforms, Inc. - Common Stock",nasdaq,8882772306.148052,18528439.0,23.489999771118164
+LLYVA,"Liberty Live Holdings, Inc. - Series A Liberty Live Group Common Stock",nasdaq,8881187419.059906,172631.0,96.52999877929688
+CHWY,"Chewy, Inc. Class A Common Stock",other,8866886080.029366,8322192.0,21.280000686645508
+STN,Stantec Inc Common Stock,other,8813956320.734673,367942.0,77.2699966430664
+CNM,"Core & Main, Inc. Class A Common Stock",other,8799435989.154911,2532430.0,46.77000045776367
+MWH,"SOLV Energy, Inc. - Class A common stock",nasdaq,8795587917.460556,923328.0,43.439998626708984
+PSO,"Pearson, Plc Common Stock",other,8778901502.811607,1121111.0,14.569999694824219
+ZION,Zions Bancorporation N.A. - Common Stock,nasdaq,8771085204.82101,1657725.0,59.630001068115234
+SBSW,D/B/A Sibanye-Stillwater Limited ADS,other,8767248353.176834,5781949.0,12.119999885559082
+BAH,Booz Allen Hamilton Holding Corporation Common Stock,other,8763594027.815079,1898553.0,72.66999816894531
+LINE,"Lineage, Inc. - Common Stock",nasdaq,8754079507.951756,1150319.0,38.45000076293945
+SNEX,StoneX Group Inc. - Common Stock,nasdaq,8734307301.603088,751752.0,110.20999908447266
+ENS,EnerSys Common Stock,other,8733038453.073944,370107.0,236.97999572753906
+BVN,Buenaventura Mining Company Inc.,other,8709209901.961922,1595903.0,34.290000915527344
+ZG,"Zillow Group, Inc. - Class A Common Stock",nasdaq,8708197202.81147,1117584.0,38.060001373291016
+SIRI,SiriusXM Holdings Inc. - Common Stock,nasdaq,8694892921.197937,4581198.0,25.829999923706055
+CUBE,CubeSmart Common Shares,other,8685226984.991913,2378019.0,38.36000061035156
+TTC,Toro Company (The) Common Stock,other,8644583450.988731,820738.0,88.68000030517578
+UHAL-B,U-Haul Holding Company Series N Non-Voting Common Stock ,other,8617866305.252075,367303.0,44.86000061035156
+Z,"Zillow Group, Inc. - Class C Capital Stock",nasdaq,8616676129.687614,3914328.0,37.65999984741211
+ALV,"Autoliv, Inc. Common Stock",other,8598054255.067612,813787.0,114.8499984741211
+FRHC,Freedom Holding Corp. - Common Stock,nasdaq,8567898972.134171,100758.0,140.02000427246094
+PRI,"Primerica, Inc. Common Stock",other,8548784409.916992,199007.0,274.1400146484375
+AYI,Acuity Inc. Common Stock,other,8537660911.863281,440898.0,281.6300048828125
+EDU,"New Oriental Education & Technology Group, Inc. Sponsored ADR representing 10 Ordinary Share (Cayman Islands)",other,8485647824.082527,775601.0,50.900001525878906
+MSGS,Madison Square Garden Sports Corp. Class A Common Stock (New),other,8463714860.508453,257538.0,351.5400085449219
+CFR,"Cullen/Frost Bankers, Inc. Common Stock",other,8458762173.958618,560382.0,134.6999969482422
+GKOS,Glaukos Corporation Common Stock,other,8458270200.474991,763077.0,144.00999450683594
+NE,Noble Corporation plc A Ordinary Shares,other,8439980681.047791,1746922.0,52.900001525878906
+MBLY,Mobileye Global Inc. - Class A Common Stock,nasdaq,8438705518.34222,6197046.0,10.020000457763672
+DDS,"Dillard's, Inc. Common Stock",other,8412760015.117615,117269.0,538.6900024414062
+PRMB,Primo Brands Corporation Class A Common Stock,other,8411293377.898697,5006538.0,23.18000030517578
+SARO,"StandardAero, Inc. Common Stock",other,8394917293.0,4190579.0,25.25
+CHRD,Chord Energy Corporation - Common Stock,nasdaq,8354235731.007706,1064853.0,148.38999938964844
+COLB,"Columbia Banking System, Inc. - Common Stock",nasdaq,8328637962.338173,2931095.0,28.770000457763672
+KRMN,Karman Holdings Inc. Common Stock,other,8318675848.895725,2142555.0,62.77000045776367
+NNN,"NNN REIT, Inc. Common Stock",other,8317650530.676544,1578982.0,43.720001220703125
+FLS,Flowserve Corporation Common Stock,other,8316402817.4663925,2178390.0,65.06999969482422
+CIFR,Cipher Digital Inc. - Common Stock,nasdaq,8315970143.802023,25961192.0,20.329999923706055
+HSIC,"Henry Schein, Inc. - Common Stock",nasdaq,8284026708.098541,1462752.0,72.72000122070312
+ICL,ICL Group Ltd. Ordinary Shares,other,8273211995.948971,1718122.0,6.409999847412109
+MXL,"MaxLinear, Inc - Common Stock",nasdaq,8268673526.132904,3356415.0,92.33999633789062
+MTCH,"Match Group, Inc. - Common Stock",nasdaq,8257635376.336472,4936704.0,35.400001525878906
+EGO,Eldorado Gold Corporation Ordinary Shares,other,8248567504.045372,3224173.0,31.65999984741211
+CAE,CAE Inc. Ordinary Shares,other,8202816080.214621,832171.0,25.489999771118164
+AGCO,AGCO Corporation Common Stock,other,8202437850.170685,724382.0,113.27999877929688
+EMN,Eastman Chemical Company Common Stock,other,8185170346.18103,1465623.0,71.58000183105469
+FRO,Frontline Plc Ordinary Shares,other,8161355113.430443,3848250.0,36.65999984741211
+CRUS,"Cirrus Logic, Inc. - Common Stock",nasdaq,8146390439.646835,632315.0,159.7100067138672
+AAL,"American Airlines Group, Inc. - Common Stock",nasdaq,8141651313.998248,65786409.0,12.3100004196167
+WAL,Western Alliance Bancorporation Common Stock (DE),other,8125574291.275635,1417417.0,74.41999816894531
+QRVO,"Qorvo, Inc. - Common Stock",nasdaq,8119261334.25,1190020.0,92.25
+ACI,"Albertsons Companies, Inc. Class A Common Stock",other,8110371220.149929,6381433.0,16.399999618530273
+AXTI,AXT Inc - Common Stock,nasdaq,8098081635.657715,11780271.0,123.77999877929688
+ORA,"Ormat Technologies, Inc. Common Stock",other,8082371816.157913,986573.0,131.52000427246094
+NUVL,"Nuvalent, Inc. - Class A Common Stock",nasdaq,8081486945.582504,567596.0,102.30000305175781
+LEVI,Levi Strauss & Co Class A Common Stock,other,8068829169.925808,2824717.0,20.979999542236328
+FR,"First Industrial Realty Trust, Inc. Common Stock",other,8064259134.663696,985009.0,60.83000183105469
+ZWS,Zurn Elkay Water Solutions Corporation Common Stock,other,8052083360.324341,1027417.0,48.060001373291016
+SFM,"Sprouts Farmers Market, Inc. - Common Stock",nasdaq,8041728379.410301,2528071.0,85.51000213623047
+FROG,JFrog Ltd. - Ordinary shares,nasdaq,8013281383.393677,3409787.0,66.16000366210938
+ECG,"Everus Construction Group, Inc. Common Stock",other,7999240554.626648,656417.0,156.72000122070312
+AVAV,"AeroVironment, Inc. - Common Stock",nasdaq,7995601218.0,1600752.0,158.0
+ALGM,"Allegro MicroSystems, Inc. - Common Stock",nasdaq,7986036214.26857,2234712.0,43.099998474121094
+JHG,Janus Henderson Group plc Ordinary Shares,other,7968790685.560577,3195366.0,51.720001220703125
+HALO,"Halozyme Therapeutics, Inc. - Common Stock",nasdaq,7961304885.780334,1699088.0,67.12000274658203
+TKR,Timken Company (The) Common Stock,other,7956426301.44371,801825.0,114.48999786376953
+CMC,Commercial Metals Company Common Stock,other,7900726110.0,1143749.0,71.25
+TEM,"Tempus AI, Inc. - Class A Common Stock",nasdaq,7888280269.108818,5664731.0,43.93000030517578
+RIG,Transocean Ltd (Switzerland) Common Stock,other,7859745836.451149,37653680.0,7.039999961853027
+CAMT,Camtek Ltd. - Ordinary Shares,nasdaq,7845863987.401154,489911.0,168.35000610351562
+REXR,"Rexford Industrial Realty, Inc. Common Stock",other,7841447832.920368,2524558.0,34.7400016784668
+ARE,"Alexandria Real Estate Equities, Inc. Common Stock",other,7836898728.331299,2431712.0,44.970001220703125
+WFRD,Weatherford International plc - Ordinary shares,nasdaq,7827634013.259216,1352161.0,108.83000183105469
+SM,SM Energy Company Common Stock,other,7813410202.172749,6111853.0,32.59000015258789
+KEX,Kirby Corporation Common Stock,other,7790870236.816406,700815.0,145.6999969482422
+SOBO,South Bow Corporation Common Shares,other,7776034639.940094,1022738.0,37.279998779296875
+MANH,"Manhattan Associates, Inc. - Common Stock",nasdaq,7769495967.974487,704904.0,131.32000732421875
+AMG,"Affiliated Managers Group, Inc. Common Stock",other,7762775999.073944,368871.0,293.9100036621094
+IDA,"IDACORP, Inc. Common Stock",other,7754936942.603531,472611.0,139.9600067138672
+FDS,FactSet Research Systems Inc. Common Stock,other,7744529044.367386,992276.0,212.5800018310547
+AOS,A.O. Smith Corporation Common Stock,other,7719780998.899231,1540942.0,56.0099983215332
+NFG,National Fuel Gas Company Common Stock,other,7719722774.287399,792974.0,81.2300033569336
+CELH,"Celsius Holdings, Inc. - Common Stock",nasdaq,7710113218.592377,7766168.0,30.15999984741211
+CORZ,"Core Scientific, Inc. - Common Stock",nasdaq,7696002628.287323,13633536.0,24.209999084472656
+GAP,"Gap, Inc. (The) Common Stock",other,7690410741.817554,7862342.0,21.049999237060547
+W,Wayfair Inc. Class A Common Stock,other,7684836332.908539,4033041.0,58.220001220703125
+BOKF,BOK Financial Corporation - Common Stock,nasdaq,7677632626.204956,342776.0,126.36000061035156
+JXN,Jackson Financial Inc. Class A Common Stock ,other,7659885240.0234375,637261.0,109.83000183105469
+TAP,Molson Coors Beverage Company Class B Common Stock,other,7659597571.018066,3223287.0,40.84000015258789
+SAIL,"SailPoint, Inc. - Common Stock",nasdaq,7657504924.5,3219947.0,13.5
+BLDR,"Builders FirstSource, Inc. Common Stock",other,7573291263.05603,2478307.0,70.41000366210938
+PCVX,"Vaxcyte, Inc. - Common Stock",nasdaq,7564994471.846649,1363312.0,52.38999938964844
+QBTS,D-Wave Quantum Inc. Common Shares,other,7538177788.306465,26803711.0,20.350000381469727
+LTH,"Life Time Group Holdings, Inc. Common Stock",other,7510616753.751305,3299250.0,33.7400016784668
+ESE,ESCO Technologies Inc. Common Stock,other,7509711821.140137,308317.0,289.8699951171875
+OSK,Oshkosh Corporation (Holding Company)Common Stock,other,7506474052.453781,692325.0,120.38999938964844
+MTDR,Matador Resources Company Common Stock,other,7492914236.128094,1918577.0,60.34000015258789
+XE,"X-Energy, Inc. - Class A Common Stock",nasdaq,7464979877.579933,10398543.0,27.299999237060547
+NXE,Nexgen Energy Ltd. Common Shares,other,7439580740.546679,7020966.0,11.239999771118164
+CBSH,"Commerce Bancshares, Inc. - Common Stock",nasdaq,7427346311.319145,1289060.0,50.95000076293945
+VOYA,"Voya Financial, Inc. Common Stock",other,7383864914.953308,1216676.0,81.44000244140625
+PDI,PIMCO Dynamic Income Fund Common Stock,other,7371445166.854858,2724666.0,16.860000610351562
+SSD,"Simpson Manufacturing Company, Inc. Common Stock",other,7348127410.629272,279830.0,178.6199951171875
+ATR,"AptarGroup, Inc. Common Stock",other,7318275518.861511,518039.0,114.66999816894531
+NOV,NOV Inc. Common Stock,other,7310558638.791199,4948438.0,20.3700008392334
+AXS,Axis Capital Holdings Limited Common Stock,other,7305235185.257446,575390.0,99.08999633789062
+VAL,Valaris Limited Common Shares,other,7301215186.533966,1123630.0,105.43000030517578
+UGI,UGI Corporation Common Stock,other,7287242630.732727,1721177.0,33.9900016784668
+MYRG,"MYR Group, Inc. - Common Stock",nasdaq,7278836355.506714,300371.0,467.4599914550781
+CRL,"Charles River Laboratories International, Inc. Common Stock",other,7266102364.492493,970320.0,150.85000610351562
+CWAN,"Clearwater Analytics Holdings, Inc. Class A Common Stock",other,7241085137.689619,4842803.0,24.350000381469727
+STAG,"Stag Industrial, Inc. Common Stock",other,7221815014.876728,1258746.0,37.77000045776367
+KNSL,"Kinsale Capital Group, Inc. Common Stock",other,7179225123.579987,282049.0,311.2900085449219
+VLY,Valley National Bancorp - Common Stock,nasdaq,7164920179.647507,7194374.0,12.930000305175781
+SLAB,"Silicon Laboratories, Inc. - Common Stock",nasdaq,7143532922.786957,511014.0,216.58999633789062
