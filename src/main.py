@@ -243,13 +243,16 @@ def main() -> None:
     save_report_files(df, mode, report_body)
 
     send_after_close = env_bool("SEND_AFTER_CLOSE", default=False)
+    dry_run = env_bool("DRY_RUN", default=False)
 
     should_send = (
         mode in {"morning_email", "noon_update", "afternoon_update", "manual"}
         or (mode == "full_after_close" and send_after_close)
     )
 
-    if should_send:
+    if dry_run:
+        print("DRY_RUN=true, email not sent.", flush=True)
+    elif should_send:
         send_email(subject_for(mode), report_body)
         print("Email sent.", flush=True)
     else:

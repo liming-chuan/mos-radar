@@ -55,4 +55,5 @@ jobs:
           REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
           PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
+          DRY_RUN: ${{ vars.DRY_RUN }}
         run: python src/main.py

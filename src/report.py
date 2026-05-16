@@ -56,7 +56,11 @@ def normalize_numeric(df: pd.DataFrame) -> pd.DataFrame:
         "fcf_yield",
         "price",
         "intrinsic_value_per_share",
+        "buy_price_20mos",
+        "buy_price_35mos",
+        "buy_price_50mos",
         "debt_to_ebitda",
+        "interest_coverage",
         "roe",
         "price_change_since_scan",
         "mos_change_since_scan",
@@ -170,6 +174,9 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <td class="num">{num(r.get("final_score"))}</td>
                 <td class="num">{money(r.get("price"))}</td>
                 <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
+                <td class="num">{money(r.get("buy_price_20mos"))}</td>
+                <td class="num">{money(r.get("buy_price_35mos"))}</td>
+                <td class="num">{money(r.get("buy_price_50mos"))}</td>
                 <td class="num">{pct(r.get("fcf_yield"))}</td>
                 <td class="num">{num(r.get("debt_to_ebitda"))}</td>
                 <td>{short_reason(r.get("reason"))}</td>
@@ -189,6 +196,9 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>分数</th>
                 <th>现价</th>
                 <th>保守价值/股</th>
+                <th>20%观察价</th>
+                <th>35%观察价</th>
+                <th>50%强关注价</th>
                 <th>FCF Yield</th>
                 <th>债务/EBITDA</th>
                 <th>理由</th>
@@ -425,7 +435,7 @@ def generate_report(
 
         <div class="note">
             持仓池会显示所有持仓的安全边际；全市场部分只显示 S / A / B，避免安全边际低的股票干扰判断。
-            本报告只用于筛选和复核，不是自动买卖建议。
+            20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
         </div>
     </div>
 

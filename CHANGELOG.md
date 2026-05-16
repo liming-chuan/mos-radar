@@ -2,6 +2,23 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.0 - 2026-05-16
+
+- Added `DRY_RUN=true` support to generate reports without sending email.
+- Added lightweight retry handling for yfinance data fetches and price updates.
+- Upgraded model identifier from `MOS_Radar_V5` to `MOS_Radar_V6`.
+- Added more value trap checks:
+  - consecutive revenue decline
+  - gross margin decline
+  - operating margin decline
+  - high FCF volatility
+  - weak interest coverage
+  - debt exceeding market cap
+  - debt over 5x average FCF
+- Added quality/risk rating caps so weak fundamentals can cap high margin-of-safety names.
+- Added 20% / 35% / 50% margin-of-safety observation prices to reports.
+- Kept the architecture compatible with GitHub Actions free runners: no database, no paid API, no heavy background service.
+
 ## v5.0.0 - 2026-05-16
 
 - Documented the current MOS Radar V5 model in `README.md`.

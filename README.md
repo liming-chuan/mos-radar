@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V5
+# MOS Radar：安全边际雷达 V6
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -15,7 +15,7 @@
 安全边际 = (保守内在价值/股 - 当前股价) / 当前股价
 ```
 
-V5 的保守内在价值按行业模型生成估值候选，并取最低的有效估值：
+V6 的保守内在价值按行业模型生成估值候选，并取最低的有效估值：
 
 ```text
 最近/3年/5年 FCF 中较低的正值 × 行业保守倍数
@@ -26,7 +26,15 @@ V5 的保守内在价值按行业模型生成估值候选，并取最低的有�
 金融股：按 ROE 分层的 PB 模型
 ```
 
-REIT/地产类公司需要 AFFO/NOI 专门模型，V5 默认跳过。
+REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
+
+## V6 风险控制
+
+- yfinance 数据抓取增加轻量重试，适配 GitHub Actions 免费服务器上的偶发网络抖动。
+- 增加价值陷阱识别：收入连续下降、毛利率/营业利润率恶化、FCF 波动过大、利息覆盖不足、债务过高、股权稀释等。
+- 增加评级封顶：现金流、质量、债务或数据质量不过关时，即使安全边际很高，也不会直接给 S/A。
+- 报告显示 20% / 35% / 50% 安全边际对应观察价，方便人工复核价格触发区。
+- 支持 `DRY_RUN=true`，本地或 GitHub 手动测试时只生成报告，不发送邮件。
 
 ## 评级
 
@@ -37,7 +45,7 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V5 默认跳过。
 - D_TRAP：疑似价值陷阱
 - PASS：没有安全边际
 - NO_DATA / ERROR：数据不足或抓取失败
-- SKIP：V5 暂不自动估值的行业或模型，例如 REIT/地产类公司
+- SKIP：V6 暂不自动估值的行业或模型，例如 REIT/地产类公司
 
 ## GitHub Secrets
 
@@ -72,6 +80,7 @@ MAX_TICKERS=0
 REQUEST_SLEEP_SECONDS=0.2
 PRICE_SLEEP_SECONDS=0.05
 SEND_AFTER_CLOSE=false
+DRY_RUN=false
 ```
 
 说明：
@@ -79,6 +88,7 @@ SEND_AFTER_CLOSE=false
 - `TOP_MOS_COUNT=50`：邮件里显示更多安全边际厚的公司。
 - `MAX_TICKERS=0`：扫描 `data/universe.csv` 里的全部股票；测试时可设为 10。
 - `SEND_AFTER_CLOSE=false`：盘后只生成报告不发邮件；如果想盘后也发，改为 `true`。
+- `DRY_RUN=false`：线上正常发邮件；本地或手动测试可设为 `true`，只生成报告不发邮件。
 
 ## 本地测试
 
@@ -96,6 +106,7 @@ export MAIL_TO=你的Outlook邮箱
 export TOP_MOS_COUNT=50
 export MAX_TICKERS=10
 export RUN_MODE=manual
+export DRY_RUN=true
 python src/main.py
 ```
 
@@ -115,7 +126,7 @@ QCOM
 
 ## 重要提醒
 
-1. V5 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
-3. REIT/地产类公司 V5 默认跳过，因为需要 AFFO/NOI 专门模型。
+3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

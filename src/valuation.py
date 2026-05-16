@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V5"
+MODEL_VERSION = "MOS_Radar_V6"
 
 
 @dataclass
@@ -37,6 +37,7 @@ class AnalysisResult:
     fcf_ttm: float | None = None
     fcf_3y_avg: float | None = None
     fcf_5y_avg: float | None = None
+    fcf_volatility: float | None = None
     fcf_yield: float | None = None
     fcf_conversion: float | None = None
 
@@ -45,6 +46,7 @@ class AnalysisResult:
     net_cash: float | None = None
     ebitda: float | None = None
     debt_to_ebitda: float | None = None
+    interest_coverage: float | None = None
     equity: float | None = None
     roe: float | None = None
 
@@ -52,6 +54,9 @@ class AnalysisResult:
 
     intrinsic_value_total: float | None = None
     intrinsic_value_per_share: float | None = None
+    buy_price_20mos: float | None = None
+    buy_price_35mos: float | None = None
+    buy_price_50mos: float | None = None
     margin_of_safety: float | None = None
 
     valuation_method: str = ""
@@ -69,6 +74,7 @@ class AnalysisResult:
 
     trap_flags: str = ""
     trap_count: int = 0
+    rating_cap: str = ""
     feedback_label: str = ""
 
     rating: str = "NO_DATA"
@@ -113,6 +119,51 @@ def series_avg(s: pd.Series | None, n: int = 5) -> float | None:
     return safe_float(vals.mean())
 
 
+def series_volatility_ratio(s: pd.Series | None, n: int = 5) -> float | None:
+    if s is None or len(s) == 0:
+        return None
+    vals = pd.to_numeric(s, errors="coerce").dropna().head(n)
+    if len(vals) < 3:
+        return None
+    avg = vals.mean()
+    if avg <= 0:
+        return None
+    return safe_float(vals.std(ddof=0) / avg)
+
+
+def has_consecutive_decline(s: pd.Series | None, periods: int = 3) -> bool:
+    if s is None or len(s) < periods:
+        return False
+    vals = pd.to_numeric(s, errors="coerce").dropna().head(periods)
+    if len(vals) < periods:
+        return False
+    # yfinance columns are usually newest first.
+    return all(vals.iloc[i] < vals.iloc[i + 1] for i in range(len(vals) - 1))
+
+
+def margin_declining(numerator: pd.Series | None, denominator: pd.Series | None, periods: int = 3) -> bool:
+    if numerator is None or denominator is None:
+        return False
+    num = pd.to_numeric(numerator, errors="coerce")
+    den = pd.to_numeric(denominator, errors="coerce")
+    common_cols = num.index.intersection(den.index)
+    if len(common_cols) < periods:
+        return False
+    margins = (num.loc[common_cols] / den.loc[common_cols]).replace([np.inf, -np.inf], np.nan).dropna().head(periods)
+    if len(margins) < periods:
+        return False
+    return all(margins.iloc[i] < margins.iloc[i + 1] for i in range(len(margins) - 1))
+
+
+def update_buy_prices(result: AnalysisResult) -> None:
+    iv = result.intrinsic_value_per_share
+    if iv is None or iv <= 0:
+        return
+    result.buy_price_20mos = iv / 1.20
+    result.buy_price_35mos = iv / 1.35
+    result.buy_price_50mos = iv / 1.50
+
+
 def row(df: pd.DataFrame | None, names: list[str]) -> pd.Series | None:
     if df is None or df.empty:
         return None
@@ -132,6 +183,18 @@ def fast_info_value(fast_info, key: str):
             return getattr(fast_info, key)
         except Exception:
             return None
+
+
+def retry_call(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
+    last_error = None
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as e:
+            last_error = e
+            if i < attempts - 1:
+                time.sleep(base_sleep * (i + 1))
+    raise last_error
 
 
 def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | None]:
@@ -592,8 +655,15 @@ def score_data_quality(*values) -> float:
 def detect_traps(
     latest_fcf,
     fcf_5y_avg,
+    fcf_volatility,
     revenue_cagr,
+    revenue_decline_streak,
+    gross_margin_decline,
+    operating_margin_decline,
     debt_to_ebitda,
+    interest_coverage,
+    debt,
+    market_cap,
     operating_margin,
     net_margin,
     share_dilution,
@@ -612,8 +682,29 @@ def detect_traps(
     if revenue_cagr is not None and revenue_cagr < -0.03:
         flags.append("revenue_decline")
 
+    if revenue_decline_streak:
+        flags.append("revenue_decline_streak")
+
+    if gross_margin_decline:
+        flags.append("gross_margin_decline")
+
+    if operating_margin_decline:
+        flags.append("operating_margin_decline")
+
+    if fcf_volatility is not None and fcf_volatility > 0.80:
+        flags.append("high_fcf_volatility")
+
     if debt_to_ebitda is not None and debt_to_ebitda > 4:
         flags.append("high_debt_to_ebitda")
+
+    if interest_coverage is not None and interest_coverage < 3:
+        flags.append("weak_interest_coverage")
+
+    if debt is not None and market_cap is not None and market_cap > 0 and debt > market_cap:
+        flags.append("debt_exceeds_market_cap")
+
+    if debt is not None and fcf_5y_avg is not None and fcf_5y_avg > 0 and debt > 5 * fcf_5y_avg:
+        flags.append("debt_over_5x_avg_fcf")
 
     if operating_margin is not None and operating_margin < 0:
         flags.append("negative_operating_margin")
@@ -632,6 +723,49 @@ def detect_traps(
             flags.append("possible_cycle_peak_fcf")
 
     return flags
+
+
+def rating_rank(rating: str) -> int:
+    order = {"S": 0, "A": 1, "B": 2, "C_THIN": 3, "PASS": 4, "D_TRAP": 5, "NO_DATA": 6, "SKIP": 7, "ERROR": 8}
+    return order.get(str(rating), 9)
+
+
+def cap_rating(rating: str, cap: str) -> str:
+    return cap if rating_rank(rating) < rating_rank(cap) else rating
+
+
+def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
+    reasons = []
+    cap = None
+
+    if result.trap_count >= 3:
+        return "D_TRAP", ["trap_count_ge_3"]
+
+    if result.trap_count >= 2:
+        cap = "C_THIN"
+        reasons.append("trap_count_ge_2")
+
+    if result.cashflow_score < 8:
+        cap = cap_rating(cap or "S", "B")
+        reasons.append("weak_cashflow_score")
+
+    if result.quality_score < 6:
+        cap = cap_rating(cap or "S", "B")
+        reasons.append("weak_quality_score")
+
+    if result.debt_to_ebitda is not None and result.debt_to_ebitda > 5:
+        cap = cap_rating(cap or "S", "C_THIN")
+        reasons.append("debt_to_ebitda_over_5")
+
+    if result.interest_coverage is not None and result.interest_coverage < 2:
+        cap = cap_rating(cap or "S", "C_THIN")
+        reasons.append("interest_coverage_under_2")
+
+    if result.data_quality_score < 5:
+        cap = cap_rating(cap or "S", "B")
+        reasons.append("low_data_quality")
+
+    return cap, reasons
 
 
 def apply_feedback(ticker: str, intrinsic_value: float | None, final_score: float, flags: list[str]) -> tuple[float | None, float, str, list[str]]:
@@ -665,7 +799,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         info = {}
         try:
-            info = t.info or {}
+            info = retry_call(f"{ticker}.info", lambda: t.info or {})
         except Exception:
             info = {}
 
@@ -689,7 +823,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         if result.model_type == "reit_needs_affo":
             result.rating = "SKIP"
-            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V5 暂不自动估值"
+            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6 暂不自动估值"
             return result
 
         financials = None
@@ -697,17 +831,17 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         cashflow = None
 
         try:
-            financials = t.financials
+            financials = retry_call(f"{ticker}.financials", lambda: t.financials)
         except Exception:
             financials = None
 
         try:
-            balance = t.balance_sheet
+            balance = retry_call(f"{ticker}.balance_sheet", lambda: t.balance_sheet)
         except Exception:
             balance = None
 
         try:
-            cashflow = t.cashflow
+            cashflow = retry_call(f"{ticker}.cashflow", lambda: t.cashflow)
         except Exception:
             cashflow = None
 
@@ -716,6 +850,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         operating_income_s = row(financials, ["Operating Income", "Operating Income or Loss"])
         net_income_s = row(financials, ["Net Income", "Net Income Common Stockholders"])
         ebitda_s = row(financials, ["EBITDA"])
+        interest_expense_s = row(financials, ["Interest Expense", "Interest Expense Non Operating"])
 
         ocf_s = row(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
         capex_s = row(cashflow, ["Capital Expenditure", "Capital Expenditures"])
@@ -750,6 +885,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         latest_fcf = series_latest(fcf_s)
         fcf_3y_avg = series_avg(fcf_s, 3)
         fcf_5y_avg = series_avg(fcf_s, 5)
+        fcf_volatility = series_volatility_ratio(fcf_s, 5)
 
         cash = series_latest(cash_s) or safe_float(info.get("totalCash"))
         debt = series_latest(debt_s) or safe_float(info.get("totalDebt"))
@@ -763,6 +899,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.fcf_ttm = latest_fcf
         result.fcf_3y_avg = fcf_3y_avg
         result.fcf_5y_avg = fcf_5y_avg
+        result.fcf_volatility = fcf_volatility
         result.cash = cash
         result.total_debt = debt
         result.net_cash = (cash or 0) - (debt or 0)
@@ -794,6 +931,10 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         if debt is not None and ebitda is not None and ebitda > 0:
             result.debt_to_ebitda = debt / ebitda
 
+        interest_expense = series_latest(interest_expense_s)
+        if operating_income is not None and interest_expense is not None and interest_expense != 0:
+            result.interest_coverage = operating_income / abs(interest_expense)
+
         if shares_s is not None:
             vals = pd.to_numeric(shares_s, errors="coerce").dropna().head(4)
             if len(vals) >= 2 and vals.iloc[-1] > 0:
@@ -819,8 +960,15 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         flags = detect_traps(
             latest_fcf=latest_fcf,
             fcf_5y_avg=fcf_5y_avg,
+            fcf_volatility=fcf_volatility,
             revenue_cagr=revenue_cagr,
+            revenue_decline_streak=has_consecutive_decline(revenue_s, 3),
+            gross_margin_decline=margin_declining(gross_profit_s, revenue_s, 3),
+            operating_margin_decline=margin_declining(operating_income_s, revenue_s, 3),
             debt_to_ebitda=result.debt_to_ebitda,
+            interest_coverage=result.interest_coverage,
+            debt=debt,
+            market_cap=market_cap,
             operating_margin=result.operating_margin,
             net_margin=result.net_margin,
             share_dilution=result.share_dilution_3y,
@@ -834,6 +982,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             if market_cap is not None and market_cap > 0:
                 result.intrinsic_value_per_share = price * intrinsic / market_cap
                 result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
+                update_buy_prices(result)
 
         result.mos_score = score_margin_of_safety(result.margin_of_safety)
         result.cashflow_score = score_cashflow(latest_fcf, fcf_5y_avg, result.fcf_yield, result.fcf_conversion)
@@ -875,6 +1024,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.intrinsic_value_total = intrinsic_adjusted
             result.intrinsic_value_per_share = price * intrinsic_adjusted / market_cap
             result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
+            update_buy_prices(result)
             result.mos_score = score_margin_of_safety(result.margin_of_safety)
 
         result.final_score = final_adjusted
@@ -900,19 +1050,27 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = f"疑似价值陷阱：{result.trap_flags}"
         elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
             result.rating = "S"
-            result.reason = f"安全边际很厚，V5模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际很厚，V6模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
             result.rating = "A"
-            result.reason = f"安全边际较厚，V5模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际较厚，V6模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
             result.rating = "B"
-            result.reason = f"有一定安全边际，V5模型={result.model_type}，估值法={method}"
+            result.reason = f"有一定安全边际，V6模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0:
             result.rating = "C_THIN"
             result.reason = "安全边际偏薄，不优先"
         else:
             result.rating = "PASS"
             result.reason = "当前价格高于保守内在价值，没有安全边际"
+
+        cap, cap_reasons = quality_rating_cap(result)
+        if cap is not None:
+            original_rating = result.rating
+            result.rating = cap_rating(result.rating, cap)
+            if result.rating != original_rating:
+                result.rating_cap = cap
+                result.reason += f"；质量/风险封顶：{original_rating}->{result.rating}({','.join(cap_reasons)})"
 
         if feedback_label:
             result.reason += f"；人工反馈标签={feedback_label}"

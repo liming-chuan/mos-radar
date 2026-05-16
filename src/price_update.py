@@ -17,17 +17,29 @@ def _safe_float(x):
         return None
 
 
+def _retry(fn, attempts: int = 3, base_sleep: float = 0.5):
+    last_error = None
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as e:
+            last_error = e
+            if i < attempts - 1:
+                time.sleep(base_sleep * (i + 1))
+    raise last_error
+
+
 def get_current_price(ticker: str) -> Optional[float]:
     try:
         t = yf.Ticker(ticker)
         try:
-            p = t.fast_info.get("last_price")
+            p = _retry(lambda: t.fast_info.get("last_price"))
             p = _safe_float(p)
             if p:
                 return p
         except Exception:
             pass
-        info = t.info or {}
+        info = _retry(lambda: t.info or {})
         for key in ["currentPrice", "regularMarketPrice", "previousClose"]:
             p = _safe_float(info.get(key))
             if p:
