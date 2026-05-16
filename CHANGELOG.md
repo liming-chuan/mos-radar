@@ -2,6 +2,17 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.2.0 - 2026-05-17
+
+- Switched operating-company valuation from reported FCF to owner FCF: `Operating Cash Flow + CapEx - SBC`.
+- Added reported FCF, SBC, total assets, total liabilities, NCAV, tangible equity, risk-free rate, applied discount rate, and accrual ratio to valuation outputs.
+- Added dynamic discount-rate support using cached `^TNX` 10-year Treasury yield with a conservative fallback for GitHub Actions.
+- Added NCAV and tangible-book valuation candidates for asset-heavy and cyclical models.
+- Financial PB/ROE valuation now prefers tangible equity when available, reducing false positives from goodwill-heavy balance sheets.
+- Added accrual-ratio value-trap detection when accounting earnings materially exceed owner FCF.
+- Made cyclical FCF valuation more conservative by haircutting latest FCF and skipping latest-year capped FCF for cycle-sensitive industries.
+- Updated README and version metadata for the V6.2 model.
+
 ## v6.1.0 - 2026-05-17
 
 - Refactored the valuation model around asset/model type instead of treating all stocks as normal FCF businesses.

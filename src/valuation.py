@@ -14,7 +14,8 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.1.0"
+MODEL_VERSION = "MOS_Radar_V6.2.0"
+RISK_FREE_RATE_CACHE: float | None = None
 
 
 @dataclass
@@ -36,6 +37,8 @@ class AnalysisResult:
     net_margin: float | None = None
 
     net_income_ttm: float | None = None
+    reported_fcf_ttm: float | None = None
+    sbc_ttm: float | None = None
     fcf_ttm: float | None = None
     fcf_3y_avg: float | None = None
     fcf_5y_avg: float | None = None
@@ -46,6 +49,10 @@ class AnalysisResult:
     cash: float | None = None
     total_debt: float | None = None
     net_cash: float | None = None
+    total_assets: float | None = None
+    total_liabilities: float | None = None
+    ncav: float | None = None
+    tangible_equity: float | None = None
     ebitda: float | None = None
     debt_to_ebitda: float | None = None
     interest_coverage: float | None = None
@@ -64,6 +71,9 @@ class AnalysisResult:
     valuation_method: str = ""
     model_type: str = ""
     model_version: str = MODEL_VERSION
+    risk_free_rate: float | None = None
+    discount_rate_used: float | None = None
+    accrual_ratio: float | None = None
 
     mos_score: float = 0
     cashflow_score: float = 0
@@ -199,6 +209,49 @@ def retry_call(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
     raise last_error
 
 
+def normalize_tnx_quote(raw: float | None) -> float | None:
+    value = safe_float(raw)
+    if value is None or value <= 0:
+        return None
+    # ^TNX is usually quoted as yield * 10, e.g. 43.5 means 4.35%.
+    if value > 20:
+        return value / 1000
+    if value > 1:
+        return value / 100
+    return value
+
+
+def get_risk_free_rate(default: float = 0.045) -> float:
+    global RISK_FREE_RATE_CACHE
+    if RISK_FREE_RATE_CACHE is not None:
+        return RISK_FREE_RATE_CACHE
+
+    try:
+        t = yf.Ticker("^TNX")
+        raw = None
+        try:
+            raw = fast_info_value(t.fast_info, "last_price") or fast_info_value(t.fast_info, "lastPrice")
+        except Exception:
+            raw = None
+        if raw is None:
+            info = retry_call("^TNX.info", lambda: t.info or {}, attempts=2, base_sleep=0.3)
+            raw = info.get("regularMarketPrice") or info.get("previousClose")
+        rate = normalize_tnx_quote(raw)
+        RISK_FREE_RATE_CACHE = clamp(rate, 0.02, 0.08, default=default)
+    except Exception:
+        RISK_FREE_RATE_CACHE = default
+
+    return RISK_FREE_RATE_CACHE
+
+
+def effective_discount_rate(cfg: dict, risk_free_rate: float | None) -> float:
+    base = float(cfg.get("discount_rate", 0.11))
+    premium = float(cfg.get("risk_premium", 0.06))
+    if risk_free_rate is None:
+        return base
+    return max(base, risk_free_rate + premium)
+
+
 def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | None]:
     price = None
     market_cap = None
@@ -252,6 +305,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
         "pe_multiple": 10.0,
         "terminal_multiple": 9.0,
         "discount_rate": 0.11,
+        "risk_premium": 0.06,
         "growth_cap": 0.08,
     }
 
@@ -262,6 +316,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 6.0,
             "terminal_multiple": 4.0,
             "discount_rate": 0.15,
+            "risk_premium": 0.10,
             "growth_cap": 0.00,
         })
     elif "semiconductor" in i:
@@ -271,6 +326,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 11.0,
             "terminal_multiple": 8.0,
             "discount_rate": 0.12,
+            "risk_premium": 0.08,
             "growth_cap": 0.08,
         })
     elif "technology" in s:
@@ -280,6 +336,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 14.0,
             "terminal_multiple": 12.0,
             "discount_rate": 0.11,
+            "risk_premium": 0.07,
             "growth_cap": 0.12,
         })
     elif "communication" in s:
@@ -289,6 +346,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 12.0,
             "terminal_multiple": 10.0,
             "discount_rate": 0.11,
+            "risk_premium": 0.06,
             "growth_cap": 0.09,
         })
     elif "consumer defensive" in s:
@@ -298,6 +356,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 13.0,
             "terminal_multiple": 11.0,
             "discount_rate": 0.10,
+            "risk_premium": 0.05,
             "growth_cap": 0.07,
         })
     elif "consumer cyclical" in s:
@@ -307,6 +366,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 11.0,
             "terminal_multiple": 9.0,
             "discount_rate": 0.12,
+            "risk_premium": 0.08,
             "growth_cap": 0.08,
         })
     elif "industrial" in s:
@@ -316,6 +376,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 11.0,
             "terminal_multiple": 9.0,
             "discount_rate": 0.12,
+            "risk_premium": 0.08,
             "growth_cap": 0.07,
         })
     elif "energy" in s:
@@ -325,6 +386,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 8.0,
             "terminal_multiple": 6.0,
             "discount_rate": 0.13,
+            "risk_premium": 0.09,
             "growth_cap": 0.03,
         })
     elif "basic materials" in s:
@@ -334,6 +396,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 9.0,
             "terminal_multiple": 7.0,
             "discount_rate": 0.13,
+            "risk_premium": 0.09,
             "growth_cap": 0.04,
         })
     elif "utilities" in s:
@@ -343,6 +406,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 10.0,
             "terminal_multiple": 7.0,
             "discount_rate": 0.10,
+            "risk_premium": 0.05,
             "growth_cap": 0.04,
         })
     elif "healthcare" in s:
@@ -353,6 +417,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
                 "pe_multiple": 8.0,
                 "terminal_multiple": 6.0,
                 "discount_rate": 0.14,
+                "risk_premium": 0.10,
                 "growth_cap": 0.06,
             })
         else:
@@ -362,6 +427,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
                 "pe_multiple": 12.0,
                 "terminal_multiple": 10.0,
                 "discount_rate": 0.11,
+                "risk_premium": 0.06,
                 "growth_cap": 0.08,
             })
     elif "financial" in s:
@@ -371,6 +437,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 9.0,
             "terminal_multiple": 0.0,
             "discount_rate": 0.12,
+            "risk_premium": 0.08,
             "growth_cap": 0.05,
         })
     elif "real estate" in s or "reit" in i:
@@ -380,6 +447,7 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "pe_multiple": 0.0,
             "terminal_multiple": 0.0,
             "discount_rate": 0.11,
+            "risk_premium": 0.07,
             "growth_cap": 0.03,
         })
 
@@ -454,8 +522,15 @@ def dcf_value(
     return equity_value if equity_value > 0 else None
 
 
-def financial_pb_value(equity: float | None, roe: float | None, market_cap: float | None) -> tuple[float | None, str]:
-    if equity is None or equity <= 0:
+def financial_pb_value(
+    equity: float | None,
+    roe: float | None,
+    market_cap: float | None,
+    tangible_equity: float | None = None,
+) -> tuple[float | None, str]:
+    capital_base = tangible_equity if tangible_equity is not None and tangible_equity > 0 else equity
+
+    if capital_base is None or capital_base <= 0:
         return None, "financial_pb_no_equity"
 
     r = roe if roe is not None else 0
@@ -471,7 +546,8 @@ def financial_pb_value(equity: float | None, roe: float | None, market_cap: floa
     else:
         pb = 0.60
 
-    return equity * pb, f"financial_pb_roe_{pb:.2f}x"
+    base_name = "tangible_book" if tangible_equity is not None and tangible_equity > 0 else "book"
+    return capital_base * pb, f"financial_pb_roe_{base_name}_{pb:.2f}x"
 
 
 def estimate_intrinsic_value(
@@ -487,6 +563,9 @@ def estimate_intrinsic_value(
     equity: float | None,
     roe: float | None,
     market_cap: float | None,
+    ncav: float | None,
+    tangible_equity: float | None,
+    risk_free_rate: float | None,
 ) -> tuple[float | None, str]:
     cash = cash or 0.0
     debt = debt or 0.0
@@ -496,7 +575,7 @@ def estimate_intrinsic_value(
         return None, "SKIP_REIT_AFFO_REQUIRED"
 
     if model == "financial_pb_roe":
-        return financial_pb_value(equity, roe, market_cap)
+        return financial_pb_value(equity, roe, market_cap, tangible_equity)
 
     fcf_candidates = [x for x in [latest_fcf, fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
     ni_candidates = [x for x in [latest_net_income, net_income_5y_avg] if x is not None and x > 0]
@@ -506,16 +585,23 @@ def estimate_intrinsic_value(
     fcf_multiple = float(cfg.get("fcf_multiple", 10))
     pe_multiple = float(cfg.get("pe_multiple", 10))
     terminal_multiple = float(cfg.get("terminal_multiple", 9))
-    discount_rate = float(cfg.get("discount_rate", 0.11))
+    discount_rate = effective_discount_rate(cfg, risk_free_rate)
     growth_cap = float(cfg.get("growth_cap", 0.08))
 
     if fcf_candidates:
-        # 保守 FCF 基数：取最近、3年、5年中较低的正值，防止周期高点误判
-        fcf_base = min(fcf_candidates)
+        cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner"}
+        if model in cyclical_models:
+            cycle_candidates = [x for x in [fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
+            if latest_fcf is not None and latest_fcf > 0:
+                cycle_candidates.append(latest_fcf * 0.5)
+            fcf_base = min(cycle_candidates) if cycle_candidates else min(fcf_candidates)
+        else:
+            # 保守 owner FCF 基数：取最近、3年、5年中较低的正值，防止高点误判
+            fcf_base = min(fcf_candidates)
 
         valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
 
-        if latest_fcf is not None and latest_fcf > 0:
+        if model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner"} and latest_fcf is not None and latest_fcf > 0:
             valuations.append(("latest_fcf_capped_10x", latest_fcf * min(10.0, fcf_multiple) + cash - debt))
 
         growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
@@ -535,6 +621,14 @@ def estimate_intrinsic_value(
     if ni_candidates:
         ni_base = min(ni_candidates)
         valuations.append(("normalized_net_income_pe", ni_base * pe_multiple + cash - debt))
+
+    asset_heavy_models = {"energy_cyclical", "materials_cyclical", "industrial_normalized", "precious_metals_miner", "consumer_cyclical"}
+    if ncav is not None and ncav > 0:
+        if model in asset_heavy_models or (market_cap is not None and ncav >= market_cap):
+            valuations.append(("ncav_2_3", ncav * 0.67))
+
+    if tangible_equity is not None and tangible_equity > 0 and model in asset_heavy_models:
+        valuations.append(("tangible_book_0_8x", tangible_equity * 0.80))
 
     clean = [(name, v) for name, v in valuations if v is not None and v > 0]
 
@@ -727,6 +821,7 @@ def detect_traps(
     net_margin,
     share_dilution,
     fcf_conversion,
+    accrual_ratio,
     model_type,
     latest_net_income,
 ) -> list[str]:
@@ -776,6 +871,11 @@ def detect_traps(
 
     if fcf_conversion is not None and fcf_conversion < 0.30 and latest_net_income is not None and latest_net_income > 0:
         flags.append("weak_cash_conversion")
+
+    if accrual_ratio is not None and accrual_ratio > 0.20:
+        flags.append("very_high_accrual_ratio")
+    elif accrual_ratio is not None and accrual_ratio > 0.10:
+        flags.append("high_accrual_ratio")
 
     if model_type in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized"}:
         if latest_fcf is not None and fcf_5y_avg is not None and fcf_5y_avg > 0 and latest_fcf > 2.5 * fcf_5y_avg:
@@ -913,7 +1013,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = (
                 "报价币种与财报币种不一致，疑似 ADR/海外股票；"
                 f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
-                "V6.1 暂不自动估值，避免币种/ADR比例导致安全边际失真"
+                "V6.2 暂不自动估值，避免币种/ADR比例导致安全边际失真"
             )
             return result
 
@@ -924,12 +1024,12 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         if needs_nav_or_special_model(result.company_name, sector, industry):
             result.rating = "SKIP"
-            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.1 暂不自动估值"
+            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.2 暂不自动估值"
             return result
 
         if result.model_type == "reit_needs_affo":
             result.rating = "SKIP"
-            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6 暂不自动估值"
+            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6.2 暂不自动估值"
             return result
 
         financials = None
@@ -966,6 +1066,12 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         cash_s = row(balance, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"])
         debt_s = row(balance, ["Total Debt", "Long Term Debt And Capital Lease Obligation"])
         equity_s = row(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest", "Total Stockholder Equity"])
+        current_assets_s = row(balance, ["Current Assets", "Total Current Assets"])
+        total_liabilities_s = row(balance, ["Total Liabilities Net Minority Interest", "Total Liabilities"])
+        total_assets_s = row(balance, ["Total Assets"])
+        goodwill_s = row(balance, ["Goodwill"])
+        goodwill_and_intangibles_s = row(balance, ["Goodwill And Other Intangible Assets"])
+        other_intangible_s = row(balance, ["Other Intangible Assets", "Intangible Assets"])
 
         revenue_latest = series_latest(revenue_s) or safe_float(info.get("totalRevenue"))
         revenue_oldest = None
@@ -984,24 +1090,45 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             ocf_vals = pd.to_numeric(ocf_s, errors="coerce")
             capex_vals = pd.to_numeric(capex_s, errors="coerce")
             common_cols = ocf_vals.index.intersection(capex_vals.index)
-            fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
+            reported_fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
+            if sbc_s is not None:
+                sbc_vals = pd.to_numeric(sbc_s, errors="coerce")
+                sbc_cols = common_cols.intersection(sbc_vals.index)
+                owner_fcf_s = reported_fcf_s.copy()
+                owner_fcf_s.loc[sbc_cols] = owner_fcf_s.loc[sbc_cols] - sbc_vals.loc[sbc_cols].abs()
+            else:
+                owner_fcf_s = reported_fcf_s
         else:
-            fcf_s = None
+            reported_fcf_s = None
+            owner_fcf_s = None
 
-        latest_fcf = series_latest(fcf_s)
-        fcf_3y_avg = series_avg(fcf_s, 3)
-        fcf_5y_avg = series_avg(fcf_s, 5)
-        fcf_volatility = series_volatility_ratio(fcf_s, 5)
+        reported_fcf = series_latest(reported_fcf_s)
+        sbc = series_latest(sbc_s)
+        latest_fcf = series_latest(owner_fcf_s)
+        fcf_3y_avg = series_avg(owner_fcf_s, 3)
+        fcf_5y_avg = series_avg(owner_fcf_s, 5)
+        fcf_volatility = series_volatility_ratio(owner_fcf_s, 5)
 
         cash = series_latest(cash_s) or safe_float(info.get("totalCash"))
         debt = series_latest(debt_s) or safe_float(info.get("totalDebt"))
         equity = series_latest(equity_s)
+        current_assets = series_latest(current_assets_s)
+        total_liabilities = series_latest(total_liabilities_s)
+        total_assets = series_latest(total_assets_s)
+        goodwill = series_latest(goodwill_s)
+        other_intangible = series_latest(other_intangible_s)
+        goodwill_and_intangibles = series_latest(goodwill_and_intangibles_s)
+        if goodwill_and_intangibles is None:
+            intangible_components = [v for v in [goodwill, other_intangible] if v is not None]
+            goodwill_and_intangibles = sum(intangible_components) if intangible_components else None
 
         ebitda = series_latest(ebitda_s) or safe_float(info.get("ebitda"))
 
         result.revenue_ttm = revenue_latest
         result.revenue_5y_cagr = revenue_cagr
         result.net_income_ttm = latest_net_income
+        result.reported_fcf_ttm = reported_fcf
+        result.sbc_ttm = sbc
         result.fcf_ttm = latest_fcf
         result.fcf_3y_avg = fcf_3y_avg
         result.fcf_5y_avg = fcf_5y_avg
@@ -1009,8 +1136,16 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.cash = cash
         result.total_debt = debt
         result.net_cash = (cash or 0) - (debt or 0)
+        result.total_assets = total_assets
+        result.total_liabilities = total_liabilities
+        result.ncav = current_assets - total_liabilities if current_assets is not None and total_liabilities is not None else None
+        result.tangible_equity = equity - goodwill_and_intangibles if equity is not None and goodwill_and_intangibles is not None else None
         result.ebitda = ebitda
         result.equity = equity
+        result.risk_free_rate = get_risk_free_rate()
+        result.discount_rate_used = effective_discount_rate(cfg, result.risk_free_rate)
+        if latest_net_income is not None and latest_fcf is not None and total_assets is not None and total_assets > 0:
+            result.accrual_ratio = (latest_net_income - latest_fcf) / total_assets
 
         result.enterprise_value = (market_cap or 0) + (debt or 0) - (cash or 0) if market_cap is not None else None
 
@@ -1059,6 +1194,9 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             equity=equity,
             roe=result.roe,
             market_cap=market_cap,
+            ncav=result.ncav,
+            tangible_equity=result.tangible_equity,
+            risk_free_rate=result.risk_free_rate,
         )
 
         result.valuation_method = method
@@ -1090,6 +1228,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 net_margin=result.net_margin,
                 share_dilution=result.share_dilution_3y,
                 fcf_conversion=result.fcf_conversion,
+                accrual_ratio=result.accrual_ratio,
                 model_type=result.model_type,
                 latest_net_income=latest_net_income,
             )
@@ -1129,6 +1268,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 cash,
                 debt,
                 equity,
+                total_assets,
                 result.roe,
                 result.gross_margin,
                 result.operating_margin,
@@ -1193,13 +1333,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = f"疑似价值陷阱：{result.trap_flags}"
         elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
             result.rating = "S"
-            result.reason = f"安全边际很厚，V6.1模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际很厚，V6.2模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
             result.rating = "A"
-            result.reason = f"安全边际较厚，V6.1模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际较厚，V6.2模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
             result.rating = "B"
-            result.reason = f"有一定安全边际，V6.1模型={result.model_type}，估值法={method}"
+            result.reason = f"有一定安全边际，V6.2模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20:
             result.rating = "C_THIN"
             result.reason = "安全边际达到观察区，但综合分或质量门槛不足，未进入 B 级"
