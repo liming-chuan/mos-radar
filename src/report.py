@@ -146,6 +146,28 @@ def short_reason(x, limit: int = 80) -> str:
     return escape(s)
 
 
+def sort_by_mos_score(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+
+    df = df.copy()
+    sort_cols = []
+    ascending = []
+
+    if "margin_of_safety" in df.columns:
+        sort_cols.append("margin_of_safety")
+        ascending.append(False)
+
+    if "final_score" in df.columns:
+        sort_cols.append("final_score")
+        ascending.append(False)
+
+    if not sort_cols:
+        return df
+
+    return df.sort_values(sort_cols, ascending=ascending)
+
+
 def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_pool: bool = False) -> str:
     if df.empty:
         return f"""
@@ -179,7 +201,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <td class="num">{money(r.get("buy_price_50mos"))}</td>
                 <td class="num">{pct(r.get("fcf_yield"))}</td>
                 <td class="num">{num(r.get("debt_to_ebitda"))}</td>
-                <td>{short_reason(r.get("reason"))}</td>
+                <td class="reason">{short_reason(r.get("reason"), limit=110)}</td>
             </tr>
             """
         )
@@ -199,6 +221,65 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>20%观察价</th>
                 <th>35%观察价</th>
                 <th>50%强关注价</th>
+                <th>FCF Yield</th>
+                <th>债务/EBITDA</th>
+                <th>理由</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(rows)}
+        </tbody>
+    </table>
+    """
+
+
+def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> str:
+    if df.empty:
+        return f"""
+        <h2>{escape(title)}</h2>
+        <div class="empty">暂无符合条件的公司。</div>
+        """
+
+    if limit is not None:
+        df = df.head(limit)
+
+    rows = []
+
+    for _, r in df.iterrows():
+        ticker = escape(str(r.get("ticker", "")))
+        name = escape(str(r.get("company_name", "") or ""))
+        sector = escape(str(r.get("sector", "") or ""))
+        rating = rating_badge(str(r.get("rating", "N/A")))
+
+        rows.append(
+            f"""
+            <tr>
+                <td class="ticker">{ticker}</td>
+                <td class="company">{name}<br><span class="sub">{sector}</span></td>
+                <td>{rating}</td>
+                <td class="num">{pct(r.get("margin_of_safety"))}</td>
+                <td class="num">{num(r.get("final_score"))}</td>
+                <td class="num">{money(r.get("price"))}</td>
+                <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
+                <td class="num">{pct(r.get("fcf_yield"))}</td>
+                <td class="num">{num(r.get("debt_to_ebitda"))}</td>
+                <td class="reason">{short_reason(r.get("reason"), limit=140)}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <h2>{escape(title)}</h2>
+    <table class="compact">
+        <thead>
+            <tr>
+                <th>代码</th>
+                <th>公司 / 行业</th>
+                <th>评级</th>
+                <th>安全边际</th>
+                <th>分数</th>
+                <th>现价</th>
+                <th>保守价值/股</th>
                 <th>FCF Yield</th>
                 <th>债务/EBITDA</th>
                 <th>理由</th>
@@ -260,7 +341,28 @@ def diagnostic_sample_html(df: pd.DataFrame) -> str:
         return ""
 
     watch = sort_for_report(watch)
-    return html_table(watch, "扫描诊断：未进入 S/A/B 的样本 Top 30", limit=30)
+    return compact_table(watch, "扫描诊断：未进入 S/A/B 的样本 Top 30", limit=30)
+
+
+def near_miss_html(df: pd.DataFrame) -> str:
+    if df.empty or "rating" not in df.columns or "margin_of_safety" not in df.columns:
+        return ""
+
+    mos = pd.to_numeric(df["margin_of_safety"], errors="coerce")
+    score = pd.to_numeric(df.get("final_score", pd.Series(index=df.index)), errors="coerce")
+    near = df[
+        (df["rating"] == "C_THIN")
+        & (
+            (mos >= 0.15)
+            | ((mos >= 0.10) & (score >= 50))
+        )
+    ].copy()
+
+    if near.empty:
+        return ""
+
+    near = sort_by_mos_score(near)
+    return compact_table(near, "接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
 
 
 def generate_report(
@@ -293,6 +395,7 @@ def generate_report(
 
     market_high = high_margin_candidates(market_df)
     rating_diag_html = rating_distribution_html(df)
+    near_miss = near_miss_html(market_df)
     diagnostic_html = diagnostic_sample_html(market_df)
 
     total_holdings = len(holdings_df)
@@ -428,10 +531,28 @@ def generate_report(
         color: #111827;
         white-space: nowrap;
     }}
+    .company {{
+        min-width: 180px;
+    }}
     .num {{
         text-align: right;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
+    }}
+    .reason {{
+        min-width: 180px;
+        max-width: 320px;
+        line-height: 1.45;
+        white-space: normal;
+        word-break: normal;
+        overflow-wrap: break-word;
+    }}
+    .compact th,
+    .compact td {{
+        padding: 8px 7px;
+    }}
+    .compact .reason {{
+        min-width: 220px;
     }}
     .sub {{
         color: #6b7280;
@@ -498,6 +619,8 @@ def generate_report(
     <div class="card">
         {rating_diag_html}
     </div>
+
+    {f'<div class="card">{near_miss}</div>' if near_miss else ''}
 
     {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
 

@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.4 - 2026-05-16
+
+- Improved report readability for diagnostic sections.
+- Added a separate "near miss" section for `C_THIN` names close to B-level review.
+- Changed diagnostic tables to a compact layout so the reason column does not collapse into vertical text.
+- Kept the main S/A/B candidate table unchanged.
+
 ## v6.0.3 - 2026-05-16
 
 - Added `HOLDINGS_TICKERS` secret support so holdings can be used on GitHub Actions without committing private holdings files.
