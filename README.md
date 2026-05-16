@@ -1,6 +1,6 @@
 # MOS Radar：安全边际雷达 V1
 
-每天盘后完整扫描一次美股候选池；开盘前、午盘、下午用 QQ 邮箱 SMTP 发报告到 Outlook。报告只做候选筛选，不做自动买卖建议。
+每天盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。报告只做候选筛选，不做自动买卖建议。
 
 ## 运行逻辑
 
@@ -42,8 +42,8 @@ TTM/最近FCF × 10倍或更低
 ```text
 SMTP_HOST=smtp.qq.com
 SMTP_PORT=587
-SMTP_USER=你的QQ邮箱，例如 123456@qq.com
-SMTP_PASSWORD=QQ邮箱授权码，不是QQ登录密码
+SMTP_USER=你的发件邮箱，例如 example@example.com
+SMTP_PASSWORD=邮箱 SMTP 授权码，不是网页登录密码
 SMTP_SSL=false
 MAIL_TO=你的Outlook邮箱，例如 yourname@outlook.com
 MAIL_FROM_NAME=MOS Radar
@@ -85,8 +85,8 @@ pip install -r requirements.txt
 
 export SMTP_HOST=smtp.qq.com
 export SMTP_PORT=587
-export SMTP_USER=你的QQ邮箱
-export SMTP_PASSWORD=你的QQ邮箱授权码
+export SMTP_USER=你的发件邮箱
+export SMTP_PASSWORD=你的邮箱 SMTP 授权码
 export SMTP_SSL=false
 export MAIL_TO=你的Outlook邮箱
 export TOP_MOS_COUNT=50
