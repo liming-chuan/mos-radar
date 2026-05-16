@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.5 - 2026-05-17
+
+- Split report sections for non-financial operating companies and financial stocks.
+- Financial stocks now appear in a dedicated observation section because they use PB/ROE instead of normal FCF valuation.
+- The non-financial near-miss section no longer gets dominated by Financial Services names.
+- Diagnostic samples are diversified by sector to avoid one sector filling the entire table.
+
 ## v6.0.4 - 2026-05-16
 
 - Improved report readability for diagnostic sections.

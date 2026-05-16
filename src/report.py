@@ -168,6 +168,38 @@ def sort_by_mos_score(df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(sort_cols, ascending=ascending)
 
 
+def is_financial_row(row) -> bool:
+    sector = str(row.get("sector", "") or "").lower()
+    model_type = str(row.get("model_type", "") or "").lower()
+    return "financial" in sector or model_type == "financial_pb_roe"
+
+
+def split_financials(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if df.empty:
+        return df.copy(), df.copy()
+    mask = df.apply(is_financial_row, axis=1)
+    return df[~mask].copy(), df[mask].copy()
+
+
+def diversified_sample(df: pd.DataFrame, limit: int = 30, per_sector: int = 5) -> pd.DataFrame:
+    if df.empty or "sector" not in df.columns:
+        return df.head(limit)
+
+    selected = []
+    counts: dict[str, int] = {}
+
+    for idx, row in df.iterrows():
+        sector = str(row.get("sector", "") or "Unknown")
+        if counts.get(sector, 0) >= per_sector:
+            continue
+        selected.append(idx)
+        counts[sector] = counts.get(sector, 0) + 1
+        if len(selected) >= limit:
+            break
+
+    return df.loc[selected].copy()
+
+
 def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_pool: bool = False) -> str:
     if df.empty:
         return f"""
@@ -340,11 +372,11 @@ def diagnostic_sample_html(df: pd.DataFrame) -> str:
     if watch.empty:
         return ""
 
-    watch = sort_for_report(watch)
+    watch = diversified_sample(sort_for_report(watch), limit=30, per_sector=5)
     return compact_table(watch, "扫描诊断：未进入 S/A/B 的样本 Top 30", limit=30)
 
 
-def near_miss_html(df: pd.DataFrame) -> str:
+def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30) -> str:
     if df.empty or "rating" not in df.columns or "margin_of_safety" not in df.columns:
         return ""
 
@@ -362,7 +394,7 @@ def near_miss_html(df: pd.DataFrame) -> str:
         return ""
 
     near = sort_by_mos_score(near)
-    return compact_table(near, "接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
+    return compact_table(near, title, limit=limit)
 
 
 def generate_report(
@@ -393,13 +425,23 @@ def generate_report(
     else:
         market_df = df.copy()
 
-    market_high = high_margin_candidates(market_df)
+    operating_market_df, financial_market_df = split_financials(market_df)
+
+    market_high = high_margin_candidates(operating_market_df)
+    financial_high = high_margin_candidates(financial_market_df)
     rating_diag_html = rating_distribution_html(df)
-    near_miss = near_miss_html(market_df)
+    near_miss = near_miss_html(operating_market_df, "非金融接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
+    financial_near_miss = near_miss_html(financial_market_df, "金融股观察池：PB/ROE 接近候选 Top 20", limit=20)
     diagnostic_html = diagnostic_sample_html(market_df)
 
     total_holdings = len(holdings_df)
     market_high_count = len(market_high)
+    financial_high_count = len(financial_high)
+    near_miss_count = 0
+    if not operating_market_df.empty and "rating" in operating_market_df.columns and "margin_of_safety" in operating_market_df.columns:
+        mos = pd.to_numeric(operating_market_df["margin_of_safety"], errors="coerce")
+        score = pd.to_numeric(operating_market_df.get("final_score", pd.Series(index=operating_market_df.index)), errors="coerce")
+        near_miss_count = int(((operating_market_df["rating"] == "C_THIN") & ((mos >= 0.15) | ((mos >= 0.10) & (score >= 50)))).sum())
 
     s_count = count_rating(market_high, "S")
     a_count = count_rating(market_high, "A")
@@ -418,8 +460,14 @@ def generate_report(
 
     market_html = html_table(
         market_high,
-        f"全市场股票池：安全边际较厚候选 Top {top_mos_count}",
+        f"非金融经营型股票池：安全边际较厚候选 Top {top_mos_count}",
         limit=top_mos_count,
+    )
+
+    financial_html = compact_table(
+        sort_for_report(financial_high),
+        "金融股观察池：S/A/B 候选",
+        limit=20,
     )
 
     thicker_html = ""
@@ -593,17 +641,21 @@ def generate_report(
                 <div class="value">{holdings_pass}</div>
             </div>
             <div class="box">
-                <div class="label">市场 S/A/B 候选</div>
+                <div class="label">非金融 S/A/B</div>
                 <div class="value">{market_high_count}</div>
             </div>
             <div class="box">
-                <div class="label">市场 S/A/B 分布</div>
-                <div class="value">S{s_count}/A{a_count}/B{b_count}</div>
+                <div class="label">金融 S/A/B</div>
+                <div class="value">{financial_high_count}</div>
+            </div>
+            <div class="box">
+                <div class="label">非金融接近候选</div>
+                <div class="value">{near_miss_count}</div>
             </div>
         </div>
 
         <div class="note">
-            持仓池会显示所有持仓的安全边际；全市场部分只显示 S / A / B，避免安全边际低的股票干扰判断。
+            持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
         </div>
     </div>
@@ -617,10 +669,16 @@ def generate_report(
     </div>
 
     <div class="card">
+        {financial_html}
+    </div>
+
+    <div class="card">
         {rating_diag_html}
     </div>
 
     {f'<div class="card">{near_miss}</div>' if near_miss else ''}
+
+    {f'<div class="card">{financial_near_miss}</div>' if financial_near_miss else ''}
 
     {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
 
