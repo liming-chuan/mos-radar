@@ -2,6 +2,17 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.1.0 - 2026-05-17
+
+- Refactored the valuation model around asset/model type instead of treating all stocks as normal FCF businesses.
+- Financial stocks now use financial-only scoring based on PB/ROE and no longer use FCF yield or debt/EBITDA in their score.
+- Financial stocks can enter only the dedicated financial observation flow; they no longer pollute the main operating-company candidate pool.
+- Funds, BDCs, closed-end funds, and NAV/NII-driven financial assets are skipped until a dedicated NAV/NII model is added.
+- Data quality scoring now treats `NaN` as missing instead of counting it as valid data.
+- Rating reasons are now more precise:
+  - 20%+ margin of safety but weak score is labeled as insufficient quality/score, not simply "thin".
+  - financial stocks explicitly state that PB/ROE is only a limited screening model.
+
 ## v6.0.5 - 2026-05-17
 
 - Split report sections for non-financial operating companies and financial stocks.

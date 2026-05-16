@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.0.2"
+MODEL_VERSION = "MOS_Radar_V6.1.0"
 
 
 @dataclass
@@ -394,6 +394,30 @@ def has_currency_mismatch(quote_currency: str, financial_currency: str) -> bool:
     return quote != financial
 
 
+def needs_nav_or_special_model(company_name: str, sector: str, industry: str) -> bool:
+    name = str(company_name or "").lower()
+    s = str(sector or "").lower()
+    i = str(industry or "").lower()
+
+    if "financial" not in s:
+        return False
+
+    hard_keywords = [
+        "fund",
+        "income fund",
+        "closed-end",
+        "business development",
+        "bdc",
+    ]
+    if any(k in name or k in i for k in hard_keywords):
+        return True
+
+    asset_management_like = "asset management" in i and any(
+        k in name for k in ["capital", "investment", "income", "credit"]
+    )
+    return asset_management_like
+
+
 def calc_cagr(latest: float | None, oldest: float | None, years: int) -> float | None:
     if latest is None or oldest is None or years <= 0:
         return None
@@ -517,7 +541,7 @@ def estimate_intrinsic_value(
     if not clean:
         return None, "NO_VALID_VALUATION"
 
-    # V5 保守原则：取最低的有效估值
+    # 保守原则：取最低的有效估值
     method, value = min(clean, key=lambda x: x[1])
 
     return value, method
@@ -632,6 +656,22 @@ def score_quality(roe, gross_margin, operating_margin, net_margin) -> float:
     return min(score, 15)
 
 
+def score_financial_quality(roe) -> float:
+    if roe is None:
+        return 0
+    if roe >= 0.18:
+        return 25
+    if roe >= 0.13:
+        return 21
+    if roe >= 0.10:
+        return 16
+    if roe >= 0.07:
+        return 10
+    if roe >= 0.04:
+        return 5
+    return 0
+
+
 def score_trend(revenue_cagr, share_dilution, fcf_latest, fcf_5y_avg) -> float:
     score = 0.0
 
@@ -665,7 +705,7 @@ def score_trend(revenue_cagr, share_dilution, fcf_latest, fcf_5y_avg) -> float:
 
 def score_data_quality(*values) -> float:
     total = len(values)
-    present = sum(1 for v in values if v is not None)
+    present = sum(1 for v in values if safe_float(v) is not None)
     if total == 0:
         return 0
     return round(10 * present / total, 2)
@@ -744,6 +784,21 @@ def detect_traps(
     return flags
 
 
+def detect_financial_traps(latest_net_income, equity, roe) -> list[str]:
+    flags = []
+
+    if latest_net_income is not None and latest_net_income < 0:
+        flags.append("financial_net_income_negative")
+
+    if equity is not None and equity <= 0:
+        flags.append("financial_equity_not_positive")
+
+    if roe is not None and roe < 0.04:
+        flags.append("financial_low_roe")
+
+    return flags
+
+
 def rating_rank(rating: str) -> int:
     order = {"S": 0, "A": 1, "B": 2, "C_THIN": 3, "PASS": 4, "D_TRAP": 5, "NO_DATA": 6, "SKIP": 7, "ERROR": 8}
     return order.get(str(rating), 9)
@@ -763,6 +818,14 @@ def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
     if result.trap_count >= 2:
         cap = "C_THIN"
         reasons.append("trap_count_ge_2")
+
+    if result.model_type == "financial_pb_roe":
+        cap = cap_rating(cap or "S", "B")
+        reasons.append("financial_limited_pb_roe_model")
+        if result.data_quality_score < 5:
+            cap = cap_rating(cap, "B")
+            reasons.append("low_data_quality")
+        return cap, reasons
 
     if result.cashflow_score < 8:
         cap = cap_rating(cap or "S", "B")
@@ -850,7 +913,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = (
                 "报价币种与财报币种不一致，疑似 ADR/海外股票；"
                 f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
-                "V6.0.2 暂不自动估值，避免币种/ADR比例导致安全边际失真"
+                "V6.1 暂不自动估值，避免币种/ADR比例导致安全边际失真"
             )
             return result
 
@@ -858,6 +921,11 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         industry = result.industry
         cfg = sector_config(sector, industry)
         result.model_type = str(cfg.get("model", "normal_fcf"))
+
+        if needs_nav_or_special_model(result.company_name, sector, industry):
+            result.rating = "SKIP"
+            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.1 暂不自动估值"
+            return result
 
         if result.model_type == "reit_needs_affo":
             result.rating = "SKIP"
@@ -995,25 +1063,36 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         result.valuation_method = method
 
-        flags = detect_traps(
-            latest_fcf=latest_fcf,
-            fcf_5y_avg=fcf_5y_avg,
-            fcf_volatility=fcf_volatility,
-            revenue_cagr=revenue_cagr,
-            revenue_decline_streak=has_consecutive_decline(revenue_s, 3),
-            gross_margin_decline=margin_declining(gross_profit_s, revenue_s, 3),
-            operating_margin_decline=margin_declining(operating_income_s, revenue_s, 3),
-            debt_to_ebitda=result.debt_to_ebitda,
-            interest_coverage=result.interest_coverage,
-            debt=debt,
-            market_cap=market_cap,
-            operating_margin=result.operating_margin,
-            net_margin=result.net_margin,
-            share_dilution=result.share_dilution_3y,
-            fcf_conversion=result.fcf_conversion,
-            model_type=result.model_type,
-            latest_net_income=latest_net_income,
-        )
+        if result.model_type == "financial_pb_roe":
+            result.fcf_yield = None
+            result.fcf_conversion = None
+            result.debt_to_ebitda = None
+            result.interest_coverage = None
+            flags = detect_financial_traps(
+                latest_net_income=latest_net_income,
+                equity=equity,
+                roe=result.roe,
+            )
+        else:
+            flags = detect_traps(
+                latest_fcf=latest_fcf,
+                fcf_5y_avg=fcf_5y_avg,
+                fcf_volatility=fcf_volatility,
+                revenue_cagr=revenue_cagr,
+                revenue_decline_streak=has_consecutive_decline(revenue_s, 3),
+                gross_margin_decline=margin_declining(gross_profit_s, revenue_s, 3),
+                operating_margin_decline=margin_declining(operating_income_s, revenue_s, 3),
+                debt_to_ebitda=result.debt_to_ebitda,
+                interest_coverage=result.interest_coverage,
+                debt=debt,
+                market_cap=market_cap,
+                operating_margin=result.operating_margin,
+                net_margin=result.net_margin,
+                share_dilution=result.share_dilution_3y,
+                fcf_conversion=result.fcf_conversion,
+                model_type=result.model_type,
+                latest_net_income=latest_net_income,
+            )
 
         if intrinsic is not None:
             result.intrinsic_value_total = intrinsic
@@ -1023,33 +1102,46 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 update_buy_prices(result)
 
         result.mos_score = score_margin_of_safety(result.margin_of_safety)
-        result.cashflow_score = score_cashflow(latest_fcf, fcf_5y_avg, result.fcf_yield, result.fcf_conversion)
-        result.balance_sheet_score = score_balance(cash, debt, result.debt_to_ebitda, result.net_cash, market_cap)
-        result.quality_score = score_quality(result.roe, result.gross_margin, result.operating_margin, result.net_margin)
-        result.trend_score = score_trend(revenue_cagr, result.share_dilution_3y, latest_fcf, fcf_5y_avg)
-        result.data_quality_score = score_data_quality(
-            price,
-            market_cap,
-            revenue_latest,
-            latest_fcf,
-            fcf_5y_avg,
-            latest_net_income,
-            cash,
-            debt,
-            equity,
-            result.roe,
-            result.gross_margin,
-            result.operating_margin,
-        )
 
-        result.final_score = (
-            result.mos_score
-            + result.cashflow_score
-            + result.balance_sheet_score
-            + result.quality_score
-            + result.trend_score
-            + result.data_quality_score
-        )
+        if result.model_type == "financial_pb_roe":
+            result.cashflow_score = 0
+            result.balance_sheet_score = 0
+            result.quality_score = score_financial_quality(result.roe)
+            result.trend_score = 0
+            result.data_quality_score = score_data_quality(price, market_cap, latest_net_income, equity, result.roe)
+            result.final_score = (
+                result.mos_score
+                + result.quality_score
+                + result.data_quality_score
+            )
+        else:
+            result.cashflow_score = score_cashflow(latest_fcf, fcf_5y_avg, result.fcf_yield, result.fcf_conversion)
+            result.balance_sheet_score = score_balance(cash, debt, result.debt_to_ebitda, result.net_cash, market_cap)
+            result.quality_score = score_quality(result.roe, result.gross_margin, result.operating_margin, result.net_margin)
+            result.trend_score = score_trend(revenue_cagr, result.share_dilution_3y, latest_fcf, fcf_5y_avg)
+            result.data_quality_score = score_data_quality(
+                price,
+                market_cap,
+                revenue_latest,
+                latest_fcf,
+                fcf_5y_avg,
+                latest_net_income,
+                cash,
+                debt,
+                equity,
+                result.roe,
+                result.gross_margin,
+                result.operating_margin,
+            )
+
+            result.final_score = (
+                result.mos_score
+                + result.cashflow_score
+                + result.balance_sheet_score
+                + result.quality_score
+                + result.trend_score
+                + result.data_quality_score
+            )
 
         intrinsic_adjusted, final_adjusted, feedback_label, flags = apply_feedback(
             ticker=ticker,
@@ -1083,21 +1175,37 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         if result.intrinsic_value_total is None or result.margin_of_safety is None:
             result.rating = "NO_DATA"
             result.reason = f"估值数据不足：{method}"
+        elif result.model_type == "financial_pb_roe":
+            if result.trap_count >= 2:
+                result.rating = "D_TRAP"
+                result.reason = f"金融股风险信号过多：{result.trap_flags}"
+            elif result.margin_of_safety >= 0.35 and result.final_score >= 55 and (result.roe is not None and result.roe >= 0.10):
+                result.rating = "B"
+                result.reason = f"金融股 PB/ROE 口径有折价，仍需人工复核资产质量，估值法={method}"
+            elif result.margin_of_safety >= 0:
+                result.rating = "C_THIN"
+                result.reason = "金融股 PB/ROE 口径有一定折价，但安全边际/ROE/数据质量不足，不进入主候选"
+            else:
+                result.rating = "PASS"
+                result.reason = "金融股当前价格高于保守 PB/ROE 价值，没有安全边际"
         elif result.trap_count >= 3:
             result.rating = "D_TRAP"
             result.reason = f"疑似价值陷阱：{result.trap_flags}"
         elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
             result.rating = "S"
-            result.reason = f"安全边际很厚，V6模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际很厚，V6.1模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
             result.rating = "A"
-            result.reason = f"安全边际较厚，V6模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际较厚，V6.1模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
             result.rating = "B"
-            result.reason = f"有一定安全边际，V6模型={result.model_type}，估值法={method}"
+            result.reason = f"有一定安全边际，V6.1模型={result.model_type}，估值法={method}"
+        elif result.margin_of_safety >= 0.20:
+            result.rating = "C_THIN"
+            result.reason = "安全边际达到观察区，但综合分或质量门槛不足，未进入 B 级"
         elif result.margin_of_safety >= 0:
             result.rating = "C_THIN"
-            result.reason = "安全边际偏薄，不优先"
+            result.reason = "安全边际低于 20%，偏薄，不优先"
         else:
             result.rating = "PASS"
             result.reason = "当前价格高于保守内在价值，没有安全边际"
