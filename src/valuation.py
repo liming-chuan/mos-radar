@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6"
+MODEL_VERSION = "MOS_Radar_V6.0.2"
 
 
 @dataclass
@@ -23,6 +23,8 @@ class AnalysisResult:
     company_name: str = ""
     sector: str = ""
     industry: str = ""
+    quote_currency: str = ""
+    financial_currency: str = ""
     price: float | None = None
     market_cap: float | None = None
     enterprise_value: float | None = None
@@ -253,7 +255,16 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
         "growth_cap": 0.08,
     }
 
-    if "semiconductor" in i:
+    if any(x in i for x in ["gold", "silver", "copper", "other precious metals", "industrial metals", "mining"]):
+        cfg.update({
+            "model": "precious_metals_miner",
+            "fcf_multiple": 4.0,
+            "pe_multiple": 6.0,
+            "terminal_multiple": 4.0,
+            "discount_rate": 0.15,
+            "growth_cap": 0.00,
+        })
+    elif "semiconductor" in i:
         cfg.update({
             "model": "cyclical_semiconductor",
             "fcf_multiple": 10.0,
@@ -373,6 +384,14 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
         })
 
     return cfg
+
+
+def has_currency_mismatch(quote_currency: str, financial_currency: str) -> bool:
+    quote = str(quote_currency or "").strip().upper()
+    financial = str(financial_currency or "").strip().upper()
+    if not quote or not financial:
+        return False
+    return quote != financial
 
 
 def calc_cagr(latest: float | None, oldest: float | None, years: int) -> float | None:
@@ -765,6 +784,14 @@ def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
         cap = cap_rating(cap or "S", "B")
         reasons.append("low_data_quality")
 
+    if result.model_type == "precious_metals_miner":
+        cap = cap_rating(cap or "S", "B")
+        reasons.append("precious_metals_cycle_model")
+
+    if result.fcf_yield is not None and result.fcf_yield > 0.25:
+        cap = cap_rating(cap or "S", "C_THIN")
+        reasons.append("abnormal_fcf_yield")
+
     return cap, reasons
 
 
@@ -810,10 +837,21 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.company_name = info.get("longName") or info.get("shortName") or ""
         result.sector = info.get("sector") or ""
         result.industry = info.get("industry") or ""
+        result.quote_currency = str(info.get("currency") or "").upper()
+        result.financial_currency = str(info.get("financialCurrency") or "").upper()
 
         if price is None or price <= 0:
             result.rating = "NO_DATA"
             result.reason = "无法获取有效股价"
+            return result
+
+        if has_currency_mismatch(result.quote_currency, result.financial_currency):
+            result.rating = "SKIP"
+            result.reason = (
+                "报价币种与财报币种不一致，疑似 ADR/海外股票；"
+                f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
+                "V6.0.2 暂不自动估值，避免币种/ADR比例导致安全边际失真"
+            )
             return result
 
         sector = result.sector

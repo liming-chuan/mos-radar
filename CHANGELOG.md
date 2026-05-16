@@ -2,6 +2,14 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.2 - 2026-05-16
+
+- Added quote currency and financial statement currency fields to valuation output.
+- Added a hard skip for tickers where quote currency and financial currency differ, preventing ADR/currency mismatches from creating false margin-of-safety signals.
+- Added a precious metals/mining model with more conservative multiples.
+- Capped precious metals/mining stocks at B because current FCF is highly cycle-dependent.
+- Added an abnormal FCF yield cap: FCF yield above 25% caps rating at `C_THIN` pending manual review.
+
 ## v6.0.1 - 2026-05-16
 
 - Optimized `update_universe.py` for GitHub Actions free runners.
