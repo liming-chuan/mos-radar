@@ -2,6 +2,14 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.1 - 2026-05-16
+
+- Optimized `update_universe.py` for GitHub Actions free runners.
+- Replaced one-by-one yfinance ticker verification with batched Yahoo quote requests.
+- Added per-batch HTTP timeout so one stuck ticker cannot freeze the whole universe update.
+- Changed Update Universe default limit from 500 to 1000.
+- Added `UNIVERSE_BATCH_SIZE` for controlled batch verification.
+
 ## v6.0.0 - 2026-05-16
 
 - Added `DRY_RUN=true` support to generate reports without sending email.

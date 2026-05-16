@@ -90,6 +90,18 @@ DRY_RUN=false
 - `SEND_AFTER_CLOSE=false`：盘后只生成报告不发邮件；如果想盘后也发，改为 `true`。
 - `DRY_RUN=false`：线上正常发邮件；本地或手动测试可设为 `true`，只生成报告不发邮件。
 
+## 股票池更新
+
+GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Yahoo quote 批量验证价格、市值和成交量。V6.0.1 起使用批量请求，避免单个 ticker 卡住整个更新任务。
+
+建议参数：
+
+```text
+How many tickers to keep = 1000
+Minimum market cap = 1000000000
+Minimum average volume = 100000
+```
+
 ## 本地测试
 
 ```bash

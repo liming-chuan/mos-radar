@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 import requests
-import yfinance as yf
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +14,7 @@ OUT_PATH = ROOT / "data" / "universe.csv"
 
 NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt"
 OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
+YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
 
 BAD_TICKERS = {"FI", "K"}
 
@@ -85,52 +85,94 @@ def fetch_other_listed() -> pd.DataFrame:
     return out
 
 
-def fast_info_value(fast_info, key: str):
+def chunks(items: list[str], size: int):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]
+
+
+def safe_float(value):
     try:
-        return fast_info[key]
-    except Exception:
-        try:
-            return getattr(fast_info, key)
-        except Exception:
+        if value is None:
             return None
+        value = float(value)
+        if value != value:
+            return None
+        return value
+    except Exception:
+        return None
+
+
+def quote_value(row: dict, keys: list[str]):
+    for key in keys:
+        value = row.get(key)
+        if value is not None:
+            return value
+    return None
+
+
+def fetch_quote_batch(batch: list[str], timeout: int = 30) -> list[dict]:
+    if not batch:
+        return []
+
+    response = requests.get(
+        YAHOO_QUOTE_URL,
+        params={
+            "symbols": ",".join(batch),
+            "fields": "regularMarketPrice,marketCap,averageDailyVolume3Month,averageDailyVolume10Day",
+        },
+        timeout=timeout,
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
+    response.raise_for_status()
+    payload = response.json()
+    rows = payload.get("quoteResponse", {}).get("result", [])
+
+    verified = []
+    for row in rows:
+        ticker = str(row.get("symbol", "")).strip().upper()
+        price = safe_float(quote_value(row, ["regularMarketPrice", "regularMarketPreviousClose", "regularMarketOpen"]))
+        market_cap = safe_float(row.get("marketCap"))
+        avg_volume = safe_float(quote_value(row, ["averageDailyVolume3Month", "averageDailyVolume10Day", "regularMarketVolume"]))
+
+        if not ticker or price is None or price <= 0:
+            continue
+
+        verified.append({
+            "ticker": yahoo_symbol(ticker),
+            "last_price": price,
+            "market_cap": market_cap,
+            "avg_volume": avg_volume,
+        })
+
+    return verified
+
+
+def verify_tickers(tickers: list[str], sleep_seconds: float, batch_size: int) -> pd.DataFrame:
+    verified = []
+    ticker_batches = list(chunks(tickers, batch_size))
+    total_batches = len(ticker_batches)
+
+    for i, batch in enumerate(ticker_batches, 1):
+        first = batch[0]
+        last = batch[-1]
+        print(f"[batch {i}/{total_batches}] verifying {len(batch)} tickers: {first}..{last}", flush=True)
+
+        try:
+            verified.extend(fetch_quote_batch(batch))
+        except Exception as e:
+            print(f"skip batch {first}..{last}: {type(e).__name__}: {e}", flush=True)
+
+        if sleep_seconds:
+            time.sleep(sleep_seconds)
+
+    return pd.DataFrame(verified)
 
 
 def verify_ticker(ticker: str, sleep_seconds: float) -> dict | None:
     try:
-        t = yf.Ticker(ticker)
-        fi = t.fast_info
-
-        price = (
-            fast_info_value(fi, "last_price")
-            or fast_info_value(fi, "lastPrice")
-            or fast_info_value(fi, "regular_market_price")
-            or fast_info_value(fi, "regularMarketPrice")
-        )
-
-        market_cap = (
-            fast_info_value(fi, "market_cap")
-            or fast_info_value(fi, "marketCap")
-        )
-
-        avg_volume = (
-            fast_info_value(fi, "three_month_average_volume")
-            or fast_info_value(fi, "ten_day_average_volume")
-            or fast_info_value(fi, "average_volume")
-            or fast_info_value(fi, "averageVolume")
-        )
-
+        rows = fetch_quote_batch([ticker])
         time.sleep(sleep_seconds)
-
-        if price is None or float(price) <= 0:
-            return None
-
-        return {
-            "ticker": ticker,
-            "last_price": float(price),
-            "market_cap": float(market_cap) if market_cap else None,
-            "avg_volume": float(avg_volume) if avg_volume else None,
-        }
-
+        return rows[0] if rows else None
     except Exception as e:
         print(f"skip {ticker}: {e}")
         time.sleep(sleep_seconds)
@@ -138,10 +180,11 @@ def verify_ticker(ticker: str, sleep_seconds: float) -> dict | None:
 
 
 def build_universe() -> pd.DataFrame:
-    limit = getenv_int("UNIVERSE_LIMIT", 500)
+    limit = getenv_int("UNIVERSE_LIMIT", 1000)
     min_market_cap = getenv_int("MIN_MARKET_CAP", 1_000_000_000)
     min_avg_volume = getenv_int("MIN_AVG_VOLUME", 100_000)
     sleep_seconds = getenv_float("UNIVERSE_SLEEP_SECONDS", 0.05)
+    batch_size = getenv_int("UNIVERSE_BATCH_SIZE", 100)
 
     print("Fetching official symbol lists...")
 
@@ -159,16 +202,7 @@ def build_universe() -> pd.DataFrame:
     tickers = raw["ticker"].tolist()
     print("raw filtered candidates:", len(tickers))
 
-    verified = []
-    total = len(tickers)
-
-    for i, ticker in enumerate(tickers, 1):
-        print(f"[{i}/{total}] verifying {ticker}", flush=True)
-        item = verify_ticker(ticker, sleep_seconds)
-        if item:
-            verified.append(item)
-
-    vdf = pd.DataFrame(verified)
+    vdf = verify_tickers(tickers, sleep_seconds=sleep_seconds, batch_size=batch_size)
     merged = raw.merge(vdf, on="ticker", how="inner")
 
     merged["market_cap"] = pd.to_numeric(merged["market_cap"], errors="coerce")
