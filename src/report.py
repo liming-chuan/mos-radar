@@ -371,7 +371,60 @@ def rating_distribution_html(df: pd.DataFrame) -> str:
     """
 
 
-def diagnostic_sample_html(df: pd.DataFrame) -> str:
+def sector_distribution_html(df: pd.DataFrame) -> str:
+    if df.empty or "sector" not in df.columns:
+        return ""
+
+    rows = []
+    total = len(df)
+    grouped = (
+        df.assign(sector=df["sector"].fillna("").replace("", "Unknown"))
+        .groupby("sector", dropna=False)
+        .agg(
+            count=("ticker", "count"),
+            sab=("rating", lambda s: int(s.isin(["S", "A", "B"]).sum())),
+            c_thin=("rating", lambda s: int((s == "C_THIN").sum())),
+            pass_count=("rating", lambda s: int((s == "PASS").sum())),
+        )
+        .sort_values("count", ascending=False)
+        .head(12)
+    )
+
+    for sector, row in grouped.iterrows():
+        rows.append(
+            f"""
+            <tr>
+                <td>{escape(str(sector))}</td>
+                <td class="num">{int(row["count"])}</td>
+                <td class="num">{pct(row["count"] / total if total else None)}</td>
+                <td class="num">{int(row["sab"])}</td>
+                <td class="num">{int(row["c_thin"])}</td>
+                <td class="num">{int(row["pass_count"])}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <h2>扫描诊断：市场行业分布</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>行业</th>
+                <th>数量</th>
+                <th>占比</th>
+                <th>S/A/B</th>
+                <th>C_THIN</th>
+                <th>PASS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(rows)}
+        </tbody>
+    </table>
+    """
+
+
+def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进入 S/A/B 的样本 Top 30") -> str:
     if df.empty or "rating" not in df.columns:
         return ""
 
@@ -380,7 +433,7 @@ def diagnostic_sample_html(df: pd.DataFrame) -> str:
         return ""
 
     watch = diversified_sample(sort_for_report(watch), limit=30, per_sector=5)
-    return compact_table(watch, "扫描诊断：未进入 S/A/B 的样本 Top 30", limit=30)
+    return compact_table(watch, title, limit=30)
 
 
 def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30) -> str:
@@ -437,9 +490,13 @@ def generate_report(
     market_high = high_margin_candidates(operating_market_df)
     financial_high = high_margin_candidates(financial_market_df)
     rating_diag_html = rating_distribution_html(df)
+    sector_diag_html = sector_distribution_html(market_df)
     near_miss = near_miss_html(operating_market_df, "非金融接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
     financial_near_miss = near_miss_html(financial_market_df, "金融股观察池：PB/ROE 接近候选 Top 20", limit=20)
-    diagnostic_html = diagnostic_sample_html(market_df)
+    diagnostic_html = diagnostic_sample_html(
+        operating_market_df,
+        "扫描诊断：非金融未进入 S/A/B 的样本 Top 30",
+    )
 
     total_holdings = len(holdings_df)
     market_high_count = len(market_high)
@@ -682,6 +739,8 @@ def generate_report(
     <div class="card">
         {rating_diag_html}
     </div>
+
+    {f'<div class="card">{sector_diag_html}</div>' if sector_diag_html else ''}
 
     {f'<div class="card">{near_miss}</div>' if near_miss else ''}
 

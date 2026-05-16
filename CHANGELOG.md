@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.2.1 - 2026-05-17
+
+- Added a market sector distribution table to scan reports so universe composition is visible.
+- Changed the generic diagnostic sample to use only non-financial operating companies.
+- Kept financial stocks in their dedicated PB/ROE observation sections, preventing duplicated financial names from dominating diagnostics.
+- Updated README and version metadata.
+
 ## v6.2.0 - 2026-05-17
 
 - Switched operating-company valuation from reported FCF to owner FCF: `Operating Cash Flow + CapEx - SBC`.
