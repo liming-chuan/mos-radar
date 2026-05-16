@@ -3,6 +3,7 @@ name: MOS Radar Daily Scanner
 on:
   schedule:
     # GitHub Actions cron uses UTC time.
+    # Run on NY market weekdays only. No automatic runs on Saturday or Sunday.
     # Approx NY times during EDT:
     # 08:31 NY -> 12:31 UTC
     # 12:31 NY -> 16:31 UTC
