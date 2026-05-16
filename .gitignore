@@ -8,3 +8,8 @@ __pycache__/
 data/holdings.csv
 data/results/
 reports/
+
+# private investment data
+data/holdings.csv
+data/results/
+reports/
