@@ -2,6 +2,14 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.0.3 - 2026-05-16
+
+- Added `HOLDINGS_TICKERS` secret support so holdings can be used on GitHub Actions without committing private holdings files.
+- Added report diagnostics:
+  - full rating distribution
+  - sample rows for tickers that did not enter S/A/B
+- This makes empty candidate reports explainable instead of only showing "no qualifying companies".
+
 ## v6.0.2 - 2026-05-16
 
 - Added quote currency and financial statement currency fields to valuation output.

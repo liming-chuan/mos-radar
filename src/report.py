@@ -217,6 +217,52 @@ def count_rating(df: pd.DataFrame, rating: str) -> int:
     return int((df["rating"] == rating).sum())
 
 
+def rating_distribution_html(df: pd.DataFrame) -> str:
+    ratings = ["S", "A", "B", "C_THIN", "PASS", "D_TRAP", "NO_DATA", "SKIP", "ERROR"]
+    rows = []
+    total = len(df)
+
+    for rating in ratings:
+        count = count_rating(df, rating)
+        rows.append(
+            f"""
+            <tr>
+                <td>{rating_badge(rating)}</td>
+                <td class="num">{count}</td>
+                <td class="num">{pct(count / total if total else None)}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <h2>扫描诊断：评级分布</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>评级</th>
+                <th>数量</th>
+                <th>占比</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(rows)}
+        </tbody>
+    </table>
+    """
+
+
+def diagnostic_sample_html(df: pd.DataFrame) -> str:
+    if df.empty or "rating" not in df.columns:
+        return ""
+
+    watch = df[df["rating"].isin(["C_THIN", "PASS", "D_TRAP", "NO_DATA", "SKIP", "ERROR"])].copy()
+    if watch.empty:
+        return ""
+
+    watch = sort_for_report(watch)
+    return html_table(watch, "扫描诊断：未进入 S/A/B 的样本 Top 30", limit=30)
+
+
 def generate_report(
     df: pd.DataFrame,
     mode: str,
@@ -246,6 +292,8 @@ def generate_report(
         market_df = df.copy()
 
     market_high = high_margin_candidates(market_df)
+    rating_diag_html = rating_distribution_html(df)
+    diagnostic_html = diagnostic_sample_html(market_df)
 
     total_holdings = len(holdings_df)
     market_high_count = len(market_high)
@@ -446,6 +494,12 @@ def generate_report(
     <div class="card">
         {market_html}
     </div>
+
+    <div class="card">
+        {rating_diag_html}
+    </div>
+
+    {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
 
     {f'<div class="card">{thicker_html}</div>' if thicker_html else ''}
 

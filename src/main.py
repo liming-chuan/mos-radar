@@ -104,8 +104,30 @@ def _read_ticker_csv(path: Path) -> list[str]:
     return out
 
 
+def _normalize_tickers(raw: list[str]) -> list[str]:
+    out = []
+    seen = set()
+
+    for x in raw:
+        ticker = str(x).strip().upper()
+        if not ticker or ticker == "TICKER":
+            continue
+
+        ticker = ticker.replace(".", "-").replace("/", "-")
+
+        if ticker not in seen:
+            seen.add(ticker)
+            out.append(ticker)
+
+    return out
+
+
 def load_holdings() -> list[str]:
-    return _read_ticker_csv(HOLDINGS_PATH)
+    holdings = _read_ticker_csv(HOLDINGS_PATH)
+    env_holdings = os.getenv("HOLDINGS_TICKERS", "")
+    if env_holdings.strip():
+        holdings.extend(env_holdings.replace("\n", ",").split(","))
+    return _normalize_tickers(holdings)
 
 
 def load_scan_tickers() -> list[str]:

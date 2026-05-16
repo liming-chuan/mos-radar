@@ -36,6 +36,7 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 - 增加 ADR/海外股票币种防护：报价币种和财报币种不一致时暂不自动估值，避免台币/卢比等财报数据被当成美元。
 - 贵金属/矿业股使用更保守的周期模型，且最高评级封顶，避免把金价高点 FCF 当成永久现金流。
 - 报告显示 20% / 35% / 50% 安全边际对应观察价，方便人工复核价格触发区。
+- 报告显示完整评级分布和未进入 S/A/B 的样本原因，避免空报告无法诊断。
 - 支持 `DRY_RUN=true`，本地或 GitHub 手动测试时只生成报告，不发送邮件。
 
 ## 评级
@@ -61,6 +62,7 @@ SMTP_PASSWORD=邮箱 SMTP 授权码，不是网页登录密码
 SMTP_SSL=false
 MAIL_TO=你的Outlook邮箱，例如 yourname@outlook.com
 MAIL_FROM_NAME=MOS Radar
+HOLDINGS_TICKERS=你的持仓代码，用英文逗号分隔，例如 AAPL,MSFT,TSM
 ```
 
 也可以用 465 SSL：

@@ -48,6 +48,7 @@ jobs:
           SMTP_SSL: ${{ secrets.SMTP_SSL }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          HOLDINGS_TICKERS: ${{ secrets.HOLDINGS_TICKERS }}
           TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
           TRAP_COUNT: ${{ vars.TRAP_COUNT }}
           THIN_COUNT: ${{ vars.THIN_COUNT }}
