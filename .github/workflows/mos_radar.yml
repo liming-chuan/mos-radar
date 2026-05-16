@@ -2,22 +2,20 @@ name: MOS Radar Daily Scanner
 
 on:
   schedule:
-    # Full after-close valuation scan. Avoid :00 to reduce queue delays.
-    - cron: "37 18 * * 1-5"
-      timezone: "America/New_York"
-    # Morning full report.
-    - cron: "31 8 * * 1-5"
-      timezone: "America/New_York"
-    # Noon price-only update.
+    # GitHub Actions cron uses UTC time.
+    # Approx NY times during EDT:
+    # 08:31 NY -> 12:31 UTC
+    # 12:31 NY -> 16:31 UTC
+    # 15:31 NY -> 19:31 UTC
+    # 18:37 NY -> 22:37 UTC
     - cron: "31 12 * * 1-5"
-      timezone: "America/New_York"
-    # Afternoon price-only update.
-    - cron: "31 15 * * 1-5"
-      timezone: "America/New_York"
+    - cron: "31 16 * * 1-5"
+    - cron: "31 19 * * 1-5"
+    - cron: "37 22 * * 1-5"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   mos-radar:
@@ -57,11 +55,3 @@ jobs:
           PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
         run: python src/main.py
-
-      - name: Commit reports and latest results
-        run: |
-          git config user.name "mos-radar-bot"
-          git config user.email "mos-radar-bot@users.noreply.github.com"
-          git add reports/ data/results/ || true
-          git commit -m "update MOS radar report" || echo "No changes to commit"
-          git push
