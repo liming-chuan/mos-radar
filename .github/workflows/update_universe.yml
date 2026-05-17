@@ -6,7 +6,7 @@ on:
       limit:
         description: "How many tickers to keep"
         required: true
-        default: "1000"
+        default: "2000"
       min_market_cap:
         description: "Minimum market cap"
         required: true

@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.3.3
+# MOS Radar：安全边际雷达 V6.3.4
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -118,10 +118,12 @@ V6.3.3 起，如果 Yahoo quote 临时返回空结果，`Update Universe` 会保
 建议参数：
 
 ```text
-How many tickers to keep = 1000
+How many tickers to keep = 2000
 Minimum market cap = 1000000000
 Minimum average volume = 100000
 ```
+
+`Update Universe` 日志会打印实际收到的 `limit / min_market_cap / min_avg_volume`，以及 quote 验证数量、过滤后数量。如果你填了 2000 但最终仍是 1000，要先看日志里的 `Universe config: limit=...` 是否真的等于 2000。
 
 ## 本地测试
 
@@ -200,7 +202,7 @@ dry_run = false
 
 ## 重要提醒
 
-1. V6.3.3 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.3.4 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

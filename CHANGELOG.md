@@ -2,6 +2,12 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.4 - 2026-05-17
+
+- Changed `Update Universe` default limit from 1000 to 2000.
+- Added explicit Update Universe diagnostics for received limit, market-cap threshold, volume threshold, verified quote row count, merged row count, and post-filter row count.
+- Updated README, model version, and version metadata.
+
 ## v6.3.3 - 2026-05-17
 
 - Fixed `Update Universe` when Yahoo quote verification returns zero rows.

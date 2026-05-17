@@ -188,6 +188,15 @@ def build_universe() -> pd.DataFrame:
     sleep_seconds = getenv_float("UNIVERSE_SLEEP_SECONDS", 0.05)
     batch_size = getenv_int("UNIVERSE_BATCH_SIZE", 100)
 
+    print(
+        "Universe config:",
+        f"limit={limit}",
+        f"min_market_cap={min_market_cap}",
+        f"min_avg_volume={min_avg_volume}",
+        f"batch_size={batch_size}",
+        f"sleep_seconds={sleep_seconds}",
+        flush=True,
+    )
     print("Fetching official symbol lists...")
 
     raw = pd.concat(
@@ -205,6 +214,7 @@ def build_universe() -> pd.DataFrame:
     print("raw filtered candidates:", len(tickers))
 
     vdf = verify_tickers(tickers, sleep_seconds=sleep_seconds, batch_size=batch_size)
+    print("verified quote rows:", len(vdf), flush=True)
     if vdf.empty:
         print(
             "WARNING: quote verification returned zero rows. "
@@ -220,6 +230,7 @@ def build_universe() -> pd.DataFrame:
         return pd.DataFrame(columns=UNIVERSE_COLUMNS)
 
     merged = raw.merge(vdf, on="ticker", how="inner")
+    print("merged quote rows:", len(merged), flush=True)
 
     merged["market_cap"] = pd.to_numeric(merged["market_cap"], errors="coerce")
     merged["avg_volume"] = pd.to_numeric(merged["avg_volume"], errors="coerce")
@@ -228,6 +239,7 @@ def build_universe() -> pd.DataFrame:
         (merged["market_cap"].fillna(0) >= min_market_cap)
         & (merged["avg_volume"].fillna(0) >= min_avg_volume)
     ]
+    print("rows after market cap / volume filters:", len(merged), flush=True)
 
     merged = merged.sort_values("market_cap", ascending=False)
 
