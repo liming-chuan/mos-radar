@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.3 - 2026-05-17
+
+- Fixed `Update Universe` when Yahoo quote verification returns zero rows.
+- Empty quote verification now keeps the existing `data/universe.csv` instead of crashing with `KeyError: 'ticker'` or writing an empty universe.
+- `Update Universe` now uploads `data/universe.csv` as the `mos-radar-universe` artifact for inspection.
+- Updated README, model version, and version metadata.
+
 ## v6.3.2 - 2026-05-17
 
 - Historical replay now sends email when `dry_run=false`.

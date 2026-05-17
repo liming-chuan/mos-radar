@@ -17,6 +17,8 @@ OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
 YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
 
 BAD_TICKERS = {"FI", "K"}
+UNIVERSE_COLUMNS = ["ticker", "name", "source", "market_cap", "avg_volume", "last_price"]
+QUOTE_COLUMNS = ["ticker", "last_price", "market_cap", "avg_volume"]
 
 
 def getenv_int(name: str, default: int) -> int:
@@ -165,7 +167,7 @@ def verify_tickers(tickers: list[str], sleep_seconds: float, batch_size: int) ->
         if sleep_seconds:
             time.sleep(sleep_seconds)
 
-    return pd.DataFrame(verified)
+    return pd.DataFrame(verified, columns=QUOTE_COLUMNS)
 
 
 def verify_ticker(ticker: str, sleep_seconds: float) -> dict | None:
@@ -203,6 +205,20 @@ def build_universe() -> pd.DataFrame:
     print("raw filtered candidates:", len(tickers))
 
     vdf = verify_tickers(tickers, sleep_seconds=sleep_seconds, batch_size=batch_size)
+    if vdf.empty:
+        print(
+            "WARNING: quote verification returned zero rows. "
+            "Keeping existing data/universe.csv if available instead of writing an empty universe.",
+            flush=True,
+        )
+        if OUT_PATH.exists():
+            existing = pd.read_csv(OUT_PATH)
+            for column in UNIVERSE_COLUMNS:
+                if column not in existing.columns:
+                    existing[column] = pd.NA
+            return existing[UNIVERSE_COLUMNS].reset_index(drop=True)
+        return pd.DataFrame(columns=UNIVERSE_COLUMNS)
+
     merged = raw.merge(vdf, on="ticker", how="inner")
 
     merged["market_cap"] = pd.to_numeric(merged["market_cap"], errors="coerce")
@@ -218,9 +234,7 @@ def build_universe() -> pd.DataFrame:
     if limit > 0:
         merged = merged.head(limit)
 
-    return merged[
-        ["ticker", "name", "source", "market_cap", "avg_volume", "last_price"]
-    ].reset_index(drop=True)
+    return merged[UNIVERSE_COLUMNS].reset_index(drop=True)
 
 
 def main():

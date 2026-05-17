@@ -221,13 +221,13 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
         result.reason = f"历史价格回放：疑似价值陷阱：{result.trap_flags}"
     elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
         result.rating = "S"
-        result.reason = f"历史价格回放：安全边际很厚，V6.3.2模型={result.model_type}"
+        result.reason = f"历史价格回放：安全边际很厚，V6.3.3模型={result.model_type}"
     elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
         result.rating = "A"
-        result.reason = f"历史价格回放：安全边际较厚，V6.3.2模型={result.model_type}"
+        result.reason = f"历史价格回放：安全边际较厚，V6.3.3模型={result.model_type}"
     elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
         result.rating = "B"
-        result.reason = f"历史价格回放：有一定安全边际，V6.3.2模型={result.model_type}"
+        result.reason = f"历史价格回放：有一定安全边际，V6.3.3模型={result.model_type}"
     elif result.margin_of_safety >= 0:
         result.rating = "C_THIN"
         result.reason = "历史价格回放：安全边际偏薄"

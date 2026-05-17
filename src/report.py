@@ -771,7 +771,7 @@ def generate_report(
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
-            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3.2 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
+            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3.3 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
     </div>
 
