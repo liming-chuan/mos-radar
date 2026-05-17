@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.2.0"
+MODEL_VERSION = "MOS_Radar_V6.3.0"
 RISK_FREE_RATE_CACHE: float | None = None
 
 
@@ -88,6 +88,12 @@ class AnalysisResult:
     trap_count: int = 0
     rating_cap: str = ""
     feedback_label: str = ""
+
+    is_historical_replay: bool = False
+    backtest_date: str = ""
+    current_price: float | None = None
+    current_market_cap: float | None = None
+    return_since_backtest: float | None = None
 
     rating: str = "NO_DATA"
     reason: str = ""
@@ -1013,7 +1019,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = (
                 "报价币种与财报币种不一致，疑似 ADR/海外股票；"
                 f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
-                "V6.2 暂不自动估值，避免币种/ADR比例导致安全边际失真"
+                "V6.3 暂不自动估值，避免币种/ADR比例导致安全边际失真"
             )
             return result
 
@@ -1024,12 +1030,12 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         if needs_nav_or_special_model(result.company_name, sector, industry):
             result.rating = "SKIP"
-            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.2 暂不自动估值"
+            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.3 暂不自动估值"
             return result
 
         if result.model_type == "reit_needs_affo":
             result.rating = "SKIP"
-            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6.2 暂不自动估值"
+            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6.3 暂不自动估值"
             return result
 
         financials = None
@@ -1333,13 +1339,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = f"疑似价值陷阱：{result.trap_flags}"
         elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
             result.rating = "S"
-            result.reason = f"安全边际很厚，V6.2模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际很厚，V6.3模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
             result.rating = "A"
-            result.reason = f"安全边际较厚，V6.2模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际较厚，V6.3模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
             result.rating = "B"
-            result.reason = f"有一定安全边际，V6.2模型={result.model_type}，估值法={method}"
+            result.reason = f"有一定安全边际，V6.3模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20:
             result.rating = "C_THIN"
             result.reason = "安全边际达到观察区，但综合分或质量门槛不足，未进入 B 级"

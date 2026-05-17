@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from emailer import send_email
+from historical_replay import run_historical_replay
 from price_update import update_prices_only
 from report import generate_report
 from valuation import analyze_ticker, results_to_dataframe
@@ -208,13 +209,21 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backtest_date = ""
+    if mode == "historical_replay" and "backtest_date" in df.columns:
+        values = df["backtest_date"].dropna().astype(str)
+        backtest_date = values.iloc[0] if not values.empty else ""
 
-    (REPORTS_DIR / f"{mode}_{timestamp}.md").write_text(body, encoding="utf-8")
+    report_name = f"{mode}_{backtest_date}_{timestamp}.md" if backtest_date else f"{mode}_{timestamp}.md"
+    (REPORTS_DIR / report_name).write_text(body, encoding="utf-8")
     (REPORTS_DIR / "latest_report.md").write_text(body, encoding="utf-8")
 
     df = annotate_pools(df)
     RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(RESULTS_PATH, index=False)
+    if mode == "historical_replay" and backtest_date:
+        df.to_csv(RESULTS_PATH.parent / f"historical_replay_{backtest_date}.csv", index=False)
+    else:
+        df.to_csv(RESULTS_PATH, index=False)
 
 
 def subject_for(mode: str) -> str:
@@ -226,6 +235,7 @@ def subject_for(mode: str) -> str:
         "noon_update": f"【MOS Radar】{today} 午盘安全边际变化",
         "afternoon_update": f"【MOS Radar】{today} 下午安全边际变化",
         "manual": f"【MOS Radar】{today} 手动安全边际扫描",
+        "historical_replay": f"【MOS Radar】{today} 历史价格回放",
     }
 
     return mapping.get(mode, f"【MOS Radar】{today} 安全边际报告")
@@ -241,6 +251,14 @@ def main() -> None:
 
     if mode in {"full_after_close", "manual"}:
         df = run_full_scan()
+
+    elif mode == "historical_replay":
+        backtest_date = os.getenv("BACKTEST_DATE", "2022-10-14").strip() or "2022-10-14"
+        use_latest = env_bool("BACKTEST_USE_LATEST", default=False)
+        base_df = load_latest_or_full_scan() if use_latest else run_full_scan()
+        df = run_historical_replay(base_df, backtest_date)
+        df = annotate_pools(df)
+        df["scan_time"] = datetime.now().isoformat(timespec="seconds")
 
     elif mode == "morning_email":
         df = load_latest_or_full_scan()

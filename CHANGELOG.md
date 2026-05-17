@@ -2,6 +2,15 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.0 - 2026-05-17
+
+- Added `historical_replay` mode for bear-market price stress testing.
+- Added GitHub Actions manual inputs for `run_mode`, `backtest_date`, and `backtest_use_latest`.
+- Historical replay fetches historical prices and recalculates margin of safety, FCF yield, market cap, score, rating, and post-backtest return.
+- Historical replay writes dedicated result files such as `data/results/historical_replay_2022-10-14.csv` instead of overwriting the normal latest scan.
+- Reports now label historical replay as a price stress test, not a strict point-in-time financial-statement backtest.
+- Updated README and version metadata.
+
 ## v6.2.1 - 2026-05-17
 
 - Added a market sector distribution table to scan reports so universe composition is visible.

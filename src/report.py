@@ -71,6 +71,9 @@ def normalize_numeric(df: pd.DataFrame) -> pd.DataFrame:
         "roe",
         "price_change_since_scan",
         "mos_change_since_scan",
+        "current_price",
+        "current_market_cap",
+        "return_since_backtest",
     ]:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -217,6 +220,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
     if limit is not None:
         df = df.head(limit)
 
+    show_backtest_return = "return_since_backtest" in df.columns
     rows = []
 
     for _, r in df.iterrows():
@@ -232,6 +236,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <td>{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
+                {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
                 <td class="num">{money(r.get("price"))}</td>
                 <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
@@ -254,6 +259,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>公司 / 行业</th>
                 <th>评级</th>
                 <th>安全边际</th>
+                {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
                 <th>现价</th>
                 <th>保守价值/股</th>
@@ -282,6 +288,7 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
     if limit is not None:
         df = df.head(limit)
 
+    show_backtest_return = "return_since_backtest" in df.columns
     rows = []
 
     for _, r in df.iterrows():
@@ -297,6 +304,7 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <td class="company">{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
+                {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
                 <td class="num">{money(r.get("price"))}</td>
                 <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
@@ -316,6 +324,7 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <th>公司 / 行业</th>
                 <th>评级</th>
                 <th>安全边际</th>
+                {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
                 <th>现价</th>
                 <th>保守价值/股</th>
@@ -473,10 +482,15 @@ def generate_report(
         "noon_update": "午盘安全边际变化",
         "afternoon_update": "下午安全边际变化",
         "manual": "手动安全边际扫描",
+        "historical_replay": "历史价格回放压力测试",
     }
 
     title = title_map.get(mode, "安全边际报告")
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    backtest_date = ""
+    if "backtest_date" in df.columns:
+        values = df["backtest_date"].dropna().astype(str)
+        backtest_date = values.iloc[0] if not values.empty else ""
 
     holdings_df = holdings_all(df)
 
@@ -721,6 +735,7 @@ def generate_report(
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
+            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
     </div>
 

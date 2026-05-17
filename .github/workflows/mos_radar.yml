@@ -14,6 +14,19 @@ on:
     - cron: "31 19 * * 1-5"
     - cron: "37 22 * * 1-5"
   workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "Run mode: manual or historical_replay"
+        required: false
+        default: "manual"
+      backtest_date:
+        description: "Historical replay date, e.g. 2022-10-14"
+        required: false
+        default: "2022-10-14"
+      backtest_use_latest:
+        description: "Use latest saved scan instead of running a fresh scan first"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -57,4 +70,7 @@ jobs:
           PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
           DRY_RUN: ${{ vars.DRY_RUN }}
+          RUN_MODE: ${{ github.event.inputs.run_mode }}
+          BACKTEST_DATE: ${{ github.event.inputs.backtest_date }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
         run: python src/main.py
