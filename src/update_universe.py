@@ -15,6 +15,7 @@ OUT_PATH = ROOT / "data" / "universe.csv"
 NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt"
 OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
 YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
+NASDAQ_SCREENER_URL = "https://api.nasdaq.com/api/screener/stocks"
 
 BAD_TICKERS = {"FI", "K"}
 UNIVERSE_COLUMNS = ["ticker", "name", "source", "market_cap", "avg_volume", "last_price"]
@@ -96,6 +97,10 @@ def safe_float(value):
     try:
         if value is None:
             return None
+        if isinstance(value, str):
+            value = value.replace("$", "").replace(",", "").strip()
+            if value.upper() in {"N/A", "NA", ""}:
+                return None
         value = float(value)
         if value != value:
             return None
@@ -147,6 +152,46 @@ def fetch_quote_batch(batch: list[str], timeout: int = 30) -> list[dict]:
         })
 
     return verified
+
+
+def fetch_nasdaq_screener_quotes(timeout: int = 30) -> pd.DataFrame:
+    response = requests.get(
+        NASDAQ_SCREENER_URL,
+        params={
+            "tableonly": "true",
+            "limit": "25000",
+            "offset": "0",
+            "download": "true",
+        },
+        timeout=timeout,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
+            "Origin": "https://www.nasdaq.com",
+            "Referer": "https://www.nasdaq.com/market-activity/stocks/screener",
+        },
+    )
+    response.raise_for_status()
+    rows = response.json().get("data", {}).get("rows", [])
+
+    out = []
+    for row in rows:
+        ticker = yahoo_symbol(row.get("symbol", ""))
+        price = safe_float(row.get("lastsale"))
+        market_cap = safe_float(row.get("marketCap"))
+        volume = safe_float(row.get("volume"))
+
+        if not ticker or price is None or price <= 0:
+            continue
+
+        out.append({
+            "ticker": ticker,
+            "last_price": price,
+            "market_cap": market_cap,
+            "avg_volume": volume,
+        })
+
+    return pd.DataFrame(out, columns=QUOTE_COLUMNS)
 
 
 def verify_tickers(tickers: list[str], sleep_seconds: float, batch_size: int) -> pd.DataFrame:
@@ -215,6 +260,20 @@ def build_universe() -> pd.DataFrame:
 
     vdf = verify_tickers(tickers, sleep_seconds=sleep_seconds, batch_size=batch_size)
     print("verified quote rows:", len(vdf), flush=True)
+    if len(vdf) < min(limit if limit > 0 else 2000, 2000):
+        print(
+            "Yahoo quote coverage is below target. Trying Nasdaq screener fallback...",
+            flush=True,
+        )
+        try:
+            fallback_vdf = fetch_nasdaq_screener_quotes()
+            print("Nasdaq screener quote rows:", len(fallback_vdf), flush=True)
+            if len(fallback_vdf) > len(vdf):
+                vdf = fallback_vdf
+                print("Using Nasdaq screener quote data for universe verification.", flush=True)
+        except Exception as e:
+            print(f"Nasdaq screener fallback failed: {type(e).__name__}: {e}", flush=True)
+
     if vdf.empty:
         print(
             "WARNING: quote verification returned zero rows. "

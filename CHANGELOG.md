@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.5 - 2026-05-17
+
+- Added Nasdaq screener fallback data for `Update Universe` when Yahoo quote batches return 401 or insufficient coverage.
+- `Update Universe` now switches to the fallback when verified quote rows are below the requested target.
+- Improved numeric parsing for dollar/comma formatted quote fields.
+- Updated README, model version, and version metadata.
+
 ## v6.3.4 - 2026-05-17
 
 - Changed `Update Universe` default limit from 1000 to 2000.
