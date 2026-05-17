@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.3
+# MOS Radar：安全边际雷达 V6.3.1
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -45,7 +45,8 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 - 报告显示 20% / 35% / 50% 安全边际对应观察价，方便人工复核价格触发区。
 - 报告显示完整评级分布和未进入 S/A/B 的样本原因，避免空报告无法诊断。
 - 报告显示市场行业分布，用来判断问题来自股票池结构，还是估值/排序逻辑。
-- 支持历史价格回放压力测试：在 GitHub Actions 手动运行时选择 `historical_replay`，输入例如 `2022-10-14`，系统会用历史价格重算安全边际，用于验证熊市环境下是否出现 S/A/B。
+- 支持独立历史价格回放压力测试：当前市场扫描和历史回放拆成两个 GitHub Actions，互不干扰。
+- 当前市场和历史回放都会上传 Actions artifact，运行结束后可在本次 workflow 页面下载 CSV 和报告。
 - 报告单独显示接近候选的 `C_THIN` 股票，并使用紧凑诊断表避免理由列竖排。
 - 报告把非金融经营型公司和金融股分开显示；金融股使用 PB/ROE 口径，不再和普通 FCF 公司混排；非金融诊断表不再重复显示金融股。
 - 金融股不再使用 FCF Yield 和债务/EBITDA 评分；银行、保险等优先使用有形权益 PB/ROE；基金、BDC、封闭式基金等 NAV/NII 驱动资产默认跳过，等待专门模型。
@@ -153,12 +154,31 @@ QCOM
 
 第一版建议先扫 200—1000 只大中盘股，不建议直接扫所有低流动性小票。
 
-## 历史价格回放
+## GitHub Actions 运行
 
-GitHub Actions → `MOS Radar Daily Scanner` → `Run workflow`：
+### 当前市场扫描
+
+GitHub Actions → `MOS Radar Daily Scanner` → `Run workflow`
+
+这个 workflow 扫描当前市场，也负责工作日定时运行。运行结束后，在本次 run 页面下载 artifact：
 
 ```text
-run_mode = historical_replay
+mos-radar-current-results
+```
+
+里面包含：
+
+```text
+data/results/mos_latest.csv
+data/results/mos_snapshot_latest.csv
+reports/latest_report.md
+```
+
+### 历史价格回放
+
+GitHub Actions → `MOS Radar Historical Replay` → `Run workflow`：
+
+```text
 backtest_date = 2022-10-14
 backtest_use_latest = false
 ```
@@ -168,12 +188,13 @@ backtest_use_latest = false
 - 这是历史价格压力测试，不是严格 point-in-time 财报回测。
 - 系统会先按当前 V6.3 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
 - 输出文件保存为 `data/results/historical_replay_YYYY-MM-DD.csv`，报告标题为“历史价格回放压力测试”。
+- 运行结束后，在本次 run 页面下载 artifact：`mos-radar-historical-YYYY-MM-DD`。
 - `backtest_use_latest=true` 会跳过重新扫描，直接用已有 `mos_latest.csv` 做价格回放，速度更快但依赖旧结果。
 - 严格历史回测需要 SEC/财报公告日期和当时可见财报数据，免费 yfinance 不能可靠完成这一层。
 
 ## 重要提醒
 
-1. V6.3 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.3.1 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

@@ -1,28 +1,25 @@
-name: MOS Radar Daily Scanner
+name: MOS Radar Historical Replay
 
 on:
-  schedule:
-    # GitHub Actions cron uses UTC time.
-    # Run on NY market weekdays only. No automatic runs on Saturday or Sunday.
-    # Approx NY times during EDT:
-    # 08:31 NY -> 12:31 UTC
-    # 12:31 NY -> 16:31 UTC
-    # 15:31 NY -> 19:31 UTC
-    # 18:37 NY -> 22:37 UTC
-    - cron: "31 12 * * 1-5"
-    - cron: "31 16 * * 1-5"
-    - cron: "31 19 * * 1-5"
-    - cron: "37 22 * * 1-5"
   workflow_dispatch:
+    inputs:
+      backtest_date:
+        description: "Historical replay date, e.g. 2022-10-14"
+        required: true
+        default: "2022-10-14"
+      backtest_use_latest:
+        description: "Use latest saved scan instead of running a fresh scan first"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
 
 jobs:
-  mos-radar:
+  historical-replay:
     runs-on: ubuntu-latest
     concurrency:
-      group: mos-radar
+      group: mos-radar-historical-replay
       cancel-in-progress: true
 
     steps:
@@ -38,9 +35,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run MOS Radar
+      - name: Run historical replay
         env:
-          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -54,16 +50,17 @@ jobs:
           THIN_COUNT: ${{ vars.THIN_COUNT }}
           MAX_TICKERS: ${{ vars.MAX_TICKERS }}
           REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
-          PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
-          SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
           DRY_RUN: ${{ vars.DRY_RUN }}
+          RUN_MODE: historical_replay
+          BACKTEST_DATE: ${{ github.event.inputs.backtest_date }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
         run: python src/main.py
 
-      - name: Upload MOS Radar results
+      - name: Upload historical replay results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mos-radar-current-results
+          name: mos-radar-historical-${{ github.event.inputs.backtest_date }}
           if-no-files-found: ignore
           retention-days: 14
           path: |

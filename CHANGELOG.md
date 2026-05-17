@@ -2,6 +2,14 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.1 - 2026-05-17
+
+- Split current-market scanning and historical replay into separate GitHub Actions workflows.
+- `MOS Radar Daily Scanner` now runs only current-market scans and scheduled weekday jobs.
+- Added `MOS Radar Historical Replay` for manual historical price replay runs.
+- Both workflows upload CSV results and reports as GitHub Actions artifacts.
+- Updated README and version metadata.
+
 ## v6.3.0 - 2026-05-17
 
 - Added `historical_replay` mode for bear-market price stress testing.
