@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.3.6
+# MOS Radar：安全边际雷达 V6.4.0
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -29,6 +29,18 @@ Owner FCF = 经营现金流 - 资本开支 - 股权激励 SBC
 ```
 
 REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
+
+
+## V6.4 自动化与数据口径升级
+
+- 定时任务按 GitHub Actions 的 UTC cron 精确映射运行模式，避免开盘前、午盘、下午、盘后被识别错。
+- 盘后/手动完整扫描会把公开市场扫描结果保存到 `state/mos_market_latest.csv`；早盘、午盘、下午只读取该状态，不再因为 runner 是新环境而偷偷重跑 full scan。
+- `state/mos_market_latest.csv` 不保存持仓池，持仓仍来自 `data/holdings.csv` 或 `HOLDINGS_TICKERS`，避免把私人持仓提交到 GitHub。
+- 估值口径新增 `financial_period_type`：`TTM` 表示最近四个季度滚动数据，`ANNUAL_FALLBACK` 表示季度数据不足时退回最新年报。
+- 报告新增最低估值法、估值候选明细、行业模型状态、持仓风险复核和数据质量诊断。
+- 午盘/下午价格更新改为批量拉取价格，并在价格变化后重算安全边际、FCF Yield、MOS 分数和评级。
+- 股票池更新使用 `liquidity_volume` 和 `volume_source`，不再把 Nasdaq 当日成交量无说明地写成平均成交量。
+- 历史功能统一称为“历史价格压力测试”，不是严格 point-in-time 回测。
 
 ## V6.3 风险控制
 
@@ -97,7 +109,9 @@ TRAP_COUNT=30
 THIN_COUNT=30
 MAX_TICKERS=0
 REQUEST_SLEEP_SECONDS=0.2
-PRICE_SLEEP_SECONDS=0.05
+PRICE_SLEEP_SECONDS=0.02
+USE_FUNDAMENTALS_CACHE=true
+FUNDAMENTALS_CACHE_DAYS=7
 SEND_AFTER_CLOSE=false
 DRY_RUN=false
 ```
@@ -111,16 +125,16 @@ DRY_RUN=false
 
 ## 股票池更新
 
-GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.3.6 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
+GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.4.0 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
 
-V6.3.6 起，如果 Nasdaq screener 临时返回空结果，`Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
+V6.4.0 起，如果 Nasdaq screener 临时返回空结果，`Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
 
 建议参数：
 
 ```text
 How many tickers to keep = 2000
 Minimum market cap = 1000000000
-Minimum average volume = 100000
+Minimum liquidity volume = 100000
 ```
 
 `Update Universe` 日志会打印实际收到的 `limit / min_market_cap / min_avg_volume`、Nasdaq screener 行情行数、合并行数、过滤后数量和最终股票池数量。`limit=2000` 且过滤后数量充足时，`data/universe.csv` 应生成 2000 家公司。
@@ -202,7 +216,7 @@ dry_run = false
 
 ## 重要提醒
 
-1. V6.3.6 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.4.0 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

@@ -16,8 +16,8 @@ OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
 NASDAQ_SCREENER_URL = "https://api.nasdaq.com/api/screener/stocks"
 
 BAD_TICKERS = {"FI", "K"}
-UNIVERSE_COLUMNS = ["ticker", "name", "source", "market_cap", "avg_volume", "last_price"]
-QUOTE_COLUMNS = ["ticker", "last_price", "market_cap", "avg_volume"]
+UNIVERSE_COLUMNS = ["ticker", "name", "source", "market_cap", "liquidity_volume", "volume_source", "avg_volume", "last_price"]
+QUOTE_COLUMNS = ["ticker", "last_price", "market_cap", "liquidity_volume", "volume_source", "avg_volume"]
 
 
 def getenv_int(name: str, default: int) -> int:
@@ -97,6 +97,14 @@ def safe_float(value):
         return None
 
 
+def first_numeric(row: dict, keys: list[str]) -> tuple[float | None, str]:
+    for key in keys:
+        value = safe_float(row.get(key))
+        if value is not None:
+            return value, key
+    return None, ""
+
+
 def fetch_nasdaq_screener_quotes(timeout: int = 30) -> pd.DataFrame:
     response = requests.get(
         NASDAQ_SCREENER_URL,
@@ -122,7 +130,10 @@ def fetch_nasdaq_screener_quotes(timeout: int = 30) -> pd.DataFrame:
         ticker = yahoo_symbol(row.get("symbol", ""))
         price = safe_float(row.get("lastsale"))
         market_cap = safe_float(row.get("marketCap"))
-        volume = safe_float(row.get("volume"))
+        avg_volume, avg_source = first_numeric(row, ["avgVolume", "averageVolume", "averageVolume10Day", "averageDailyVolume3Month"])
+        last_volume = safe_float(row.get("volume"))
+        liquidity_volume = avg_volume if avg_volume is not None else last_volume
+        volume_source = avg_source if avg_volume is not None else "last_volume"
 
         if not ticker or price is None or price <= 0:
             continue
@@ -131,7 +142,9 @@ def fetch_nasdaq_screener_quotes(timeout: int = 30) -> pd.DataFrame:
             "ticker": ticker,
             "last_price": price,
             "market_cap": market_cap,
-            "avg_volume": volume,
+            "liquidity_volume": liquidity_volume,
+            "volume_source": volume_source,
+            "avg_volume": avg_volume,
         })
 
     return pd.DataFrame(out, columns=QUOTE_COLUMNS)
@@ -140,12 +153,12 @@ def fetch_nasdaq_screener_quotes(timeout: int = 30) -> pd.DataFrame:
 def build_universe() -> pd.DataFrame:
     limit = getenv_int("UNIVERSE_LIMIT", 1000)
     min_market_cap = getenv_int("MIN_MARKET_CAP", 1_000_000_000)
-    min_avg_volume = getenv_int("MIN_AVG_VOLUME", 100_000)
+    min_liquidity_volume = getenv_int("MIN_LIQUIDITY_VOLUME", getenv_int("MIN_AVG_VOLUME", 100_000))
     print(
         "Universe config:",
         f"limit={limit}",
         f"min_market_cap={min_market_cap}",
-        f"min_avg_volume={min_avg_volume}",
+        f"min_liquidity_volume={min_liquidity_volume}",
         flush=True,
     )
     print("Fetching official symbol lists...")
@@ -190,13 +203,17 @@ def build_universe() -> pd.DataFrame:
     print("merged quote rows:", len(merged), flush=True)
 
     merged["market_cap"] = pd.to_numeric(merged["market_cap"], errors="coerce")
-    merged["avg_volume"] = pd.to_numeric(merged["avg_volume"], errors="coerce")
+    merged["liquidity_volume"] = pd.to_numeric(merged["liquidity_volume"], errors="coerce")
+    if "avg_volume" in merged.columns:
+        merged["avg_volume"] = pd.to_numeric(merged["avg_volume"], errors="coerce")
 
     merged = merged[
         (merged["market_cap"].fillna(0) >= min_market_cap)
-        & (merged["avg_volume"].fillna(0) >= min_avg_volume)
+        & (merged["liquidity_volume"].fillna(0) >= min_liquidity_volume)
     ]
-    print("rows after market cap / volume filters:", len(merged), flush=True)
+    source_counts = merged["volume_source"].fillna("unknown").value_counts().to_dict() if "volume_source" in merged.columns else {}
+    print("rows after market cap / liquidity filters:", len(merged), flush=True)
+    print("liquidity volume source distribution:", source_counts, flush=True)
 
     merged = merged.sort_values("market_cap", ascending=False)
 

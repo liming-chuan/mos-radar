@@ -2,6 +2,20 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.4.0 - 2026-05-17
+
+- Fixed scheduled-run mode detection by mapping GitHub UTC cron strings exactly to morning, noon, afternoon, and after-close modes.
+- Added public market state persistence through `state/mos_market_latest.csv`; non-full scheduled modes now fail fast when state is missing instead of silently running a full scan.
+- Kept holdings private: persisted state excludes holding rows and holding/pool markers; holdings continue to come from `data/holdings.csv` or `HOLDINGS_TICKERS`.
+- Added true quarterly TTM calculations for revenue, net income, reported FCF, SBC, and Owner FCF, with explicit `financial_period_type=TTM` or `ANNUAL_FALLBACK`.
+- Replaced numeric `x or fallback` patterns with `coalesce_none` in key valuation paths so valid zero values are not treated as missing.
+- Added valuation candidate detail, industry model status, data quality diagnostics, and report columns for financial period type and valuation method.
+- Changed intraday price updates to batch yfinance downloads, refresh market cap/FCF yield, and rerate rows after price changes.
+- Changed universe liquidity filtering to use explicit `liquidity_volume` and `volume_source`, no longer pretending Nasdaq screener `volume` is always average volume.
+- Added GitHub Actions fundamentals cache scaffolding, public state artifact upload, and state commit step.
+- Renamed historical replay language to historical price stress test and removed hard-coded old model version text.
+- Updated README, model version, and version metadata.
+
 ## v6.3.6 - 2026-05-17
 
 - Removed the Yahoo quote batch verification path from `Update Universe`.

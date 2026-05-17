@@ -74,6 +74,7 @@ def normalize_numeric(df: pd.DataFrame) -> pd.DataFrame:
         "current_price",
         "current_market_cap",
         "return_since_backtest",
+        "cache_age_days",
     ]:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
@@ -235,6 +236,8 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <td class="ticker">{ticker}</td>
                 <td>{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
+                <td>{escape(str(r.get("financial_period_type", "") or "N/A"))}</td>
+                <td>{short_reason(str(r.get("valuation_method", "") or ""), limit=46)}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
                 {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
@@ -258,6 +261,8 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>代码</th>
                 <th>公司 / 行业</th>
                 <th>评级</th>
+                <th>财报口径</th>
+                <th>估值法</th>
                 <th>安全边际</th>
                 {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
@@ -303,6 +308,8 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <td class="ticker">{ticker}</td>
                 <td class="company">{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
+                <td>{escape(str(r.get("financial_period_type", "") or "N/A"))}</td>
+                <td>{short_reason(str(r.get("valuation_method", "") or ""), limit=46)}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
                 {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
@@ -323,6 +330,8 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <th>代码</th>
                 <th>公司 / 行业</th>
                 <th>评级</th>
+                <th>财报口径</th>
+                <th>估值法</th>
                 <th>安全边际</th>
                 {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
@@ -468,6 +477,53 @@ def historical_price_status_html(df: pd.DataFrame) -> str:
     """
 
 
+
+def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：最低估值法与候选值") -> str:
+    if df.empty or "valuation_candidates" not in df.columns:
+        return ""
+    sample = sort_for_report(df.copy()).head(30)
+    rows = []
+    for _, r in sample.iterrows():
+        rows.append(
+            f"""
+            <tr>
+                <td class="ticker">{escape(str(r.get('ticker', '')))}</td>
+                <td>{escape(str(r.get('company_name', '') or ''))}</td>
+                <td>{rating_badge(str(r.get('rating', 'N/A')))}</td>
+                <td>{escape(str(r.get('financial_period_type', '') or 'N/A'))}</td>
+                <td>{escape(str(r.get('industry_model_status', '') or ''))}</td>
+                <td>{escape(str(r.get('valuation_method', '') or ''))}</td>
+                <td class="reason">{short_reason(r.get('valuation_candidates'), limit=220)}</td>
+            </tr>
+            """
+        )
+    return f"""
+    <h2>{escape(title)}</h2>
+    <table class="compact">
+        <thead>
+            <tr>
+                <th>代码</th>
+                <th>公司</th>
+                <th>评级</th>
+                <th>财报口径</th>
+                <th>行业模型状态</th>
+                <th>最低估值法</th>
+                <th>估值候选</th>
+            </tr>
+        </thead>
+        <tbody>{''.join(rows)}</tbody>
+    </table>
+    """
+
+
+def holdings_risk_html(df: pd.DataFrame) -> str:
+    if df.empty or "rating" not in df.columns:
+        return ""
+    risk = df[df["rating"].isin(["C_THIN", "PASS", "D_TRAP", "NO_DATA", "SKIP", "ERROR"])].copy()
+    if risk.empty:
+        return ""
+    return compact_table(sort_for_report(risk), "持仓风险复核：偏薄、无边际或数据不足", limit=None)
+
 def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进入 S/A/B 的样本 Top 30") -> str:
     if df.empty or "rating" not in df.columns:
         return ""
@@ -527,6 +583,11 @@ def generate_report(
         values = df["backtest_date"].dropna().astype(str)
         backtest_date = values.iloc[0] if not values.empty else ""
 
+    model_version = ""
+    if "model_version" in df.columns:
+        mv = df["model_version"].dropna().astype(str)
+        model_version = mv.iloc[0] if not mv.empty else ""
+
     holdings_df = holdings_all(df)
 
     if "is_holding" in df.columns:
@@ -547,6 +608,8 @@ def generate_report(
         operating_market_df,
         "扫描诊断：非金融未进入 S/A/B 的样本 Top 30",
     )
+    valuation_detail = valuation_detail_html(market_high if not market_high.empty else operating_market_df)
+    holdings_risk = holdings_risk_html(holdings_df)
 
     total_holdings = len(holdings_df)
     market_high_count = len(market_high)
@@ -739,7 +802,7 @@ def generate_report(
 <div class="wrap">
     <div class="card">
         <h1>【MOS Radar】{escape(title)}</h1>
-        <div class="meta">生成时间：{escape(ts)} | 模式：{escape(mode)}</div>
+        <div class="meta">生成时间：{escape(ts)} | 模式：{escape(mode)} | 模型：{escape(model_version or "N/A")}</div>
 
         <div class="summary">
             <div class="box">
@@ -770,8 +833,8 @@ def generate_report(
 
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
-            20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
-            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3.3 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
+            20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。S/A/B 只代表值得研究，不代表买入。
+            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
     </div>
 
@@ -779,9 +842,13 @@ def generate_report(
         {holdings_html}
     </div>
 
+    {f'<div class="card">{holdings_risk}</div>' if holdings_risk else ''}
+
     <div class="card">
         {market_html}
     </div>
+
+    {f'<div class="card">{valuation_detail}</div>' if valuation_detail else ''}
 
     <div class="card">
         {financial_html}
@@ -812,7 +879,8 @@ def generate_report(
             <b>C_THIN</b>：安全边际偏薄。<br>
             <b>PASS</b>：当前价格高于保守价值。<br>
             <b>D_TRAP</b>：疑似价值陷阱，必须人工排雷。<br>
-            <b>NO_DATA</b>：数据不足，不能判断。
+            <b>NO_DATA</b>：数据不足，不能判断。<br>
+            <b>财报口径</b>：TTM 表示最近四个季度滚动口径；ANNUAL_FALLBACK 表示季度数据不足，退回最新年报口径。
         </div>
     </div>
 </div>

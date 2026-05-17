@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
-from datetime import datetime
+from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -10,7 +12,7 @@ from emailer import send_email
 from historical_replay import run_historical_replay
 from price_update import update_prices_only
 from report import generate_report
-from valuation import analyze_ticker, results_to_dataframe
+from valuation import MODEL_VERSION, analyze_ticker, results_to_dataframe
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,7 +22,20 @@ HOLDINGS_PATH = ROOT / "data" / "holdings.csv"
 
 RESULTS_PATH = ROOT / "data" / "results" / "mos_latest.csv"
 SNAPSHOT_PATH = ROOT / "data" / "results" / "mos_snapshot_latest.csv"
+DIAGNOSTICS_PATH = ROOT / "data" / "results" / "data_quality_diagnostics.csv"
 REPORTS_DIR = ROOT / "reports"
+
+STATE_DIR = ROOT / "state"
+STATE_MARKET_PATH = STATE_DIR / "mos_market_latest.csv"
+CACHE_DIR = ROOT / "cache" / "fundamentals"
+
+SCHEDULE_MODE_MAP = {
+    "31 12 * * 1-5": "morning_email",
+    "31 16 * * 1-5": "noon_update",
+    "31 19 * * 1-5": "afternoon_update",
+    "37 22 * * 1-5": "full_after_close",
+}
+STATE_REQUIRED_MODES = {"morning_email", "noon_update", "afternoon_update"}
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -52,21 +67,11 @@ def getenv_float(name: str, default: float) -> float:
 
 def detect_mode() -> str:
     forced = os.getenv("RUN_MODE")
-    if forced:
-        return forced
+    if forced and forced.strip():
+        return forced.strip()
 
-    schedule = os.getenv("GITHUB_EVENT_SCHEDULE", "")
-
-    if "37 18" in schedule:
-        return "full_after_close"
-    if "31 8" in schedule:
-        return "morning_email"
-    if "31 12" in schedule:
-        return "noon_update"
-    if "31 15" in schedule:
-        return "afternoon_update"
-
-    return "manual"
+    schedule = os.getenv("GITHUB_EVENT_SCHEDULE", "").strip()
+    return SCHEDULE_MODE_MAP.get(schedule, "manual")
 
 
 def _read_ticker_csv(path: Path) -> list[str]:
@@ -88,21 +93,7 @@ def _read_ticker_csv(path: Path) -> list[str]:
     else:
         raw = df.iloc[:, 0].dropna().tolist()
 
-    out = []
-    seen = set()
-
-    for x in raw:
-        ticker = str(x).strip().upper()
-        if not ticker or ticker == "TICKER":
-            continue
-
-        ticker = ticker.replace(".", "-").replace("/", "-")
-
-        if ticker not in seen:
-            seen.add(ticker)
-            out.append(ticker)
-
-    return out
+    return _normalize_tickers(raw)
 
 
 def _normalize_tickers(raw: list[str]) -> list[str]:
@@ -147,7 +138,7 @@ def load_scan_tickers() -> list[str]:
             seen.add(ticker)
             tickers.append(ticker)
 
-    # 持仓池强制加入扫描：即使不在 universe.csv 里，也会扫描
+    # 持仓池强制加入扫描：即使不在 universe.csv 里，也会扫描。
     for ticker in holdings:
         if ticker not in seen:
             seen.add(ticker)
@@ -158,7 +149,6 @@ def load_scan_tickers() -> list[str]:
 
 def annotate_pools(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-
     holdings = set(load_holdings())
 
     if "ticker" not in df.columns:
@@ -167,42 +157,179 @@ def annotate_pools(df: pd.DataFrame) -> pd.DataFrame:
     df["ticker"] = df["ticker"].astype(str).str.strip().str.upper()
     df["is_holding"] = df["ticker"].isin(holdings)
     df["pool"] = df["is_holding"].map(lambda x: "holding" if x else "market")
-
     return df
+
+
+def public_market_state(df: pd.DataFrame) -> pd.DataFrame:
+    df = annotate_pools(df)
+    if df.empty:
+        return df
+    if "is_holding" in df.columns:
+        df = df[~df["is_holding"].map(lambda x: bool(x))].copy()
+    private_cols = [c for c in ["is_holding", "pool"] if c in df.columns]
+    if private_cols:
+        df = df.drop(columns=private_cols)
+    return df.reset_index(drop=True)
+
+
+def save_public_market_state(df: pd.DataFrame) -> None:
+    state = public_market_state(df)
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    state.to_csv(STATE_MARKET_PATH, index=False)
+    print(f"Saved public market state: {STATE_MARKET_PATH} rows={len(state)}", flush=True)
+
+
+def load_public_market_state() -> pd.DataFrame:
+    if RESULTS_PATH.exists():
+        df = pd.read_csv(RESULTS_PATH)
+        print(f"Loaded latest local result: {RESULTS_PATH} rows={len(df)}", flush=True)
+        return annotate_pools(df)
+
+    if STATE_MARKET_PATH.exists():
+        df = pd.read_csv(STATE_MARKET_PATH)
+        print(f"Loaded persisted public market state: {STATE_MARKET_PATH} rows={len(df)}", flush=True)
+        return annotate_pools(df)
+
+    raise RuntimeError(
+        "Missing latest scan state. Run full_after_close or manual full scan first. "
+        f"Expected {STATE_MARKET_PATH}. Non-full modes will not silently run a full scan."
+    )
+
+
+def cache_enabled() -> bool:
+    return env_bool("USE_FUNDAMENTALS_CACHE", default=True)
+
+
+def cache_ttl_days() -> int:
+    return getenv_int("FUNDAMENTALS_CACHE_DAYS", 7)
+
+
+def cache_path(ticker: str) -> Path:
+    safe = str(ticker).strip().upper().replace("/", "-").replace(".", "-")
+    return CACHE_DIR / f"{safe}.json"
+
+
+def load_cached_analysis(ticker: str) -> dict | None:
+    if not cache_enabled():
+        return None
+    path = cache_path(ticker)
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        saved_at = datetime.fromisoformat(str(payload.get("saved_at", "")))
+        age_days = (datetime.now(timezone.utc) - saved_at).total_seconds() / 86400
+        if age_days > cache_ttl_days():
+            return None
+        row = dict(payload.get("result") or {})
+        row["cache_status"] = "HIT"
+        row["cache_age_days"] = round(age_days, 2)
+        return row
+    except Exception:
+        return None
+
+
+def save_cached_analysis(ticker: str, result) -> None:
+    if not cache_enabled():
+        return
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        row = asdict(result) if hasattr(result, "__dataclass_fields__") else dict(result)
+        payload = {
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "model_version": MODEL_VERSION,
+            "ticker": ticker,
+            "result": row,
+        }
+        cache_path(ticker).write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        print(f"Cache write skipped for {ticker}: {type(e).__name__}: {e}", flush=True)
+
+
+def analyze_one(ticker: str, sleep_seconds: float):
+    cached = load_cached_analysis(ticker)
+    if cached is not None:
+        print(f"cache hit {ticker}", flush=True)
+        return cached
+
+    result = analyze_ticker(ticker, sleep_seconds=sleep_seconds)
+    save_cached_analysis(ticker, result)
+    row = asdict(result)
+    row["cache_status"] = "MISS"
+    row["cache_age_days"] = 0
+    return row
+
+
+def build_data_quality_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
+    wanted = [
+        "ticker", "company_name", "sector", "industry", "rating", "reason",
+        "model_version", "model_type", "industry_model_status", "financial_period_type",
+        "data_quality_score", "confidence_score", "trap_flags", "rating_cap",
+        "valuation_method", "valuation_candidates", "price_data_status", "cache_status",
+        "historical_price_status",
+    ]
+    cols = [c for c in wanted if c in df.columns]
+    return df[cols].copy() if cols else pd.DataFrame()
+
+
+def save_outputs(df: pd.DataFrame, write_state: bool = True) -> None:
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(RESULTS_PATH, index=False)
+    df.to_csv(SNAPSHOT_PATH, index=False)
+    diagnostics = build_data_quality_diagnostics(df)
+    if not diagnostics.empty:
+        diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
+    if write_state:
+        save_public_market_state(df)
 
 
 def run_full_scan() -> pd.DataFrame:
     tickers = load_scan_tickers()
     sleep_seconds = getenv_float("REQUEST_SLEEP_SECONDS", 0.2)
+    price_sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.02)
 
-    results = []
+    rows = []
     total = len(tickers)
 
     for i, ticker in enumerate(tickers, start=1):
         print(f"[{i}/{total}] analyzing {ticker}", flush=True)
-        results.append(analyze_ticker(ticker, sleep_seconds=sleep_seconds))
+        rows.append(analyze_one(ticker, sleep_seconds=sleep_seconds))
 
-    df = results_to_dataframe(results)
+    df = pd.DataFrame(rows)
     df = annotate_pools(df)
+    if "cache_status" in df.columns and (df["cache_status"].astype(str) == "HIT").any():
+        df = update_prices_only(df, sleep_seconds=price_sleep_seconds)
 
     if "margin_of_safety" in df.columns:
         df["margin_of_safety_at_scan"] = df["margin_of_safety"]
 
     df["scan_time"] = datetime.now().isoformat(timespec="seconds")
-
-    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(RESULTS_PATH, index=False)
-    df.to_csv(SNAPSHOT_PATH, index=False)
-
+    df["model_version"] = MODEL_VERSION
+    save_outputs(df, write_state=True)
     return df
 
 
-def load_latest_or_full_scan() -> pd.DataFrame:
-    if RESULTS_PATH.exists():
-        df = pd.read_csv(RESULTS_PATH)
-        return annotate_pools(df)
+def analyze_holdings_for_state() -> pd.DataFrame:
+    holdings = load_holdings()
+    if not holdings:
+        return pd.DataFrame()
+    sleep_seconds = getenv_float("REQUEST_SLEEP_SECONDS", 0.2)
+    rows = []
+    total = len(holdings)
+    for i, ticker in enumerate(holdings, start=1):
+        print(f"[{i}/{total}] analyzing holding {ticker}", flush=True)
+        rows.append(analyze_one(ticker, sleep_seconds=sleep_seconds))
+    return annotate_pools(pd.DataFrame(rows))
 
-    return run_full_scan()
+
+def load_latest_state_required() -> pd.DataFrame:
+    market_df = load_public_market_state()
+    holdings_df = analyze_holdings_for_state()
+    if holdings_df.empty:
+        return annotate_pools(market_df)
+    combined = pd.concat([market_df, holdings_df], ignore_index=True)
+    combined = combined.drop_duplicates(subset=["ticker"], keep="last")
+    return annotate_pools(combined)
 
 
 def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
@@ -224,6 +351,11 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
         df.to_csv(RESULTS_PATH.parent / f"historical_replay_{backtest_date}.csv", index=False)
     else:
         df.to_csv(RESULTS_PATH, index=False)
+        diagnostics = build_data_quality_diagnostics(df)
+        if not diagnostics.empty:
+            diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
+        if mode in {"full_after_close", "manual", "noon_update", "afternoon_update"}:
+            save_public_market_state(df)
 
 
 def subject_for(mode: str) -> str:
@@ -235,7 +367,7 @@ def subject_for(mode: str) -> str:
         "noon_update": f"【MOS Radar】{today} 午盘安全边际变化",
         "afternoon_update": f"【MOS Radar】{today} 下午安全边际变化",
         "manual": f"【MOS Radar】{today} 手动安全边际扫描",
-        "historical_replay": f"【MOS Radar】{today} 历史价格回放",
+        "historical_replay": f"【MOS Radar】{today} 历史价格压力测试",
     }
 
     return mapping.get(mode, f"【MOS Radar】{today} 安全边际报告")
@@ -255,22 +387,25 @@ def main() -> None:
     elif mode == "historical_replay":
         backtest_date = os.getenv("BACKTEST_DATE", "2022-10-14").strip() or "2022-10-14"
         use_latest = env_bool("BACKTEST_USE_LATEST", default=False)
-        base_df = load_latest_or_full_scan() if use_latest else run_full_scan()
+        base_df = load_latest_state_required() if use_latest else run_full_scan()
         df = run_historical_replay(base_df, backtest_date)
         df = annotate_pools(df)
         df["scan_time"] = datetime.now().isoformat(timespec="seconds")
 
     elif mode == "morning_email":
-        df = load_latest_or_full_scan()
+        df = load_latest_state_required()
 
     elif mode in {"noon_update", "afternoon_update"}:
-        df = load_latest_or_full_scan()
-        sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.05)
+        df = load_latest_state_required()
+        sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.02)
         df = update_prices_only(df, sleep_seconds=sleep_seconds)
         df = annotate_pools(df)
 
+    elif mode in STATE_REQUIRED_MODES:
+        df = load_latest_state_required()
+
     else:
-        df = load_latest_or_full_scan()
+        df = run_full_scan()
 
     report_body = generate_report(
         df,

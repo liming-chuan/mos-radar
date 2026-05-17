@@ -8,3 +8,5 @@ __pycache__/
 data/holdings.csv
 data/results/
 reports/
+cache/
+state/*.private.csv

@@ -11,6 +11,7 @@ import pandas as pd
 import yfinance as yf
 
 from valuation import (
+    MODEL_VERSION,
     AnalysisResult,
     cap_rating,
     quality_rating_cap,
@@ -144,7 +145,7 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
     if historical_price is None or historical_price <= 0:
         result.historical_price_status = "NO_HISTORICAL_PRICE"
         result.rating = "SKIP"
-        result.reason = f"历史价格回放跳过：{backtest_date} 附近无历史价格，通常是当时未上市、改名、分拆或 Yahoo 无数据"
+        result.reason = f"历史价格压力测试跳过：{backtest_date} 附近无历史价格，通常是当时未上市、改名、分拆或 Yahoo 无数据"
         return result
 
     result.historical_price_status = "OK"
@@ -206,34 +207,34 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
     if result.model_type == "financial_pb_roe":
         if result.trap_count >= 2:
             result.rating = "D_TRAP"
-            result.reason = f"历史价格回放：金融股风险信号过多：{result.trap_flags}"
+            result.reason = f"历史价格压力测试：金融股风险信号过多：{result.trap_flags}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 55 and (result.roe is not None and result.roe >= 0.10):
             result.rating = "B"
-            result.reason = "历史价格回放：金融股 PB/ROE 口径有折价，仍需人工复核当时资产质量"
+            result.reason = "历史价格压力测试：金融股 PB/ROE 口径有折价，仍需人工复核当时资产质量"
         elif result.margin_of_safety >= 0:
             result.rating = "C_THIN"
-            result.reason = "历史价格回放：金融股有折价但未进入 B 级"
+            result.reason = "历史价格压力测试：金融股有折价但未进入 B 级"
         else:
             result.rating = "PASS"
-            result.reason = "历史价格回放：金融股当日价格高于保守 PB/ROE 价值"
+            result.reason = "历史价格压力测试：金融股当日价格高于保守 PB/ROE 价值"
     elif result.trap_count >= 3:
         result.rating = "D_TRAP"
-        result.reason = f"历史价格回放：疑似价值陷阱：{result.trap_flags}"
+        result.reason = f"历史价格压力测试：疑似价值陷阱：{result.trap_flags}"
     elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
         result.rating = "S"
-        result.reason = f"历史价格回放：安全边际很厚，V6.3.3模型={result.model_type}"
+        result.reason = f"历史价格压力测试：安全边际很厚，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}"
     elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
         result.rating = "A"
-        result.reason = f"历史价格回放：安全边际较厚，V6.3.3模型={result.model_type}"
+        result.reason = f"历史价格压力测试：安全边际较厚，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}"
     elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
         result.rating = "B"
-        result.reason = f"历史价格回放：有一定安全边际，V6.3.3模型={result.model_type}"
+        result.reason = f"历史价格压力测试：有一定安全边际，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}"
     elif result.margin_of_safety >= 0:
         result.rating = "C_THIN"
-        result.reason = "历史价格回放：安全边际偏薄"
+        result.reason = "历史价格压力测试：安全边际偏薄"
     else:
         result.rating = "PASS"
-        result.reason = "历史价格回放：当日价格高于保守内在价值"
+        result.reason = "历史价格压力测试：当日价格高于保守内在价值"
 
     cap, cap_reasons = quality_rating_cap(result)
     if cap is not None:

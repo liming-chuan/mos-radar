@@ -16,14 +16,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   mos-radar:
     runs-on: ubuntu-latest
     concurrency:
       group: mos-radar
-      cancel-in-progress: true
+      cancel-in-progress: false
 
     steps:
       - name: Checkout repo
@@ -37,6 +37,14 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Restore fundamentals cache
+        uses: actions/cache@v4
+        with:
+          path: cache/fundamentals
+          key: mos-radar-fundamentals-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            mos-radar-fundamentals-${{ runner.os }}-
 
       - name: Run MOS Radar
         env:
@@ -55,6 +63,8 @@ jobs:
           MAX_TICKERS: ${{ vars.MAX_TICKERS }}
           REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
           PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
+          USE_FUNDAMENTALS_CACHE: ${{ vars.USE_FUNDAMENTALS_CACHE }}
+          FUNDAMENTALS_CACHE_DAYS: ${{ vars.FUNDAMENTALS_CACHE_DAYS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
           DRY_RUN: ${{ vars.DRY_RUN }}
         run: python src/main.py
@@ -69,3 +79,18 @@ jobs:
           path: |
             data/results/*.csv
             reports/*.md
+            state/*.csv
+
+      - name: Commit public market state
+        if: always()
+        run: |
+          if [ -f state/mos_market_latest.csv ]; then
+            git config user.name "mos-radar-bot"
+            git config user.email "bot@example.com"
+            git pull --rebase origin main || true
+            git add state/mos_market_latest.csv
+            git commit -m "update mos radar public state" || echo "No state changes"
+            git push
+          else
+            echo "No public market state file to commit"
+          fi

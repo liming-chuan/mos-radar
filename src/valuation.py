@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.3.6"
+MODEL_VERSION = "MOS_Radar_V6.4.0"
 RISK_FREE_RATE_CACHE: float | None = None
 
 
@@ -31,6 +31,8 @@ class AnalysisResult:
     enterprise_value: float | None = None
 
     revenue_ttm: float | None = None
+    financial_period_type: str = ""
+    data_quality_notes: str = ""
     revenue_5y_cagr: float | None = None
     gross_margin: float | None = None
     operating_margin: float | None = None
@@ -69,6 +71,8 @@ class AnalysisResult:
     margin_of_safety: float | None = None
 
     valuation_method: str = ""
+    valuation_candidates: str = ""
+    industry_model_status: str = ""
     model_type: str = ""
     model_version: str = MODEL_VERSION
     risk_free_rate: float | None = None
@@ -97,6 +101,9 @@ class AnalysisResult:
     historical_price_status: str = ""
 
     rating: str = "NO_DATA"
+    price_data_status: str = ""
+    cache_status: str = ""
+    cache_age_days: float | None = None
     reason: str = ""
 
 
@@ -114,6 +121,13 @@ def safe_float(x: Any) -> float | None:
         return None
 
 
+def coalesce_none(*values):
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
+
 def clamp(x: float | None, lo: float, hi: float, default: float = 0) -> float:
     if x is None:
         return default
@@ -127,6 +141,58 @@ def series_latest(s: pd.Series | None) -> float | None:
     if vals.empty:
         return None
     return safe_float(vals.iloc[0])
+
+
+def series_sum_latest(s: pd.Series | None, n: int = 4, min_periods: int = 4) -> float | None:
+    if s is None or len(s) == 0:
+        return None
+    vals = pd.to_numeric(s, errors="coerce").dropna().head(n)
+    if len(vals) < min_periods:
+        return None
+    return safe_float(vals.sum())
+
+
+def build_owner_fcf_series(ocf_s: pd.Series | None, capex_s: pd.Series | None, sbc_s: pd.Series | None) -> tuple[pd.Series | None, pd.Series | None]:
+    if ocf_s is None or capex_s is None:
+        return None, None
+    ocf_vals = pd.to_numeric(ocf_s, errors="coerce")
+    capex_vals = pd.to_numeric(capex_s, errors="coerce")
+    common_cols = ocf_vals.index.intersection(capex_vals.index)
+    if len(common_cols) == 0:
+        return None, None
+    reported_fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
+    owner_fcf_s = reported_fcf_s.copy()
+    if sbc_s is not None:
+        sbc_vals = pd.to_numeric(sbc_s, errors="coerce")
+        sbc_cols = common_cols.intersection(sbc_vals.index)
+        owner_fcf_s.loc[sbc_cols] = owner_fcf_s.loc[sbc_cols] - sbc_vals.loc[sbc_cols].abs()
+    return reported_fcf_s, owner_fcf_s
+
+
+def industry_model_status(sector: str, industry: str, model_type: str) -> str:
+    s = str(sector or "").lower()
+    i = str(industry or "").lower()
+    if model_type == "financial_pb_roe":
+        if "insurance" in i:
+            return "INSURANCE_LIMITED_PB_ROE_NEEDS_COMBINED_RATIO_FLOAT_RESERVES"
+        if "bank" in i or "banks" in i:
+            return "BANK_LIMITED_PB_ROE_NEEDS_CET1_NIM_NPL_DEPOSIT_COST"
+        return "FINANCIAL_LIMITED_PB_ROE_NEEDS_INDUSTRY_SPECIFIC_REVIEW"
+    if model_type == "reit_needs_affo":
+        return "REIT_SKIPPED_NEEDS_AFFO_NOI_CAP_RATE"
+    if model_type == "cyclical_semiconductor":
+        return "SEMICONDUCTOR_CYCLE_LIMITED_NEEDS_INVENTORY_MARGIN_CAPEX_REVIEW"
+    if model_type in {"energy_cyclical", "materials_cyclical", "precious_metals_miner"}:
+        return "COMMODITY_CYCLE_LIMITED_NEEDS_MID_CYCLE_PRICE_COST_RESERVE_REVIEW"
+    if model_type == "software_tech":
+        return "SOFTWARE_OWNER_FCF_SBC_ADJUSTED_NEEDS_NRR_RPO_RULE_OF_40_REVIEW"
+    return "GENERAL_OWNER_FCF_MODEL"
+
+
+def compact_candidates(candidates: list[tuple[str, float]]) -> str:
+    clean = [(name, value) for name, value in candidates if value is not None and value > 0]
+    clean = sorted(clean, key=lambda x: x[1])[:8]
+    return "; ".join(f"{name}={value:.0f}" for name, value in clean)
 
 
 def series_avg(s: pd.Series | None, n: int = 5) -> float | None:
@@ -278,8 +344,8 @@ def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | N
     except Exception:
         pass
 
-    price = safe_float(price) or safe_float(info.get("currentPrice")) or safe_float(info.get("regularMarketPrice"))
-    market_cap = safe_float(market_cap) or safe_float(info.get("marketCap"))
+    price = coalesce_none(safe_float(price), safe_float(info.get("currentPrice")), safe_float(info.get("regularMarketPrice")))
+    market_cap = coalesce_none(safe_float(market_cap), safe_float(info.get("marketCap")))
 
     return price, market_cap
 
@@ -573,16 +639,17 @@ def estimate_intrinsic_value(
     ncav: float | None,
     tangible_equity: float | None,
     risk_free_rate: float | None,
-) -> tuple[float | None, str]:
-    cash = cash or 0.0
-    debt = debt or 0.0
+) -> tuple[float | None, str, str]:
+    cash = 0.0 if cash is None else cash
+    debt = 0.0 if debt is None else debt
     model = str(cfg.get("model", "normal_fcf"))
 
     if model == "reit_needs_affo":
-        return None, "SKIP_REIT_AFFO_REQUIRED"
+        return None, "SKIP_REIT_AFFO_REQUIRED", ""
 
     if model == "financial_pb_roe":
-        return financial_pb_value(equity, roe, market_cap, tangible_equity)
+        value, method = financial_pb_value(equity, roe, market_cap, tangible_equity)
+        return value, method, compact_candidates([(method, value or 0)])
 
     fcf_candidates = [x for x in [latest_fcf, fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
     ni_candidates = [x for x in [latest_net_income, net_income_5y_avg] if x is not None and x > 0]
@@ -640,12 +707,12 @@ def estimate_intrinsic_value(
     clean = [(name, v) for name, v in valuations if v is not None and v > 0]
 
     if not clean:
-        return None, "NO_VALID_VALUATION"
+        return None, "NO_VALID_VALUATION", compact_candidates(valuations)
 
     # 保守原则：取最低的有效估值
     method, value = min(clean, key=lambda x: x[1])
 
-    return value, method
+    return value, method, compact_candidates(clean)
 
 
 def score_margin_of_safety(mos: float | None) -> float:
@@ -1020,7 +1087,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = (
                 "报价币种与财报币种不一致，疑似 ADR/海外股票；"
                 f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
-                "V6.3 暂不自动估值，避免币种/ADR比例导致安全边际失真"
+                "当前模型暂不自动估值，避免币种/ADR比例导致安全边际失真"
             )
             return result
 
@@ -1028,35 +1095,58 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         industry = result.industry
         cfg = sector_config(sector, industry)
         result.model_type = str(cfg.get("model", "normal_fcf"))
+        result.industry_model_status = industry_model_status(sector, industry, result.model_type)
 
         if needs_nav_or_special_model(result.company_name, sector, industry):
             result.rating = "SKIP"
-            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，V6.3 暂不自动估值"
+            result.reason = "基金/BDC/特殊金融资产需要 NAV/NII/分红覆盖专门模型，当前模型暂不自动估值"
             return result
 
         if result.model_type == "reit_needs_affo":
             result.rating = "SKIP"
-            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，V6.3 暂不自动估值"
+            result.reason = "REIT/地产类公司需要 AFFO/NOI 专门模型，当前模型暂不自动估值"
             return result
 
-        financials = None
-        balance = None
-        cashflow = None
+        annual_financials = None
+        annual_balance = None
+        annual_cashflow = None
+        quarterly_financials = None
+        quarterly_balance = None
+        quarterly_cashflow = None
 
         try:
-            financials = retry_call(f"{ticker}.financials", lambda: t.financials)
+            annual_financials = retry_call(f"{ticker}.financials", lambda: t.financials)
         except Exception:
-            financials = None
+            annual_financials = None
 
         try:
-            balance = retry_call(f"{ticker}.balance_sheet", lambda: t.balance_sheet)
+            annual_balance = retry_call(f"{ticker}.balance_sheet", lambda: t.balance_sheet)
         except Exception:
-            balance = None
+            annual_balance = None
 
         try:
-            cashflow = retry_call(f"{ticker}.cashflow", lambda: t.cashflow)
+            annual_cashflow = retry_call(f"{ticker}.cashflow", lambda: t.cashflow)
         except Exception:
-            cashflow = None
+            annual_cashflow = None
+
+        try:
+            quarterly_financials = retry_call(f"{ticker}.quarterly_financials", lambda: t.quarterly_financials, attempts=2, base_sleep=0.3)
+        except Exception:
+            quarterly_financials = None
+
+        try:
+            quarterly_cashflow = retry_call(f"{ticker}.quarterly_cashflow", lambda: t.quarterly_cashflow, attempts=2, base_sleep=0.3)
+        except Exception:
+            quarterly_cashflow = None
+
+        try:
+            quarterly_balance = retry_call(f"{ticker}.quarterly_balance_sheet", lambda: t.quarterly_balance_sheet, attempts=2, base_sleep=0.3)
+        except Exception:
+            quarterly_balance = None
+
+        financials = annual_financials
+        balance = quarterly_balance if quarterly_balance is not None and not quarterly_balance.empty else annual_balance
+        cashflow = annual_cashflow
 
         revenue_s = row(financials, ["Total Revenue", "Operating Revenue"])
         gross_profit_s = row(financials, ["Gross Profit"])
@@ -1065,11 +1155,22 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         ebitda_s = row(financials, ["EBITDA"])
         interest_expense_s = row(financials, ["Interest Expense", "Interest Expense Non Operating"])
 
+        q_revenue_s = row(quarterly_financials, ["Total Revenue", "Operating Revenue"])
+        q_gross_profit_s = row(quarterly_financials, ["Gross Profit"])
+        q_operating_income_s = row(quarterly_financials, ["Operating Income", "Operating Income or Loss"])
+        q_net_income_s = row(quarterly_financials, ["Net Income", "Net Income Common Stockholders"])
+        q_ebitda_s = row(quarterly_financials, ["EBITDA"])
+        q_interest_expense_s = row(quarterly_financials, ["Interest Expense", "Interest Expense Non Operating"])
+
         ocf_s = row(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
         capex_s = row(cashflow, ["Capital Expenditure", "Capital Expenditures"])
         sbc_s = row(cashflow, ["Stock Based Compensation"])
-        shares_s = row(balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
 
+        q_ocf_s = row(quarterly_cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
+        q_capex_s = row(quarterly_cashflow, ["Capital Expenditure", "Capital Expenditures"])
+        q_sbc_s = row(quarterly_cashflow, ["Stock Based Compensation"])
+
+        shares_s = row(balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
         cash_s = row(balance, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"])
         debt_s = row(balance, ["Total Debt", "Long Term Debt And Capital Lease Obligation"])
         equity_s = row(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest", "Total Stockholder Equity"])
@@ -1080,44 +1181,51 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         goodwill_and_intangibles_s = row(balance, ["Goodwill And Other Intangible Assets"])
         other_intangible_s = row(balance, ["Other Intangible Assets", "Intangible Assets"])
 
-        revenue_latest = series_latest(revenue_s) or safe_float(info.get("totalRevenue"))
+        reported_fcf_s, owner_fcf_s = build_owner_fcf_series(ocf_s, capex_s, sbc_s)
+
+        q_reported_fcf_s, q_owner_fcf_s = build_owner_fcf_series(q_ocf_s, q_capex_s, q_sbc_s)
+        q_reported_fcf = series_sum_latest(q_reported_fcf_s, 4, 4)
+        q_owner_fcf = series_sum_latest(q_owner_fcf_s, 4, 4)
+        q_sbc = series_sum_latest(q_sbc_s, 4, 1)
+
+        annual_reported_fcf = series_latest(reported_fcf_s)
+        annual_sbc = series_latest(sbc_s)
+        annual_owner_fcf = series_latest(owner_fcf_s)
+
+        revenue_ttm = series_sum_latest(q_revenue_s, 4, 4)
+        net_income_ttm = series_sum_latest(q_net_income_s, 4, 4)
+        gross_profit_ttm = series_sum_latest(q_gross_profit_s, 4, 4)
+        operating_income_ttm = series_sum_latest(q_operating_income_s, 4, 4)
+        ebitda_ttm = series_sum_latest(q_ebitda_s, 4, 4)
+        interest_expense_ttm = series_sum_latest(q_interest_expense_s, 4, 4)
+
+        revenue_annual_latest = series_latest(revenue_s)
+        latest_net_income_annual = series_latest(net_income_s)
+
+        revenue_latest = coalesce_none(revenue_ttm, revenue_annual_latest, safe_float(info.get("totalRevenue")))
+        latest_net_income = coalesce_none(net_income_ttm, latest_net_income_annual, safe_float(info.get("netIncomeToCommon")))
+        reported_fcf = coalesce_none(q_reported_fcf, annual_reported_fcf)
+        sbc = coalesce_none(q_sbc, annual_sbc)
+        latest_fcf = coalesce_none(q_owner_fcf, annual_owner_fcf)
+        result.financial_period_type = "TTM" if q_owner_fcf is not None and q_reported_fcf is not None else "ANNUAL_FALLBACK"
+
         revenue_oldest = None
         if revenue_s is not None and len(pd.to_numeric(revenue_s, errors="coerce").dropna()) >= 4:
             vals = pd.to_numeric(revenue_s, errors="coerce").dropna().head(5)
             revenue_oldest = safe_float(vals.iloc[-1]) if len(vals) >= 2 else None
 
-        revenue_cagr = calc_cagr(revenue_latest, revenue_oldest, max(1, min(4, len(pd.to_numeric(revenue_s, errors="coerce").dropna()) - 1)) if revenue_s is not None else 4)
+        revenue_cagr = calc_cagr(revenue_annual_latest, revenue_oldest, max(1, min(4, len(pd.to_numeric(revenue_s, errors="coerce").dropna()) - 1)) if revenue_s is not None else 4)
 
-        gross_profit = series_latest(gross_profit_s)
-        operating_income = series_latest(operating_income_s)
-        latest_net_income = series_latest(net_income_s) or safe_float(info.get("netIncomeToCommon"))
+        gross_profit = coalesce_none(gross_profit_ttm, series_latest(gross_profit_s))
+        operating_income = coalesce_none(operating_income_ttm, series_latest(operating_income_s))
         net_income_5y_avg = series_avg(net_income_s, 5)
 
-        if ocf_s is not None and capex_s is not None:
-            ocf_vals = pd.to_numeric(ocf_s, errors="coerce")
-            capex_vals = pd.to_numeric(capex_s, errors="coerce")
-            common_cols = ocf_vals.index.intersection(capex_vals.index)
-            reported_fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
-            if sbc_s is not None:
-                sbc_vals = pd.to_numeric(sbc_s, errors="coerce")
-                sbc_cols = common_cols.intersection(sbc_vals.index)
-                owner_fcf_s = reported_fcf_s.copy()
-                owner_fcf_s.loc[sbc_cols] = owner_fcf_s.loc[sbc_cols] - sbc_vals.loc[sbc_cols].abs()
-            else:
-                owner_fcf_s = reported_fcf_s
-        else:
-            reported_fcf_s = None
-            owner_fcf_s = None
-
-        reported_fcf = series_latest(reported_fcf_s)
-        sbc = series_latest(sbc_s)
-        latest_fcf = series_latest(owner_fcf_s)
         fcf_3y_avg = series_avg(owner_fcf_s, 3)
         fcf_5y_avg = series_avg(owner_fcf_s, 5)
         fcf_volatility = series_volatility_ratio(owner_fcf_s, 5)
 
-        cash = series_latest(cash_s) or safe_float(info.get("totalCash"))
-        debt = series_latest(debt_s) or safe_float(info.get("totalDebt"))
+        cash = coalesce_none(series_latest(cash_s), safe_float(info.get("totalCash")))
+        debt = coalesce_none(series_latest(debt_s), safe_float(info.get("totalDebt")))
         equity = series_latest(equity_s)
         current_assets = series_latest(current_assets_s)
         total_liabilities = series_latest(total_liabilities_s)
@@ -1129,7 +1237,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             intangible_components = [v for v in [goodwill, other_intangible] if v is not None]
             goodwill_and_intangibles = sum(intangible_components) if intangible_components else None
 
-        ebitda = series_latest(ebitda_s) or safe_float(info.get("ebitda"))
+        ebitda = coalesce_none(ebitda_ttm, series_latest(ebitda_s), safe_float(info.get("ebitda")))
 
         result.revenue_ttm = revenue_latest
         result.revenue_5y_cagr = revenue_cagr
@@ -1142,7 +1250,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.fcf_volatility = fcf_volatility
         result.cash = cash
         result.total_debt = debt
-        result.net_cash = (cash or 0) - (debt or 0)
+        result.net_cash = (0 if cash is None else cash) - (0 if debt is None else debt)
         result.total_assets = total_assets
         result.total_liabilities = total_liabilities
         result.ncav = current_assets - total_liabilities if current_assets is not None and total_liabilities is not None else None
@@ -1151,18 +1259,21 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.equity = equity
         result.risk_free_rate = get_risk_free_rate()
         result.discount_rate_used = effective_discount_rate(cfg, result.risk_free_rate)
+        result.industry_model_status = industry_model_status(sector, industry, result.model_type)
+        if result.financial_period_type != "TTM":
+            result.data_quality_notes = "quarterly_ttm_unavailable_used_annual_fallback"
         if latest_net_income is not None and latest_fcf is not None and total_assets is not None and total_assets > 0:
             result.accrual_ratio = (latest_net_income - latest_fcf) / total_assets
 
-        result.enterprise_value = (market_cap or 0) + (debt or 0) - (cash or 0) if market_cap is not None else None
+        result.enterprise_value = (market_cap if market_cap is not None else 0) + (debt if debt is not None else 0) - (cash if cash is not None else 0) if market_cap is not None else None
 
-        if market_cap and latest_fcf is not None:
+        if market_cap is not None and market_cap > 0 and latest_fcf is not None:
             result.fcf_yield = latest_fcf / market_cap
 
-        if latest_net_income and latest_net_income != 0 and latest_fcf is not None:
+        if latest_net_income is not None and latest_net_income != 0 and latest_fcf is not None:
             result.fcf_conversion = latest_fcf / latest_net_income
 
-        if revenue_latest and revenue_latest > 0:
+        if revenue_latest is not None and revenue_latest > 0:
             result.gross_margin = gross_profit / revenue_latest if gross_profit is not None else safe_float(info.get("grossMargins"))
             result.operating_margin = operating_income / revenue_latest if operating_income is not None else safe_float(info.get("operatingMargins"))
             result.net_margin = latest_net_income / revenue_latest if latest_net_income is not None else safe_float(info.get("profitMargins"))
@@ -1171,7 +1282,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.operating_margin = safe_float(info.get("operatingMargins"))
             result.net_margin = safe_float(info.get("profitMargins"))
 
-        if equity and equity > 0 and latest_net_income is not None:
+        if equity is not None and equity > 0 and latest_net_income is not None:
             result.roe = latest_net_income / equity
         else:
             result.roe = safe_float(info.get("returnOnEquity"))
@@ -1179,7 +1290,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         if debt is not None and ebitda is not None and ebitda > 0:
             result.debt_to_ebitda = debt / ebitda
 
-        interest_expense = series_latest(interest_expense_s)
+        interest_expense = coalesce_none(interest_expense_ttm, series_latest(interest_expense_s))
         if operating_income is not None and interest_expense is not None and interest_expense != 0:
             result.interest_coverage = operating_income / abs(interest_expense)
 
@@ -1188,7 +1299,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             if len(vals) >= 2 and vals.iloc[-1] > 0:
                 result.share_dilution_3y = vals.iloc[0] / vals.iloc[-1] - 1
 
-        intrinsic, method = estimate_intrinsic_value(
+        intrinsic, method, valuation_candidates = estimate_intrinsic_value(
             cfg=cfg,
             latest_fcf=latest_fcf,
             fcf_3y_avg=fcf_3y_avg,
@@ -1207,6 +1318,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         )
 
         result.valuation_method = method
+        result.valuation_candidates = valuation_candidates
 
         if result.model_type == "financial_pb_roe":
             result.fcf_yield = None
@@ -1340,13 +1452,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = f"疑似价值陷阱：{result.trap_flags}"
         elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
             result.rating = "S"
-            result.reason = f"安全边际很厚，V6.3模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际很厚，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
             result.rating = "A"
-            result.reason = f"安全边际较厚，V6.3模型={result.model_type}，估值法={method}"
+            result.reason = f"安全边际较厚，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
             result.rating = "B"
-            result.reason = f"有一定安全边际，V6.3模型={result.model_type}，估值法={method}"
+            result.reason = f"有一定安全边际，{MODEL_VERSION.replace('MOS_Radar_', '')}模型={result.model_type}，估值法={method}"
         elif result.margin_of_safety >= 0.20:
             result.rating = "C_THIN"
             result.reason = "安全边际达到观察区，但综合分或质量门槛不足，未进入 B 级"
