@@ -37,8 +37,6 @@ jobs:
           UNIVERSE_LIMIT: ${{ github.event.inputs.limit }}
           MIN_MARKET_CAP: ${{ github.event.inputs.min_market_cap }}
           MIN_AVG_VOLUME: ${{ github.event.inputs.min_avg_volume }}
-          UNIVERSE_SLEEP_SECONDS: "0.05"
-          UNIVERSE_BATCH_SIZE: "100"
         run: python src/update_universe.py
 
       - name: Upload universe artifact

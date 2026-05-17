@@ -2,6 +2,13 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.6 - 2026-05-17
+
+- Removed the Yahoo quote batch verification path from `Update Universe`.
+- `Update Universe` now uses Nasdaq screener quote data directly for price, market-cap, and liquidity filtering, eliminating the noisy 55-batch `401 Unauthorized` logs.
+- Kept the existing-universe protection: if Nasdaq screener returns zero rows, the workflow preserves the current `data/universe.csv` instead of writing an empty file.
+- Updated README, model version, and version metadata.
+
 ## v6.3.5 - 2026-05-17
 
 - Added Nasdaq screener fallback data for `Update Universe` when Yahoo quote batches return 401 or insufficient coverage.
