@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import contextlib
+import io
+import logging
 from dataclasses import asdict, fields
 from datetime import datetime, timedelta
 from typing import Any
@@ -27,6 +30,26 @@ def _clean_ticker(ticker: Any) -> str:
     return str(ticker or "").strip().upper()
 
 
+def _quiet_yfinance_download(tickers: list[str], start: datetime, end: datetime) -> pd.DataFrame:
+    logger = logging.getLogger("yfinance")
+    old_level = logger.level
+    logger.setLevel(logging.CRITICAL)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return yf.download(
+                tickers,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                auto_adjust=False,
+                progress=False,
+                threads=True,
+            )
+    except Exception:
+        return pd.DataFrame()
+    finally:
+        logger.setLevel(old_level)
+
+
 def fetch_historical_prices(tickers: list[str], backtest_date: str, lookahead_days: int = 7) -> dict[str, float]:
     start = parse_backtest_date(backtest_date)
     end = start + timedelta(days=lookahead_days)
@@ -34,14 +57,7 @@ def fetch_historical_prices(tickers: list[str], backtest_date: str, lookahead_da
     if not clean:
         return {}
 
-    data = yf.download(
-        clean,
-        start=start.strftime("%Y-%m-%d"),
-        end=end.strftime("%Y-%m-%d"),
-        auto_adjust=False,
-        progress=False,
-        threads=True,
-    )
+    data = _quiet_yfinance_download(clean, start, end)
 
     prices: dict[str, float] = {}
     if data is None or data.empty:
@@ -69,6 +85,13 @@ def fetch_historical_prices(tickers: list[str], backtest_date: str, lookahead_da
             price = safe_float(close.iloc[0])
             if price is not None and price > 0:
                 prices[clean[0]] = price
+
+    missing = len(clean) - len(prices)
+    print(
+        f"Historical prices {backtest_date}: found {len(prices)}/{len(clean)}, missing {missing}. "
+        "Missing usually means the stock was not listed yet or Yahoo has no historical price for that date.",
+        flush=True,
+    )
 
     return prices
 
@@ -119,10 +142,12 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
     result.current_market_cap = current_market_cap
 
     if historical_price is None or historical_price <= 0:
-        result.rating = "NO_DATA"
-        result.reason = f"无法获取 {backtest_date} 附近历史价格"
+        result.historical_price_status = "NO_HISTORICAL_PRICE"
+        result.rating = "SKIP"
+        result.reason = f"历史价格回放跳过：{backtest_date} 附近无历史价格，通常是当时未上市、改名、分拆或 Yahoo 无数据"
         return result
 
+    result.historical_price_status = "OK"
     share_count = None
     if current_price is not None and current_price > 0 and current_market_cap is not None and current_market_cap > 0:
         share_count = current_market_cap / current_price
@@ -196,13 +221,13 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
         result.reason = f"历史价格回放：疑似价值陷阱：{result.trap_flags}"
     elif result.margin_of_safety >= 0.50 and result.final_score >= 75:
         result.rating = "S"
-        result.reason = f"历史价格回放：安全边际很厚，V6.3模型={result.model_type}"
+        result.reason = f"历史价格回放：安全边际很厚，V6.3.2模型={result.model_type}"
     elif result.margin_of_safety >= 0.35 and result.final_score >= 65:
         result.rating = "A"
-        result.reason = f"历史价格回放：安全边际较厚，V6.3模型={result.model_type}"
+        result.reason = f"历史价格回放：安全边际较厚，V6.3.2模型={result.model_type}"
     elif result.margin_of_safety >= 0.20 and result.final_score >= 55:
         result.rating = "B"
-        result.reason = f"历史价格回放：有一定安全边际，V6.3模型={result.model_type}"
+        result.reason = f"历史价格回放：有一定安全边际，V6.3.2模型={result.model_type}"
     elif result.margin_of_safety >= 0:
         result.rating = "C_THIN"
         result.reason = "历史价格回放：安全边际偏薄"

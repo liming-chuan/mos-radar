@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.3.1
+# MOS Radar：安全边际雷达 V6.3.2
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -47,6 +47,7 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 - 报告显示市场行业分布，用来判断问题来自股票池结构，还是估值/排序逻辑。
 - 支持独立历史价格回放压力测试：当前市场扫描和历史回放拆成两个 GitHub Actions，互不干扰。
 - 当前市场和历史回放都会上传 Actions artifact，运行结束后可在本次 workflow 页面下载 CSV 和报告。
+- 历史回放可直接发送邮件；当时未上市或无历史价格的股票会标记为 `SKIP`，并在报告里显示历史价格覆盖率，避免 Yahoo 缺价日志干扰判断。
 - 报告单独显示接近候选的 `C_THIN` 股票，并使用紧凑诊断表避免理由列竖排。
 - 报告把非金融经营型公司和金融股分开显示；金融股使用 PB/ROE 口径，不再和普通 FCF 公司混排；非金融诊断表不再重复显示金融股。
 - 金融股不再使用 FCF Yield 和债务/EBITDA 评分；银行、保险等优先使用有形权益 PB/ROE；基金、BDC、封闭式基金等 NAV/NII 驱动资产默认跳过，等待专门模型。
@@ -181,6 +182,7 @@ GitHub Actions → `MOS Radar Historical Replay` → `Run workflow`：
 ```text
 backtest_date = 2022-10-14
 backtest_use_latest = false
+dry_run = false
 ```
 
 说明：
@@ -189,12 +191,14 @@ backtest_use_latest = false
 - 系统会先按当前 V6.3 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
 - 输出文件保存为 `data/results/historical_replay_YYYY-MM-DD.csv`，报告标题为“历史价格回放压力测试”。
 - 运行结束后，在本次 run 页面下载 artifact：`mos-radar-historical-YYYY-MM-DD`。
+- `dry_run=false` 会发送邮件；`dry_run=true` 只生成 artifact 不发邮件。
 - `backtest_use_latest=true` 会跳过重新扫描，直接用已有 `mos_latest.csv` 做价格回放，速度更快但依赖旧结果。
+- 当时尚未上市、改名、分拆或 Yahoo 缺少历史价的股票会显示为 `SKIP`，不会作为模型失败处理。
 - 严格历史回测需要 SEC/财报公告日期和当时可见财报数据，免费 yfinance 不能可靠完成这一层。
 
 ## 重要提醒
 
-1. V6.3.1 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.3.2 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

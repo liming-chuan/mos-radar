@@ -11,6 +11,10 @@ on:
         description: "Use latest saved scan instead of running a fresh scan first"
         required: false
         default: "false"
+      dry_run:
+        description: "Set true to generate artifacts without sending email"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -50,7 +54,7 @@ jobs:
           THIN_COUNT: ${{ vars.THIN_COUNT }}
           MAX_TICKERS: ${{ vars.MAX_TICKERS }}
           REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
-          DRY_RUN: ${{ vars.DRY_RUN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
           RUN_MODE: historical_replay
           BACKTEST_DATE: ${{ github.event.inputs.backtest_date }}
           BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}

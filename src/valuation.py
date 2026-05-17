@@ -14,7 +14,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.3.1"
+MODEL_VERSION = "MOS_Radar_V6.3.2"
 RISK_FREE_RATE_CACHE: float | None = None
 
 
@@ -94,6 +94,7 @@ class AnalysisResult:
     current_price: float | None = None
     current_market_cap: float | None = None
     return_since_backtest: float | None = None
+    historical_price_status: str = ""
 
     rating: str = "NO_DATA"
     reason: str = ""

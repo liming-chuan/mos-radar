@@ -286,7 +286,7 @@ def main() -> None:
     dry_run = env_bool("DRY_RUN", default=False)
 
     should_send = (
-        mode in {"morning_email", "noon_update", "afternoon_update", "manual"}
+        mode in {"morning_email", "noon_update", "afternoon_update", "manual", "historical_replay"}
         or (mode == "full_after_close" and send_after_close)
     )
 

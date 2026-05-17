@@ -433,6 +433,41 @@ def sector_distribution_html(df: pd.DataFrame) -> str:
     """
 
 
+def historical_price_status_html(df: pd.DataFrame) -> str:
+    if df.empty or "historical_price_status" not in df.columns:
+        return ""
+
+    status = df["historical_price_status"].fillna("").replace("", "UNKNOWN")
+    total = len(df)
+    rows = []
+    for label, count in status.value_counts(dropna=False).items():
+        rows.append(
+            f"""
+            <tr>
+                <td>{escape(str(label))}</td>
+                <td class="num">{int(count)}</td>
+                <td class="num">{pct(count / total if total else None)}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <h2>历史回放诊断：历史价格覆盖</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>状态</th>
+                <th>数量</th>
+                <th>占比</th>
+            </tr>
+        </thead>
+        <tbody>
+            {''.join(rows)}
+        </tbody>
+    </table>
+    """
+
+
 def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进入 S/A/B 的样本 Top 30") -> str:
     if df.empty or "rating" not in df.columns:
         return ""
@@ -505,6 +540,7 @@ def generate_report(
     financial_high = high_margin_candidates(financial_market_df)
     rating_diag_html = rating_distribution_html(df)
     sector_diag_html = sector_distribution_html(market_df)
+    historical_status_html = historical_price_status_html(df) if mode == "historical_replay" else ""
     near_miss = near_miss_html(operating_market_df, "非金融接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
     financial_near_miss = near_miss_html(financial_market_df, "金融股观察池：PB/ROE 接近候选 Top 20", limit=20)
     diagnostic_html = diagnostic_sample_html(
@@ -735,7 +771,7 @@ def generate_report(
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。
-            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测。' if mode == 'historical_replay' and backtest_date else ''}
+            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 V6.3.2 保守估值和历史价格重算安全边际，属于价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
     </div>
 
@@ -756,6 +792,8 @@ def generate_report(
     </div>
 
     {f'<div class="card">{sector_diag_html}</div>' if sector_diag_html else ''}
+
+    {f'<div class="card">{historical_status_html}</div>' if historical_status_html else ''}
 
     {f'<div class="card">{near_miss}</div>' if near_miss else ''}
 

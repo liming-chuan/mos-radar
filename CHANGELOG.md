@@ -2,6 +2,15 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.3.2 - 2026-05-17
+
+- Historical replay now sends email when `dry_run=false`.
+- Added a `dry_run` input to the historical replay workflow so email sending is controlled directly from Run workflow.
+- Suppressed noisy yfinance missing-history messages during historical replay and replaced them with one coverage summary.
+- Stocks with no historical price on the replay date are now marked `SKIP` with `historical_price_status=NO_HISTORICAL_PRICE`.
+- Historical replay reports now include a historical price coverage diagnostic table.
+- Updated README, model version, and version metadata.
+
 ## v6.3.1 - 2026-05-17
 
 - Split current-market scanning and historical replay into separate GitHub Actions workflows.
