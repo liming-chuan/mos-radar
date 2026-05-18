@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -14,8 +15,9 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.4.0"
+MODEL_VERSION = "MOS_Radar_V6.5.0"
 RISK_FREE_RATE_CACHE: float | None = None
+FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
 
 @dataclass
@@ -26,6 +28,7 @@ class AnalysisResult:
     industry: str = ""
     quote_currency: str = ""
     financial_currency: str = ""
+    financial_to_quote_fx: float | None = None
     price: float | None = None
     market_cap: float | None = None
     enterprise_value: float | None = None
@@ -294,6 +297,58 @@ def normalize_tnx_quote(raw: float | None) -> float | None:
     return value
 
 
+def current_market() -> str:
+    return os.getenv("MARKET", "us").strip().lower() or "us"
+
+
+def forex_symbol(from_currency: str, to_currency: str) -> str:
+    return f"{from_currency.upper()}{to_currency.upper()}=X"
+
+
+def get_fx_rate(from_currency: str, to_currency: str, default: float | None = None) -> float | None:
+    src = str(from_currency or "").strip().upper()
+    dst = str(to_currency or "").strip().upper()
+    if not src or not dst or src == dst:
+        return 1.0
+    key = (src, dst)
+    if key in FX_RATE_CACHE:
+        return FX_RATE_CACHE[key]
+    try:
+        t = yf.Ticker(forex_symbol(src, dst))
+        raw = None
+        try:
+            raw = fast_info_value(t.fast_info, "last_price") or fast_info_value(t.fast_info, "lastPrice")
+        except Exception:
+            raw = None
+        if raw is None:
+            info = retry_call(f"{src}{dst}.info", lambda: t.info or {}, attempts=2, base_sleep=0.3)
+            raw = info.get("regularMarketPrice") or info.get("previousClose")
+        rate = safe_float(raw)
+        if rate is not None and rate > 0:
+            FX_RATE_CACHE[key] = rate
+            return rate
+    except Exception:
+        pass
+    return default
+
+
+def can_convert_currency(quote_currency: str, financial_currency: str) -> bool:
+    quote = str(quote_currency or "").strip().upper()
+    financial = str(financial_currency or "").strip().upper()
+    if not quote or not financial or quote == financial:
+        return True
+    if current_market() == "hk" and quote == "HKD" and financial in {"CNY", "CNH", "USD"}:
+        return True
+    return False
+
+
+def scale_financial_df(df: pd.DataFrame | None, factor: float | None) -> pd.DataFrame | None:
+    if df is None or df.empty or factor is None or factor == 1:
+        return df
+    out = df.copy()
+    return out.apply(pd.to_numeric, errors="coerce") * factor
+
+
 def get_risk_free_rate(default: float = 0.045) -> float:
     global RISK_FREE_RATE_CACHE
     if RISK_FREE_RATE_CACHE is not None:
@@ -325,6 +380,36 @@ def effective_discount_rate(cfg: dict, risk_free_rate: float | None) -> float:
     return max(base, risk_free_rate + premium)
 
 
+def latest_download_price(symbol: str) -> float | None:
+    try:
+        data = yf.download(symbol, period="5d", interval="1d", auto_adjust=False, progress=False, threads=False)
+        if data is None or data.empty:
+            return None
+        series = None
+        if isinstance(data.columns, pd.MultiIndex):
+            for field in ["Adj Close", "Close"]:
+                if field in data.columns.get_level_values(0):
+                    frame = data[field]
+                    if symbol in frame.columns:
+                        series = frame[symbol]
+                    else:
+                        series = frame.iloc[:, 0]
+                    break
+        else:
+            for field in ["Adj Close", "Close"]:
+                if field in data.columns:
+                    series = data[field]
+                    break
+        if series is None:
+            return None
+        values = pd.to_numeric(series, errors="coerce").dropna()
+        if values.empty:
+            return None
+        return safe_float(values.iloc[-1])
+    except Exception:
+        return None
+
+
 def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | None]:
     price = None
     market_cap = None
@@ -345,7 +430,15 @@ def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | N
         pass
 
     price = coalesce_none(safe_float(price), safe_float(info.get("currentPrice")), safe_float(info.get("regularMarketPrice")))
+    if price is None:
+        symbol = str(getattr(t, "ticker", "") or info.get("symbol") or "").upper()
+        if symbol:
+            price = latest_download_price(symbol)
+
     market_cap = coalesce_none(safe_float(market_cap), safe_float(info.get("marketCap")))
+    shares = coalesce_none(safe_float(info.get("sharesOutstanding")), safe_float(info.get("impliedSharesOutstanding")))
+    if market_cap is None and price is not None and shares is not None and shares > 0:
+        market_cap = price * shares
 
     return price, market_cap
 
@@ -1054,8 +1147,21 @@ def apply_feedback(ticker: str, intrinsic_value: float | None, final_score: floa
     return intrinsic_value, final_score, label, flags
 
 
+def normalize_analysis_ticker(ticker: str) -> str:
+    raw = str(ticker or "").strip().upper().replace("/", "-")
+    if current_market() == "hk":
+        if raw.endswith(".HK"):
+            base = raw[:-3]
+            return f"{int(base):04d}.HK" if base.isdigit() else raw
+        compact = raw.replace("HK:", "").replace("HK", "").replace(".", "")
+        if compact.isdigit():
+            return f"{int(compact):04d}.HK"
+        return raw
+    return raw.replace(".", "-")
+
+
 def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
-    ticker = str(ticker).strip().upper().replace(".", "-").replace("/", "-")
+    ticker = normalize_analysis_ticker(ticker)
     result = AnalysisResult(ticker=ticker)
 
     try:
@@ -1082,14 +1188,28 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = "无法获取有效股价"
             return result
 
+        fx_factor = 1.0
         if has_currency_mismatch(result.quote_currency, result.financial_currency):
-            result.rating = "SKIP"
-            result.reason = (
-                "报价币种与财报币种不一致，疑似 ADR/海外股票；"
-                f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
-                "当前模型暂不自动估值，避免币种/ADR比例导致安全边际失真"
-            )
-            return result
+            if not can_convert_currency(result.quote_currency, result.financial_currency):
+                result.rating = "SKIP"
+                result.reason = (
+                    "报价币种与财报币种不一致，疑似 ADR/海外股票；"
+                    f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}。"
+                    "当前模型暂不自动估值，避免币种/ADR比例导致安全边际失真"
+                )
+                return result
+            fx_factor = get_fx_rate(result.financial_currency, result.quote_currency)
+            if fx_factor is None or fx_factor <= 0:
+                result.rating = "SKIP"
+                result.reason = (
+                    "报价币种与财报币种不一致，且无法获取换汇汇率；"
+                    f"quote_currency={result.quote_currency}, financial_currency={result.financial_currency}"
+                )
+                return result
+            result.financial_to_quote_fx = fx_factor
+            result.data_quality_notes = f"financials_converted_{result.financial_currency}_to_{result.quote_currency}_fx={fx_factor:.4f}"
+        else:
+            result.financial_to_quote_fx = 1.0
 
         sector = result.sector
         industry = result.industry
@@ -1143,6 +1263,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             quarterly_balance = retry_call(f"{ticker}.quarterly_balance_sheet", lambda: t.quarterly_balance_sheet, attempts=2, base_sleep=0.3)
         except Exception:
             quarterly_balance = None
+
+        annual_financials = scale_financial_df(annual_financials, fx_factor)
+        annual_balance = scale_financial_df(annual_balance, fx_factor)
+        annual_cashflow = scale_financial_df(annual_cashflow, fx_factor)
+        quarterly_financials = scale_financial_df(quarterly_financials, fx_factor)
+        quarterly_balance = scale_financial_df(quarterly_balance, fx_factor)
+        quarterly_cashflow = scale_financial_df(quarterly_cashflow, fx_factor)
 
         financials = annual_financials
         balance = quarterly_balance if quarterly_balance is not None and not quarterly_balance.empty else annual_balance
@@ -1261,7 +1388,8 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.discount_rate_used = effective_discount_rate(cfg, result.risk_free_rate)
         result.industry_model_status = industry_model_status(sector, industry, result.model_type)
         if result.financial_period_type != "TTM":
-            result.data_quality_notes = "quarterly_ttm_unavailable_used_annual_fallback"
+            note = "quarterly_ttm_unavailable_used_annual_fallback"
+            result.data_quality_notes = f"{result.data_quality_notes};{note}" if result.data_quality_notes else note
         if latest_net_income is not None and latest_fcf is not None and total_assets is not None and total_assets > 0:
             result.accrual_ratio = (latest_net_income - latest_fcf) / total_assets
 

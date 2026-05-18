@@ -1,0 +1,57 @@
+name: Update HK Universe
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "How many HK tickers to keep"
+        required: true
+        default: "120"
+      min_market_cap:
+        description: "Minimum market cap in quote currency"
+        required: true
+        default: "5000000000"
+      min_liquidity_volume:
+        description: "Minimum 10-day average volume"
+        required: true
+        default: "500000"
+
+permissions:
+  contents: write
+
+jobs:
+  update-hk-universe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Build HK universe
+        env:
+          HK_UNIVERSE_LIMIT: ${{ github.event.inputs.limit }}
+          HK_MIN_MARKET_CAP: ${{ github.event.inputs.min_market_cap }}
+          HK_MIN_LIQUIDITY_VOLUME: ${{ github.event.inputs.min_liquidity_volume }}
+        run: python src/update_hk_universe.py
+
+      - name: Upload HK universe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mos-radar-hk-universe
+          if-no-files-found: ignore
+          retention-days: 14
+          path: data/hk_universe.csv
+
+      - name: Commit HK universe
+        run: |
+          git config user.name "mos-radar-bot"
+          git config user.email "bot@example.com"
+          git add data/hk_universe.csv data/hk_universe_seed.csv src/update_hk_universe.py
+          git commit -m "update hk universe" || echo "No changes"
+          git push

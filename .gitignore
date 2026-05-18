@@ -10,3 +10,5 @@ data/results/
 reports/
 cache/
 state/*.private.csv
+data/hk_holdings.csv
+state/hk_*.private.csv

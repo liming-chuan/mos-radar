@@ -2,6 +2,16 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.5.0 - 2026-05-18
+
+- Added first-class Hong Kong market support through `MARKET=hk`, with independent HK universe, holdings, result, report, state, and fundamentals-cache paths.
+- Added HK ticker normalization so inputs like `700`, `0700`, and `0700.HK` resolve to Yahoo Finance format `0700.HK`.
+- Added HK quote/financial-currency conversion for common HKD quote plus CNY/CNH/USD financial-statement cases, reducing false ADR-style skips for Hong Kong listings.
+- Added curated liquid HK seed universe and HK holdings example files.
+- Added `Update HK Universe`, `MOS Radar HK Scanner`, and `MOS Radar HK Historical Replay` GitHub Actions.
+- Updated reports and email subjects to show market labels such as 美股 or 港股.
+- Updated README, model version, and version metadata.
+
 ## v6.4.0 - 2026-05-17
 
 - Fixed scheduled-run mode detection by mapping GitHub UTC cron strings exactly to morning, noon, afternoon, and after-close modes.

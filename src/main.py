@@ -17,23 +17,28 @@ from valuation import MODEL_VERSION, analyze_ticker, results_to_dataframe
 
 ROOT = Path(__file__).resolve().parents[1]
 
-UNIVERSE_PATH = ROOT / "data" / "universe.csv"
-HOLDINGS_PATH = ROOT / "data" / "holdings.csv"
+MARKET = os.getenv("MARKET", "us").strip().lower() or "us"
+MARKET_LABELS = {"us": "美股", "hk": "港股"}
+MARKET_PREFIX = "" if MARKET == "us" else f"{MARKET}_"
 
-RESULTS_PATH = ROOT / "data" / "results" / "mos_latest.csv"
-SNAPSHOT_PATH = ROOT / "data" / "results" / "mos_snapshot_latest.csv"
-DIAGNOSTICS_PATH = ROOT / "data" / "results" / "data_quality_diagnostics.csv"
-REPORTS_DIR = ROOT / "reports"
+UNIVERSE_PATH = ROOT / "data" / f"{MARKET_PREFIX}universe.csv"
+HOLDINGS_PATH = ROOT / "data" / f"{MARKET_PREFIX}holdings.csv"
+
+RESULTS_PATH = ROOT / "data" / "results" / f"{MARKET_PREFIX}mos_latest.csv"
+SNAPSHOT_PATH = ROOT / "data" / "results" / f"{MARKET_PREFIX}mos_snapshot_latest.csv"
+DIAGNOSTICS_PATH = ROOT / "data" / "results" / f"{MARKET_PREFIX}data_quality_diagnostics.csv"
+REPORTS_DIR = ROOT / "reports" / MARKET if MARKET != "us" else ROOT / "reports"
 
 STATE_DIR = ROOT / "state"
-STATE_MARKET_PATH = STATE_DIR / "mos_market_latest.csv"
-CACHE_DIR = ROOT / "cache" / "fundamentals"
+STATE_MARKET_PATH = STATE_DIR / f"{MARKET_PREFIX}mos_market_latest.csv"
+CACHE_DIR = ROOT / "cache" / "fundamentals" / MARKET
 
 SCHEDULE_MODE_MAP = {
     "31 12 * * 1-5": "morning_email",
     "31 16 * * 1-5": "noon_update",
     "31 19 * * 1-5": "afternoon_update",
     "37 22 * * 1-5": "full_after_close",
+    "45 9 * * 1-5": "full_after_close",
 }
 STATE_REQUIRED_MODES = {"morning_email", "noon_update", "afternoon_update"}
 
@@ -74,6 +79,28 @@ def detect_mode() -> str:
     return SCHEDULE_MODE_MAP.get(schedule, "manual")
 
 
+def normalize_ticker_for_market(value: str) -> str:
+    ticker = str(value).strip().upper()
+    if not ticker or ticker == "TICKER":
+        return ""
+
+    ticker = ticker.replace("/", "-")
+
+    if MARKET == "hk":
+        if ticker.endswith(".HK"):
+            base = ticker[:-3]
+            if base.isdigit():
+                return f"{int(base):04d}.HK"
+            return ticker
+        raw = ticker.replace("HK:", "").replace("HK", "")
+        raw = raw.replace(".", "")
+        if raw.isdigit():
+            return f"{int(raw):04d}.HK"
+        return ticker
+
+    return ticker.replace(".", "-")
+
+
 def _read_ticker_csv(path: Path) -> list[str]:
     if not path.exists():
         return []
@@ -101,11 +128,9 @@ def _normalize_tickers(raw: list[str]) -> list[str]:
     seen = set()
 
     for x in raw:
-        ticker = str(x).strip().upper()
-        if not ticker or ticker == "TICKER":
+        ticker = normalize_ticker_for_market(str(x))
+        if not ticker:
             continue
-
-        ticker = ticker.replace(".", "-").replace("/", "-")
 
         if ticker not in seen:
             seen.add(ticker)
@@ -116,7 +141,8 @@ def _normalize_tickers(raw: list[str]) -> list[str]:
 
 def load_holdings() -> list[str]:
     holdings = _read_ticker_csv(HOLDINGS_PATH)
-    env_holdings = os.getenv("HOLDINGS_TICKERS", "")
+    env_key = "HOLDINGS_TICKERS_HK" if MARKET == "hk" else "HOLDINGS_TICKERS"
+    env_holdings = os.getenv(env_key, "")
     if env_holdings.strip():
         holdings.extend(env_holdings.replace("\n", ",").split(","))
     return _normalize_tickers(holdings)
@@ -348,7 +374,10 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
     df = annotate_pools(df)
     RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     if mode == "historical_replay" and backtest_date:
-        df.to_csv(RESULTS_PATH.parent / f"historical_replay_{backtest_date}.csv", index=False)
+        df.to_csv(RESULTS_PATH.parent / f"{MARKET_PREFIX}historical_replay_{backtest_date}.csv", index=False)
+        diagnostics = build_data_quality_diagnostics(df)
+        if not diagnostics.empty:
+            diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
     else:
         df.to_csv(RESULTS_PATH, index=False)
         diagnostics = build_data_quality_diagnostics(df)
@@ -360,17 +389,18 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
 
 def subject_for(mode: str) -> str:
     today = datetime.now().strftime("%Y-%m-%d")
+    label = MARKET_LABELS.get(MARKET, MARKET.upper())
 
     mapping = {
-        "full_after_close": f"【MOS Radar】{today} 盘后安全边际报告",
-        "morning_email": f"【MOS Radar】{today} 开盘前安全边际报告",
-        "noon_update": f"【MOS Radar】{today} 午盘安全边际变化",
-        "afternoon_update": f"【MOS Radar】{today} 下午安全边际变化",
-        "manual": f"【MOS Radar】{today} 手动安全边际扫描",
-        "historical_replay": f"【MOS Radar】{today} 历史价格压力测试",
+        "full_after_close": f"【MOS Radar {label}】{today} 盘后安全边际报告",
+        "morning_email": f"【MOS Radar {label}】{today} 开盘前安全边际报告",
+        "noon_update": f"【MOS Radar {label}】{today} 午盘安全边际变化",
+        "afternoon_update": f"【MOS Radar {label}】{today} 下午安全边际变化",
+        "manual": f"【MOS Radar {label}】{today} 手动安全边际扫描",
+        "historical_replay": f"【MOS Radar {label}】{today} 历史价格压力测试",
     }
 
-    return mapping.get(mode, f"【MOS Radar】{today} 安全边际报告")
+    return mapping.get(mode, f"【MOS Radar {label}】{today} 安全边际报告")
 
 
 def main() -> None:
@@ -413,6 +443,7 @@ def main() -> None:
         top_mos_count=top_mos_count,
         trap_count=trap_count,
         thin_count=thin_count,
+        market=MARKET,
     )
 
     save_report_files(df, mode, report_body)

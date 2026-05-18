@@ -564,6 +564,7 @@ def generate_report(
     top_mos_count: int = 50,
     trap_count: int = 30,
     thin_count: int = 30,
+    market: str = "us",
 ) -> str:
     df = normalize_numeric(df)
 
@@ -577,6 +578,7 @@ def generate_report(
     }
 
     title = title_map.get(mode, "安全边际报告")
+    market_label = {"us": "美股", "hk": "港股"}.get(str(market).lower(), str(market).upper())
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     backtest_date = ""
     if "backtest_date" in df.columns:
@@ -801,8 +803,8 @@ def generate_report(
 <body>
 <div class="wrap">
     <div class="card">
-        <h1>【MOS Radar】{escape(title)}</h1>
-        <div class="meta">生成时间：{escape(ts)} | 模式：{escape(mode)} | 模型：{escape(model_version or "N/A")}</div>
+        <h1>【MOS Radar {escape(market_label)}】{escape(title)}</h1>
+        <div class="meta">生成时间：{escape(ts)} | 市场：{escape(market_label)} | 模式：{escape(mode)} | 模型：{escape(model_version or "N/A")}</div>
 
         <div class="summary">
             <div class="box">

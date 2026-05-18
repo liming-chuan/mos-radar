@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.4.0
+# MOS Radar：安全边际雷达 V6.5.0
 
 美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
 
@@ -125,9 +125,9 @@ DRY_RUN=false
 
 ## 股票池更新
 
-GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.4.0 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
+GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.3.6 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
 
-V6.4.0 起，如果 Nasdaq screener 临时返回空结果，`Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
+V6.3.6 起，如果 Nasdaq screener 临时返回空结果，`Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
 
 建议参数：
 
@@ -173,6 +173,44 @@ QCOM
 
 第一版建议先扫 200—1000 只大中盘股，不建议直接扫所有低流动性小票。
 
+
+## 港股支持 V6.5
+
+V6.5 新增港股独立运行通道，不影响原来的美股扫描。港股使用 Yahoo Finance 的 `.HK` 代码格式，例如：
+
+```text
+0700.HK = 腾讯控股
+9988.HK = 阿里巴巴-W
+0005.HK = 汇丰控股
+```
+
+新增 GitHub Actions：
+
+```text
+Update HK Universe
+MOS Radar HK Scanner
+MOS Radar HK Historical Replay
+```
+
+港股相关文件独立保存：
+
+```text
+data/hk_universe_seed.csv      港股初始种子池
+data/hk_universe.csv           港股扫描股票池
+data/hk_holdings.example.csv   港股持仓示例
+data/results/hk_mos_latest.csv 港股最新扫描结果
+reports/hk/latest_report.md     港股最新报告
+state/hk_mos_market_latest.csv 港股公开市场状态
+```
+
+港股持仓不要提交到仓库；如果要在 GitHub Actions 里加入港股持仓，用 Repository Secret：
+
+```text
+HOLDINGS_TICKERS_HK=0700.HK,9988.HK,0005.HK
+```
+
+港股财报币种可能是 CNY/USD，报价通常是 HKD。V6.5 对港股常见的 `CNY/CNH/USD -> HKD` 自动做汇率换算；如果无法换算，会标记 `SKIP`，不会强行估值。
+
 ## GitHub Actions 运行
 
 ### 当前市场扫描
@@ -216,7 +254,7 @@ dry_run = false
 
 ## 重要提醒
 
-1. V6.4.0 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.5.0 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

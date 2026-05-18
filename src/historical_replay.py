@@ -110,7 +110,7 @@ def _result_from_row(row: pd.Series) -> AnalysisResult:
         setattr(result, name, value)
 
     numeric_fields = {
-        "price", "market_cap", "enterprise_value", "revenue_ttm", "revenue_5y_cagr",
+        "price", "market_cap", "enterprise_value", "financial_to_quote_fx", "revenue_ttm", "revenue_5y_cagr",
         "gross_margin", "operating_margin", "net_margin", "net_income_ttm",
         "reported_fcf_ttm", "sbc_ttm", "fcf_ttm", "fcf_3y_avg", "fcf_5y_avg",
         "fcf_volatility", "fcf_yield", "fcf_conversion", "cash", "total_debt",
