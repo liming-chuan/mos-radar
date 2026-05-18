@@ -1,13 +1,20 @@
 # MOS Radar：安全边际雷达 V6.5.0
 
-美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。周六、周日不自动运行，因为美股不开盘。报告只做候选筛选，不做自动买卖建议。
+MOS Radar 目前支持美股和港股两套独立扫描通道。美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
 ## 运行逻辑
+
+美股：
 
 - 周一至周五美东 18:37：盘后完整扫描，更新财报/价格估值，保存 `data/results/mos_latest.csv` 和 `reports/latest_report.md`
 - 周一至周五美东 08:31：开盘前邮件，发送昨晚完整报告
 - 周一至周五美东 12:31：午盘价格更新，只更新股价并重算安全边际
 - 周一至周五美东 15:31：下午价格更新，只更新股价并重算安全边际
+
+港股：
+
+- 周一至周五香港时间约 17:45：盘后扫描港股候选池，保存 `data/results/hk_mos_latest.csv` 和 `reports/hk/latest_report.md`
+- 港股当前扫描、历史价格压力测试、股票池更新均使用独立 workflow，不会覆盖美股结果
 
 ## 安全边际公式
 
@@ -89,7 +96,8 @@ SMTP_PASSWORD=邮箱 SMTP 授权码，不是网页登录密码
 SMTP_SSL=false
 MAIL_TO=你的Outlook邮箱，例如 yourname@outlook.com
 MAIL_FROM_NAME=MOS Radar
-HOLDINGS_TICKERS=你的持仓代码，用英文逗号分隔，例如 AAPL,MSFT,TSM
+HOLDINGS_TICKERS=你的美股持仓代码，用英文逗号分隔，例如 AAPL,MSFT,TSM
+HOLDINGS_TICKERS_HK=你的港股持仓代码，用英文逗号分隔，例如 0700.HK,9988.HK,0005.HK
 ```
 
 也可以用 465 SSL：
@@ -114,12 +122,16 @@ USE_FUNDAMENTALS_CACHE=true
 FUNDAMENTALS_CACHE_DAYS=7
 SEND_AFTER_CLOSE=false
 DRY_RUN=false
+HK_MAX_TICKERS=0
+HK_RUN_MODE=
 ```
 
 说明：
 
 - `TOP_MOS_COUNT=50`：邮件里显示更多安全边际厚的公司。
-- `MAX_TICKERS=0`：扫描 `data/universe.csv` 里的全部股票；测试时可设为 10。
+- `MAX_TICKERS=0`：扫描美股 `data/universe.csv` 里的全部股票；测试时可设为 10。
+- `HK_MAX_TICKERS=0`：扫描港股 `data/hk_universe.csv` 里的全部股票；测试时可设为 10。
+- `HK_RUN_MODE`：港股 workflow 默认由 schedule 识别为盘后扫描；手动测试通常留空即可。
 - `SEND_AFTER_CLOSE=false`：盘后只生成报告不发邮件；如果想盘后也发，改为 `true`。
 - `DRY_RUN=false`：线上正常发邮件；本地或手动测试可设为 `true`，只生成报告不发邮件。
 
@@ -213,11 +225,11 @@ HOLDINGS_TICKERS_HK=0700.HK,9988.HK,0005.HK
 
 ## GitHub Actions 运行
 
-### 当前市场扫描
+### 美股当前扫描
 
 GitHub Actions → `MOS Radar Daily Scanner` → `Run workflow`
 
-这个 workflow 扫描当前市场，也负责工作日定时运行。运行结束后，在本次 run 页面下载 artifact：
+这个 workflow 扫描当前美股市场，也负责美股工作日定时运行。运行结束后，在本次 run 页面下载 artifact：
 
 ```text
 mos-radar-current-results
@@ -228,10 +240,12 @@ mos-radar-current-results
 ```text
 data/results/mos_latest.csv
 data/results/mos_snapshot_latest.csv
+data/results/data_quality_diagnostics.csv
 reports/latest_report.md
+state/mos_market_latest.csv
 ```
 
-### 历史价格回放
+### 美股历史价格压力测试
 
 GitHub Actions → `MOS Radar Historical Replay` → `Run workflow`：
 
@@ -241,16 +255,98 @@ backtest_use_latest = false
 dry_run = false
 ```
 
-说明：
+输出 artifact：
 
-- 这是历史价格压力测试，不是严格 point-in-time 财报回测。
-- 系统会先按当前 V6.3 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
-- 输出文件保存为 `data/results/historical_replay_YYYY-MM-DD.csv`，报告标题为“历史价格回放压力测试”。
-- 运行结束后，在本次 run 页面下载 artifact：`mos-radar-historical-YYYY-MM-DD`。
+```text
+mos-radar-historical-YYYY-MM-DD
+```
+
+### 港股股票池更新
+
+GitHub Actions → `Update HK Universe` → `Run workflow`
+
+建议先用较小范围测试：
+
+```text
+limit = 120
+min_market_cap = 5000000000
+min_liquidity_volume = 500000
+```
+
+输出 artifact：
+
+```text
+mos-radar-hk-universe
+```
+
+里面包含：
+
+```text
+data/hk_universe.csv
+```
+
+### 港股当前扫描
+
+GitHub Actions → `MOS Radar HK Scanner` → `Run workflow`
+
+第一次测试建议在 GitHub Variables 里设置：
+
+```text
+HK_MAX_TICKERS=10
+DRY_RUN=true
+```
+
+确认报告正常后再改为：
+
+```text
+HK_MAX_TICKERS=0
+DRY_RUN=false
+```
+
+输出 artifact：
+
+```text
+mos-radar-hk-current-results
+```
+
+里面包含：
+
+```text
+data/results/hk_mos_latest.csv
+data/results/hk_mos_snapshot_latest.csv
+data/results/hk_data_quality_diagnostics.csv
+reports/hk/latest_report.md
+state/hk_mos_market_latest.csv
+```
+
+### 港股历史价格压力测试
+
+GitHub Actions → `MOS Radar HK Historical Replay` → `Run workflow`：
+
+```text
+backtest_date = 2022-10-31
+backtest_use_latest = false
+dry_run = true
+```
+
+输出 artifact：
+
+```text
+mos-radar-hk-historical-YYYY-MM-DD
+```
+
+里面包含港股历史价格压力测试 CSV 和 `reports/hk/*.md` 报告。
+
+### 历史压力测试说明
+
+- 历史模式是价格压力测试，不是严格 point-in-time 财报回测。
+- 系统会先按当前 V6.5 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
+- 美股输出文件保存为 `data/results/historical_replay_YYYY-MM-DD.csv`。
+- 港股输出文件保存为 `data/results/hk_historical_replay_YYYY-MM-DD.csv`。
 - `dry_run=false` 会发送邮件；`dry_run=true` 只生成 artifact 不发邮件。
-- `backtest_use_latest=true` 会跳过重新扫描，直接用已有 `mos_latest.csv` 做价格回放，速度更快但依赖旧结果。
+- `backtest_use_latest=true` 会跳过重新扫描，直接用已有 latest CSV 做价格回放，速度更快但依赖旧结果。
 - 当时尚未上市、改名、分拆或 Yahoo 缺少历史价的股票会显示为 `SKIP`，不会作为模型失败处理。
-- 严格历史回测需要 SEC/财报公告日期和当时可见财报数据，免费 yfinance 不能可靠完成这一层。
+- 严格历史回测需要 SEC/港交所公告日期、当时可见财报和当时股本数据，免费 yfinance 不能可靠完成这一层。
 
 ## 重要提醒
 
