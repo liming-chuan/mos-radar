@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.5.0
+# MOS Radar：安全边际雷达 V6.5.1
 
 MOS Radar 目前支持美股和港股两套独立扫描通道。美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
@@ -137,9 +137,9 @@ HK_RUN_MODE=
 
 ## 股票池更新
 
-GitHub Actions 里的 `Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.3.6 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
+GitHub Actions 里的 `MOS Radar - US - Update Universe` 会从 Nasdaq Trader 官方列表获取美国上市股票，再用 Nasdaq screener 获取价格、市值和成交量数据。V6.3.6 起不再先调用 Yahoo quote 批量接口，避免 GitHub Actions 中大量 `401 Unauthorized` 日志拖慢和干扰股票池更新。
 
-V6.3.6 起，如果 Nasdaq screener 临时返回空结果，`Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
+V6.3.6 起，如果 Nasdaq screener 临时返回空结果，`MOS Radar - US - Update Universe` 会保留已有 `data/universe.csv`，不会写入空股票池，也不会因为缺少 `ticker` 列报错。运行结束后会上传 `mos-radar-universe` artifact，方便检查本次股票池文件。
 
 建议参数：
 
@@ -149,7 +149,7 @@ Minimum market cap = 1000000000
 Minimum liquidity volume = 100000
 ```
 
-`Update Universe` 日志会打印实际收到的 `limit / min_market_cap / min_avg_volume`、Nasdaq screener 行情行数、合并行数、过滤后数量和最终股票池数量。`limit=2000` 且过滤后数量充足时，`data/universe.csv` 应生成 2000 家公司。
+`MOS Radar - US - Update Universe` 日志会打印实际收到的 `limit / min_market_cap / min_avg_volume`、Nasdaq screener 行情行数、合并行数、过滤后数量和最终股票池数量。`limit=2000` 且过滤后数量充足时，`data/universe.csv` 应生成 2000 家公司。
 
 ## 本地测试
 
@@ -199,9 +199,9 @@ V6.5 新增港股独立运行通道，不影响原来的美股扫描。港股使
 新增 GitHub Actions：
 
 ```text
-Update HK Universe
-MOS Radar HK Scanner
-MOS Radar HK Historical Replay
+MOS Radar - HK - Update Universe
+MOS Radar - HK - Daily Scanner
+MOS Radar - HK - Historical Replay
 ```
 
 港股相关文件独立保存：
@@ -227,7 +227,7 @@ HOLDINGS_TICKERS_HK=0700.HK,9988.HK,0005.HK
 
 ### 美股当前扫描
 
-GitHub Actions → `MOS Radar Daily Scanner` → `Run workflow`
+GitHub Actions → `MOS Radar - US - Daily Scanner` → `Run workflow`
 
 这个 workflow 扫描当前美股市场，也负责美股工作日定时运行。运行结束后，在本次 run 页面下载 artifact：
 
@@ -247,7 +247,7 @@ state/mos_market_latest.csv
 
 ### 美股历史价格压力测试
 
-GitHub Actions → `MOS Radar Historical Replay` → `Run workflow`：
+GitHub Actions → `MOS Radar - US - Historical Replay` → `Run workflow`：
 
 ```text
 backtest_date = 2022-10-14
@@ -263,7 +263,7 @@ mos-radar-historical-YYYY-MM-DD
 
 ### 港股股票池更新
 
-GitHub Actions → `Update HK Universe` → `Run workflow`
+GitHub Actions → `MOS Radar - HK - Update Universe` → `Run workflow`
 
 建议先用较小范围测试：
 
@@ -287,7 +287,7 @@ data/hk_universe.csv
 
 ### 港股当前扫描
 
-GitHub Actions → `MOS Radar HK Scanner` → `Run workflow`
+GitHub Actions → `MOS Radar - HK - Daily Scanner` → `Run workflow`
 
 第一次测试建议在 GitHub Variables 里设置：
 
@@ -321,7 +321,7 @@ state/hk_mos_market_latest.csv
 
 ### 港股历史价格压力测试
 
-GitHub Actions → `MOS Radar HK Historical Replay` → `Run workflow`：
+GitHub Actions → `MOS Radar - HK - Historical Replay` → `Run workflow`：
 
 ```text
 backtest_date = 2022-10-31
@@ -350,7 +350,7 @@ mos-radar-hk-historical-YYYY-MM-DD
 
 ## 重要提醒
 
-1. V6.5.0 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.5.1 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。

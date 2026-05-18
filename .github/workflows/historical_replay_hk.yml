@@ -1,4 +1,4 @@
-name: MOS Radar HK Historical Replay
+name: MOS Radar - HK - Historical Replay
 
 on:
   workflow_dispatch:

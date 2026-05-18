@@ -1,4 +1,4 @@
-name: Update HK Universe
+name: MOS Radar - HK - Update Universe
 
 on:
   workflow_dispatch:

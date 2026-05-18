@@ -1,4 +1,4 @@
-name: MOS Radar Historical Replay
+name: MOS Radar - US - Historical Replay
 
 on:
   workflow_dispatch:

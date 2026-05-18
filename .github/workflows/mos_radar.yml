@@ -1,4 +1,4 @@
-name: MOS Radar Daily Scanner
+name: MOS Radar - US - Daily Scanner
 
 on:
   schedule:

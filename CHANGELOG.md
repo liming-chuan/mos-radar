@@ -2,6 +2,12 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.5.1 - 2026-05-18
+
+- Unified GitHub Actions workflow display names to the `MOS Radar - US/HK - Task` format.
+- Updated README workflow instructions to match the new Actions sidebar names.
+- Updated version metadata and model version for the workflow naming cleanup release.
+
 ## v6.5.0 - 2026-05-18
 
 - Added first-class Hong Kong market support through `MARKET=hk`, with independent HK universe, holdings, result, report, state, and fundamentals-cache paths.

@@ -1,4 +1,4 @@
-name: MOS Radar HK Scanner
+name: MOS Radar - HK - Daily Scanner
 
 on:
   schedule:

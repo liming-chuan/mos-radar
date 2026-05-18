@@ -1,4 +1,4 @@
-name: Update Universe
+name: MOS Radar - US - Update Universe
 
 on:
   workflow_dispatch:
