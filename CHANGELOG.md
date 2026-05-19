@@ -2,6 +2,15 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.5.2 - 2026-05-19
+
+- Changed scheduled automation to one pre-market full scan and email per trading day for US stocks.
+- Changed HK scheduled automation to one pre-market full scan and email per trading day at 09:00 Hong Kong time.
+- Added explicit `premarket_scan` run mode for scheduled full scans that should send email.
+- Removed default noon, afternoon, and after-close scheduled runs to reduce GitHub Actions usage.
+- Scheduled pre-market runs force `DRY_RUN=false` so daily emails are actually sent; manual runs can still use `DRY_RUN=true` for testing.
+- Updated README, model version, and version metadata.
+
 ## v6.5.1 - 2026-05-18
 
 - Unified GitHub Actions workflow display names to the `MOS Radar - US/HK - Task` format.

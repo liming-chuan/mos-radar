@@ -570,6 +570,7 @@ def generate_report(
 
     title_map = {
         "full_after_close": "盘后安全边际报告",
+        "premarket_scan": "盘前安全边际扫描",
         "morning_email": "开盘前安全边际报告",
         "noon_update": "午盘安全边际变化",
         "afternoon_update": "下午安全边际变化",

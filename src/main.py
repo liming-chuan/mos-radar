@@ -34,11 +34,8 @@ STATE_MARKET_PATH = STATE_DIR / f"{MARKET_PREFIX}mos_market_latest.csv"
 CACHE_DIR = ROOT / "cache" / "fundamentals" / MARKET
 
 SCHEDULE_MODE_MAP = {
-    "31 12 * * 1-5": "morning_email",
-    "31 16 * * 1-5": "noon_update",
-    "31 19 * * 1-5": "afternoon_update",
-    "37 22 * * 1-5": "full_after_close",
-    "45 9 * * 1-5": "full_after_close",
+    "31 12 * * 1-5": "premarket_scan",
+    "0 1 * * 1-5": "premarket_scan",
 }
 STATE_REQUIRED_MODES = {"morning_email", "noon_update", "afternoon_update"}
 
@@ -383,7 +380,7 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
         diagnostics = build_data_quality_diagnostics(df)
         if not diagnostics.empty:
             diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
-        if mode in {"full_after_close", "manual", "noon_update", "afternoon_update"}:
+        if mode in {"full_after_close", "manual", "premarket_scan", "noon_update", "afternoon_update"}:
             save_public_market_state(df)
 
 
@@ -393,6 +390,7 @@ def subject_for(mode: str) -> str:
 
     mapping = {
         "full_after_close": f"【MOS Radar {label}】{today} 盘后安全边际报告",
+        "premarket_scan": f"【MOS Radar {label}】{today} 盘前安全边际扫描",
         "morning_email": f"【MOS Radar {label}】{today} 开盘前安全边际报告",
         "noon_update": f"【MOS Radar {label}】{today} 午盘安全边际变化",
         "afternoon_update": f"【MOS Radar {label}】{today} 下午安全边际变化",
@@ -411,7 +409,7 @@ def main() -> None:
     trap_count = getenv_int("TRAP_COUNT", 30)
     thin_count = getenv_int("THIN_COUNT", 30)
 
-    if mode in {"full_after_close", "manual"}:
+    if mode in {"full_after_close", "manual", "premarket_scan"}:
         df = run_full_scan()
 
     elif mode == "historical_replay":
@@ -452,7 +450,7 @@ def main() -> None:
     dry_run = env_bool("DRY_RUN", default=False)
 
     should_send = (
-        mode in {"morning_email", "noon_update", "afternoon_update", "manual", "historical_replay"}
+        mode in {"premarket_scan", "morning_email", "noon_update", "afternoon_update", "manual", "historical_replay"}
         or (mode == "full_after_close" and send_after_close)
     )
 

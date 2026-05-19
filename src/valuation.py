@@ -15,7 +15,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.5.1"
+MODEL_VERSION = "MOS_Radar_V6.5.2"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 

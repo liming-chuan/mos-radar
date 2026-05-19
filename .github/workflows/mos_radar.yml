@@ -3,16 +3,9 @@ name: MOS Radar - US - Daily Scanner
 on:
   schedule:
     # GitHub Actions cron uses UTC time.
-    # Run on NY market weekdays only. No automatic runs on Saturday or Sunday.
-    # Approx NY times during EDT:
-    # 08:31 NY -> 12:31 UTC
-    # 12:31 NY -> 16:31 UTC
-    # 15:31 NY -> 19:31 UTC
-    # 18:37 NY -> 22:37 UTC
+    # US market weekdays only. One pre-market full scan and email per day.
+    # 12:31 UTC ~= 08:31 New York during EDT; still pre-market during EST.
     - cron: "31 12 * * 1-5"
-    - cron: "31 16 * * 1-5"
-    - cron: "31 19 * * 1-5"
-    - cron: "37 22 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -66,7 +59,7 @@ jobs:
           USE_FUNDAMENTALS_CACHE: ${{ vars.USE_FUNDAMENTALS_CACHE }}
           FUNDAMENTALS_CACHE_DAYS: ${{ vars.FUNDAMENTALS_CACHE_DAYS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
-          DRY_RUN: ${{ vars.DRY_RUN }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || vars.DRY_RUN }}
         run: python src/main.py
 
       - name: Upload MOS Radar results

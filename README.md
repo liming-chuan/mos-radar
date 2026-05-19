@@ -1,19 +1,17 @@
-# MOS Radar：安全边际雷达 V6.5.1
+# MOS Radar：安全边际雷达 V6.5.2
 
-MOS Radar 目前支持美股和港股两套独立扫描通道。美股交易日周一至周五运行：盘后完整扫描一次美股候选池；开盘前、午盘、下午通过 SMTP 邮件服务发送报告。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
+MOS Radar 目前支持美股和港股两套独立扫描通道。V6.5.2 起，自动任务改为每个交易日盘前各完整扫描一次并发送邮件：美股盘前一次，港股盘前一次。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
 ## 运行逻辑
 
 美股：
 
-- 周一至周五美东 18:37：盘后完整扫描，更新财报/价格估值，保存 `data/results/mos_latest.csv` 和 `reports/latest_report.md`
-- 周一至周五美东 08:31：开盘前邮件，发送昨晚完整报告
-- 周一至周五美东 12:31：午盘价格更新，只更新股价并重算安全边际
-- 周一至周五美东 15:31：下午价格更新，只更新股价并重算安全边际
+- 周一至周五美东盘前约 08:31：完整扫描美股候选池，保存 `data/results/mos_latest.csv` 和 `reports/latest_report.md`，并发送邮件
+- 自动任务不再运行午盘、下午和盘后多次扫描，节省 GitHub Actions 免费运行时间
 
 港股：
 
-- 周一至周五香港时间约 17:45：盘后扫描港股候选池，保存 `data/results/hk_mos_latest.csv` 和 `reports/hk/latest_report.md`
+- 周一至周五香港时间 09:00：完整扫描港股候选池，保存 `data/results/hk_mos_latest.csv` 和 `reports/hk/latest_report.md`，并发送邮件
 - 港股当前扫描、历史价格压力测试、股票池更新均使用独立 workflow，不会覆盖美股结果
 
 ## 安全边际公式
@@ -40,12 +38,12 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 
 ## V6.4 自动化与数据口径升级
 
-- 定时任务按 GitHub Actions 的 UTC cron 精确映射运行模式，避免开盘前、午盘、下午、盘后被识别错。
-- 盘后/手动完整扫描会把公开市场扫描结果保存到 `state/mos_market_latest.csv`；早盘、午盘、下午只读取该状态，不再因为 runner 是新环境而偷偷重跑 full scan。
+- 定时任务按 GitHub Actions 的 UTC cron 精确映射运行模式，V6.5.2 自动任务统一为盘前 `premarket_scan`。
+- 盘前/手动完整扫描会把公开市场扫描结果保存到 `state/mos_market_latest.csv`；非完整模式只读取该状态，不再因为 runner 是新环境而偷偷重跑 full scan。
 - `state/mos_market_latest.csv` 不保存持仓池，持仓仍来自 `data/holdings.csv` 或 `HOLDINGS_TICKERS`，避免把私人持仓提交到 GitHub。
 - 估值口径新增 `financial_period_type`：`TTM` 表示最近四个季度滚动数据，`ANNUAL_FALLBACK` 表示季度数据不足时退回最新年报。
 - 报告新增最低估值法、估值候选明细、行业模型状态、持仓风险复核和数据质量诊断。
-- 午盘/下午价格更新改为批量拉取价格，并在价格变化后重算安全边际、FCF Yield、MOS 分数和评级。
+- 午盘/下午价格更新逻辑仍保留给手动模式使用，但默认自动任务不再触发。
 - 股票池更新使用 `liquidity_volume` 和 `volume_source`，不再把 Nasdaq 当日成交量无说明地写成平均成交量。
 - 历史功能统一称为“历史价格压力测试”，不是严格 point-in-time 回测。
 
@@ -123,7 +121,6 @@ FUNDAMENTALS_CACHE_DAYS=7
 SEND_AFTER_CLOSE=false
 DRY_RUN=false
 HK_MAX_TICKERS=0
-HK_RUN_MODE=
 ```
 
 说明：
@@ -131,9 +128,8 @@ HK_RUN_MODE=
 - `TOP_MOS_COUNT=50`：邮件里显示更多安全边际厚的公司。
 - `MAX_TICKERS=0`：扫描美股 `data/universe.csv` 里的全部股票；测试时可设为 10。
 - `HK_MAX_TICKERS=0`：扫描港股 `data/hk_universe.csv` 里的全部股票；测试时可设为 10。
-- `HK_RUN_MODE`：港股 workflow 默认由 schedule 识别为盘后扫描；手动测试通常留空即可。
 - `SEND_AFTER_CLOSE=false`：盘后只生成报告不发邮件；如果想盘后也发，改为 `true`。
-- `DRY_RUN=false`：线上正常发邮件；本地或手动测试可设为 `true`，只生成报告不发邮件。
+- `DRY_RUN=false`：线上正常发邮件；本地或手动测试可设为 `true`，只生成报告不发邮件。定时盘前任务会强制按 `false` 运行，确保每天发送邮件。
 
 ## 股票池更新
 
@@ -350,7 +346,7 @@ mos-radar-hk-historical-YYYY-MM-DD
 
 ## 重要提醒
 
-1. V6.5.1 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.5.2 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。
