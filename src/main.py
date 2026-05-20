@@ -23,6 +23,7 @@ MARKET_PREFIX = "" if MARKET == "us" else f"{MARKET}_"
 
 UNIVERSE_PATH = ROOT / "data" / f"{MARKET_PREFIX}universe.csv"
 HOLDINGS_PATH = ROOT / "data" / f"{MARKET_PREFIX}holdings.csv"
+HK_UNIVERSE_SEED_PATH = ROOT / "data" / "hk_universe_seed.csv"
 
 RESULTS_PATH = ROOT / "data" / "results" / f"{MARKET_PREFIX}mos_latest.csv"
 SNAPSHOT_PATH = ROOT / "data" / "results" / f"{MARKET_PREFIX}mos_snapshot_latest.csv"
@@ -147,6 +148,12 @@ def load_holdings() -> list[str]:
 
 def load_scan_tickers() -> list[str]:
     universe = _read_ticker_csv(UNIVERSE_PATH)
+    if MARKET == "hk" and not universe:
+        universe = _read_ticker_csv(HK_UNIVERSE_SEED_PATH)
+        print(
+            f"WARNING: {UNIVERSE_PATH} is empty; using HK seed universe {HK_UNIVERSE_SEED_PATH} rows={len(universe)}",
+            flush=True,
+        )
     holdings = load_holdings()
 
     max_tickers = getenv_int("MAX_TICKERS", 0)
@@ -442,6 +449,7 @@ def main() -> None:
         trap_count=trap_count,
         thin_count=thin_count,
         market=MARKET,
+        model_version=MODEL_VERSION,
     )
 
     save_report_files(df, mode, report_body)

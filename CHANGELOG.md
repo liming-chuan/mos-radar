@@ -2,6 +2,14 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.5.3 - 2026-05-20
+
+- Fixed empty HK emails caused by `data/hk_universe.csv` being overwritten with zero tickers.
+- Restored `data/hk_universe.csv` from the curated HK seed universe.
+- Added scanner fallback from empty HK universe to `data/hk_universe_seed.csv`.
+- Changed HK universe updater to preserve an existing non-empty universe or fall back to the seed when verification or filters return zero rows.
+- Passed model version into report generation so empty diagnostics still show the current model version instead of `N/A`.
+
 ## v6.5.2 - 2026-05-19
 
 - Changed scheduled automation to one pre-market full scan and email per trading day for US stocks.

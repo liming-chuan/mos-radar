@@ -565,6 +565,7 @@ def generate_report(
     trap_count: int = 30,
     thin_count: int = 30,
     market: str = "us",
+    model_version: str | None = None,
 ) -> str:
     df = normalize_numeric(df)
 
@@ -586,8 +587,8 @@ def generate_report(
         values = df["backtest_date"].dropna().astype(str)
         backtest_date = values.iloc[0] if not values.empty else ""
 
-    model_version = ""
-    if "model_version" in df.columns:
+    model_version = model_version or ""
+    if not model_version and "model_version" in df.columns:
         mv = df["model_version"].dropna().astype(str)
         model_version = mv.iloc[0] if not mv.empty else ""
 

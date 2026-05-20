@@ -56,6 +56,26 @@ def load_seed() -> pd.DataFrame:
     return df[["ticker", "name"]]
 
 
+def with_universe_columns(df: pd.DataFrame, source: str) -> pd.DataFrame:
+    out = df.copy()
+    for column in UNIVERSE_COLUMNS:
+        if column not in out.columns:
+            out[column] = pd.NA
+    if "source" in out.columns:
+        out["source"] = out["source"].fillna(source)
+    return out[UNIVERSE_COLUMNS].reset_index(drop=True)
+
+
+def existing_or_seed_universe(seed: pd.DataFrame, reason: str) -> pd.DataFrame:
+    if OUT_PATH.exists():
+        existing = pd.read_csv(OUT_PATH)
+        if "ticker" in existing.columns and existing["ticker"].dropna().astype(str).str.strip().ne("").any():
+            print(f"WARNING: {reason}; keeping existing non-empty hk_universe.csv rows={len(existing)}", flush=True)
+            return with_universe_columns(existing, "hk_existing")
+    print(f"WARNING: {reason}; falling back to hk_universe_seed.csv rows={len(seed)}", flush=True)
+    return with_universe_columns(seed, "hk_seed_fallback")
+
+
 def batch_prices(tickers: list[str]) -> dict[str, dict[str, float | None]]:
     if not tickers:
         return {}
@@ -148,14 +168,7 @@ def build_universe() -> pd.DataFrame:
     print("seed tickers:", len(seed), flush=True)
     df = fast_info_rows(seed)
     if df.empty:
-        print("WARNING: HK verification returned zero rows; keeping existing hk_universe.csv if available.", flush=True)
-        if OUT_PATH.exists():
-            existing = pd.read_csv(OUT_PATH)
-            for column in UNIVERSE_COLUMNS:
-                if column not in existing.columns:
-                    existing[column] = pd.NA
-            return existing[UNIVERSE_COLUMNS].reset_index(drop=True)
-        return pd.DataFrame(columns=UNIVERSE_COLUMNS)
+        return existing_or_seed_universe(seed, "HK verification returned zero rows")
     df["market_cap"] = pd.to_numeric(df["market_cap"], errors="coerce")
     df["liquidity_volume"] = pd.to_numeric(df["liquidity_volume"], errors="coerce")
     df = df[
@@ -163,6 +176,8 @@ def build_universe() -> pd.DataFrame:
         & (df["liquidity_volume"].fillna(0) >= min_liquidity_volume)
     ]
     print("rows after HK filters:", len(df), flush=True)
+    if df.empty:
+        return existing_or_seed_universe(seed, "HK filters produced zero rows")
     df = df.sort_values("market_cap", ascending=False, na_position="last")
     if limit > 0:
         df = df.head(limit)
