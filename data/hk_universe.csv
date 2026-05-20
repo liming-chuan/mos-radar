@@ -1,85 +1,501 @@
 ticker,name,source,market_cap,liquidity_volume,volume_source,avg_volume,last_price
-0001.HK,CK Hutchison Holdings,hk_seed_yfinance,,9318736.8,10d_avg_volume,9318736.8,71.19999694824219
-0002.HK,CLP Holdings,hk_seed_yfinance,,2865924.5,10d_avg_volume,2865924.5,75.3499984741211
-0003.HK,Hong Kong and China Gas,hk_seed_yfinance,,15326517.0,10d_avg_volume,15326517.0,7.329999923706055
-0005.HK,HSBC Holdings,hk_seed_yfinance,,10687876.0,10d_avg_volume,10687876.0,138.60000610351562
-0006.HK,Power Assets Holdings,hk_seed_yfinance,,2867708.9,10d_avg_volume,2867708.9,64.9000015258789
-0012.HK,Henderson Land Development,hk_seed_yfinance,,8853797.2,10d_avg_volume,8853797.2,32.2599983215332
-0016.HK,Sun Hung Kai Properties,hk_seed_yfinance,,4911295.1,10d_avg_volume,4911295.1,135.89999389648438
-0017.HK,New World Development,hk_seed_yfinance,,7096086.1,10d_avg_volume,7096086.1,8.329999923706055
-0027.HK,Galaxy Entertainment,hk_seed_yfinance,,16939940.4,10d_avg_volume,16939940.4,32.79999923706055
-0066.HK,MTR Corporation,hk_seed_yfinance,,5343643.6,10d_avg_volume,5343643.6,33.15999984741211
-0101.HK,Hang Lung Properties,hk_seed_yfinance,,10430419.3,10d_avg_volume,10430419.3,8.350000381469727
-0175.HK,Geely Automobile,hk_seed_yfinance,,63592688.3,10d_avg_volume,63592688.3,19.899999618530273
-0241.HK,Alibaba Health Information Technology,hk_seed_yfinance,,143641864.4,10d_avg_volume,143641864.4,3.930000066757202
-0267.HK,CITIC Limited,hk_seed_yfinance,,15198658.9,10d_avg_volume,15198658.9,13.020000457763672
-0268.HK,Kingdee International Software,hk_seed_yfinance,,38037270.4,10d_avg_volume,38037270.4,8.0
-0285.HK,BYD Electronic,hk_seed_yfinance,,8457128.1,10d_avg_volume,8457128.1,26.299999237060547
-0288.HK,WH Group,hk_seed_yfinance,,30135867.1,10d_avg_volume,30135867.1,9.220000267028809
-0291.HK,China Resources Beer,hk_seed_yfinance,,7169461.1,10d_avg_volume,7169461.1,26.479999542236328
-0316.HK,Orient Overseas International,hk_seed_yfinance,,909310.5,10d_avg_volume,909310.5,142.8000030517578
-0386.HK,China Petroleum and Chemical,hk_seed_yfinance,,107493267.0,10d_avg_volume,107493267.0,4.5
-0388.HK,Hong Kong Exchanges and Clearing,hk_seed_yfinance,,3620844.9,10d_avg_volume,3620844.9,410.3999938964844
-0669.HK,Techtronic Industries,hk_seed_yfinance,,6327454.0,10d_avg_volume,6327454.0,114.9000015258789
-0688.HK,China Overseas Land and Investment,hk_seed_yfinance,,48873254.6,10d_avg_volume,48873254.6,15.75
-0700.HK,Tencent Holdings,hk_seed_yfinance,,29202541.5,10d_avg_volume,29202541.5,458.6000061035156
-0762.HK,China Unicom Hong Kong,hk_seed_yfinance,,43440601.9,10d_avg_volume,43440601.9,7.840000152587891
-0823.HK,Link REIT,hk_seed_yfinance,,10332131.6,10d_avg_volume,10332131.6,40.84000015258789
-0836.HK,China Resources Power,hk_seed_yfinance,,15127452.9,10d_avg_volume,15127452.9,20.219999313354492
-0857.HK,PetroChina,hk_seed_yfinance,,116647376.5,10d_avg_volume,116647376.5,11.220000267028809
-0868.HK,Xinyi Glass,hk_seed_yfinance,,10806147.0,10d_avg_volume,10806147.0,10.149999618530273
-0881.HK,Zhongsheng Group,hk_seed_yfinance,,6813481.5,10d_avg_volume,6813481.5,6.440000057220459
-0883.HK,CNOOC,hk_seed_yfinance,,86621906.0,10d_avg_volume,86621906.0,28.100000381469727
-0939.HK,China Construction Bank,hk_seed_yfinance,,175742191.4,10d_avg_volume,175742191.4,8.760000228881836
-0941.HK,China Mobile,hk_seed_yfinance,,22313229.3,10d_avg_volume,22313229.3,86.55000305175781
-0960.HK,Longfor Group,hk_seed_yfinance,,23471173.3,10d_avg_volume,23471173.3,8.369999885559082
-0968.HK,Xinyi Solar,hk_seed_yfinance,,57589151.7,10d_avg_volume,57589151.7,2.7300000190734863
-0981.HK,SMIC,hk_seed_yfinance,,117709459.4,10d_avg_volume,117709459.4,74.44999694824219
-0992.HK,Lenovo Group,hk_seed_yfinance,,102348806.1,10d_avg_volume,102348806.1,12.760000228881836
-1024.HK,Kuaishou Technology,hk_seed_yfinance,,82984071.9,10d_avg_volume,82984071.9,47.900001525878906
-1038.HK,CK Infrastructure Holdings,hk_seed_yfinance,,1277893.7,10d_avg_volume,1277893.7,65.19999694824219
-1044.HK,Hengan International,hk_seed_yfinance,,2605632.8,10d_avg_volume,2605632.8,26.100000381469727
-1088.HK,China Shenhua Energy,hk_seed_yfinance,,13241448.1,10d_avg_volume,13241448.1,44.58000183105469
-1093.HK,CSPC Pharmaceutical,hk_seed_yfinance,,75607254.9,10d_avg_volume,75607254.9,7.340000152587891
-1099.HK,Sinopharm Group,hk_seed_yfinance,,5891413.1,10d_avg_volume,5891413.1,17.68000030517578
-1109.HK,China Resources Land,hk_seed_yfinance,,35379619.6,10d_avg_volume,35379619.6,34.720001220703125
-1113.HK,CK Asset Holdings,hk_seed_yfinance,,4168958.1,10d_avg_volume,4168958.1,50.599998474121094
-1177.HK,Sino Biopharmaceutical,hk_seed_yfinance,,73663034.3,10d_avg_volume,73663034.3,5.179999828338623
-1209.HK,China Resources Mixc Lifestyle,hk_seed_yfinance,,2892886.0,10d_avg_volume,2892886.0,45.15999984741211
-1211.HK,BYD Company,hk_seed_yfinance,,21234887.1,10d_avg_volume,21234887.1,90.8499984741211
-1299.HK,AIA Group,hk_seed_yfinance,,25954870.3,10d_avg_volume,25954870.3,84.4000015258789
-1378.HK,China Hongqiao Group,hk_seed_yfinance,,41885558.3,10d_avg_volume,41885558.3,31.399999618530273
-1398.HK,Industrial and Commercial Bank of China,hk_seed_yfinance,,156359314.0,10d_avg_volume,156359314.0,6.840000152587891
-1810.HK,Xiaomi Corporation,hk_seed_yfinance,,116367897.2,10d_avg_volume,116367897.2,30.059999465942383
-1876.HK,Budweiser Brewing APAC,hk_seed_yfinance,,11486355.7,10d_avg_volume,11486355.7,7.260000228881836
-1928.HK,Sands China,hk_seed_yfinance,,11767322.1,10d_avg_volume,11767322.1,15.220000267028809
-1929.HK,Chow Tai Fook Jewellery,hk_seed_yfinance,,17301107.2,10d_avg_volume,17301107.2,10.90999984741211
-1997.HK,Wharf Real Estate Investment,hk_seed_yfinance,,5609976.2,10d_avg_volume,5609976.2,24.739999771118164
-2007.HK,Country Garden Holdings,hk_seed_yfinance,,256194972.3,10d_avg_volume,256194972.3,0.25
-2015.HK,Li Auto,hk_seed_yfinance,,18905608.8,10d_avg_volume,18905608.8,61.650001525878906
-2020.HK,ANTA Sports Products,hk_seed_yfinance,,7078798.6,10d_avg_volume,7078798.6,77.0
-2269.HK,Wuxi Biologics,hk_seed_yfinance,,25669624.1,10d_avg_volume,25669624.1,33.02000045776367
-2313.HK,Shenzhou International,hk_seed_yfinance,,8203128.8,10d_avg_volume,8203128.8,45.279998779296875
-2318.HK,Ping An Insurance,hk_seed_yfinance,,32845801.7,10d_avg_volume,32845801.7,60.650001525878906
-2319.HK,China Mengniu Dairy,hk_seed_yfinance,,14380555.1,10d_avg_volume,14380555.1,17.40999984741211
-2331.HK,Li Ning,hk_seed_yfinance,,14746335.7,10d_avg_volume,14746335.7,18.360000610351562
-2382.HK,Sunny Optical Technology,hk_seed_yfinance,,11228620.9,10d_avg_volume,11228620.9,62.79999923706055
-2388.HK,BOC Hong Kong Holdings,hk_seed_yfinance,,9972114.5,10d_avg_volume,9972114.5,46.97999954223633
-2628.HK,China Life Insurance,hk_seed_yfinance,,59490725.8,10d_avg_volume,59490725.8,29.040000915527344
-2688.HK,ENN Energy Holdings,hk_seed_yfinance,,3084021.9,10d_avg_volume,3084021.9,58.54999923706055
-2899.HK,Zijin Mining Group,hk_seed_yfinance,,65744173.7,10d_avg_volume,65744173.7,32.400001525878906
-3690.HK,Meituan,hk_seed_yfinance,,36588049.1,10d_avg_volume,36588049.1,83.1500015258789
-3692.HK,Hansoh Pharmaceutical,hk_seed_yfinance,,8383058.1,10d_avg_volume,8383058.1,33.540000915527344
-3968.HK,China Merchants Bank,hk_seed_yfinance,,13150682.7,10d_avg_volume,13150682.7,46.15999984741211
-3988.HK,Bank of China,hk_seed_yfinance,,195113152.6,10d_avg_volume,195113152.6,5.239999771118164
-6098.HK,Country Garden Services,hk_seed_yfinance,,6478788.4,10d_avg_volume,6478788.4,6.150000095367432
-6618.HK,JD Health International,hk_seed_yfinance,,12201180.9,10d_avg_volume,12201180.9,40.31999969482422
-6690.HK,Haier Smart Home,hk_seed_yfinance,,14243113.8,10d_avg_volume,14243113.8,20.3799991607666
-6862.HK,Haidilao International,hk_seed_yfinance,,13133066.9,10d_avg_volume,13133066.9,14.279999732971191
-9618.HK,JD.com,hk_seed_yfinance,,13300366.3,10d_avg_volume,13300366.3,127.80000305175781
-9633.HK,Nongfu Spring,hk_seed_yfinance,,6215388.7,10d_avg_volume,6215388.7,42.91999816894531
-9868.HK,Xpeng,hk_seed_yfinance,,11004657.7,10d_avg_volume,11004657.7,58.25
-9888.HK,Baidu,hk_seed_yfinance,,15076242.8,10d_avg_volume,15076242.8,135.10000610351562
-9961.HK,Trip.com Group,hk_seed_yfinance,,2001555.1,10d_avg_volume,2001555.1,378.79998779296875
-9988.HK,Alibaba Group Holding,hk_seed_yfinance,,88656550.1,10d_avg_volume,88656550.1,133.8000030517578
-9999.HK,NetEase,hk_seed_yfinance,,5534690.6,10d_avg_volume,5534690.6,178.10000610351562
+2473.HK,Xxf,hkex_yfinance,,556727327.6,10d_avg_volume,556727327.6,0.8600000143051147
+2255.HK,Haichang Hldg,hkex_yfinance,,532983500.0,10d_avg_volume,532983500.0,0.4300000071525574
+1060.HK,Damai Ent,hkex_yfinance,,375117714.6,10d_avg_volume,375117714.6,0.6499999761581421
+0020.HK,Sensetime-W,hkex_yfinance,,326037176.3,10d_avg_volume,326037176.3,1.8200000524520874
+0991.HK,Datang Power,hkex_yfinance,,315206882.4,10d_avg_volume,315206882.4,2.8299999237060547
+9993.HK,Radiance Hldgs,hkex_yfinance,,302764753.2,10d_avg_volume,302764753.2,3.049999952316284
+2007.HK,Country Garden,hkex_yfinance,,256197977.1,10d_avg_volume,256197977.1,0.2549999952316284
+3800.HK,Gcl Tech,hkex_yfinance,,220654181.0,10d_avg_volume,220654181.0,0.8500000238418579
+1918.HK,Sunac,hkex_yfinance,,197431135.7,10d_avg_volume,197431135.7,1.0099999904632568
+3988.HK,Bank Of China,hkex_yfinance,,195135672.6,10d_avg_volume,195135672.6,5.239999771118164
+0939.HK,Ccb,hkex_yfinance,,175780291.4,10d_avg_volume,175780291.4,8.760000228881836
+9660.HK,Horizonrobot-W,hkex_yfinance,,170757547.7,10d_avg_volume,170757547.7,5.760000228881836
+1398.HK,Icbc,hkex_yfinance,,156472414.0,10d_avg_volume,156472414.0,6.840000152587891
+0241.HK,Ali Health,hkex_yfinance,,143656464.4,10d_avg_volume,143656464.4,3.940000057220459
+1357.HK,Meitu,hkex_yfinance,,133021179.2,10d_avg_volume,133021179.2,4.550000190734863
+0728.HK,China Telecom,hkex_yfinance,,120337732.2,10d_avg_volume,120337732.2,5.579999923706055
+0981.HK,Smic,hkex_yfinance,,117757579.4,10d_avg_volume,117757579.4,74.4000015258789
+0857.HK,Petrochina,hkex_yfinance,,116669376.5,10d_avg_volume,116669376.5,11.239999771118164
+1810.HK,Xiaomi-W,hkex_yfinance,,116389517.2,10d_avg_volume,116389517.2,30.059999465942383
+0386.HK,Sinopec Corp,hkex_yfinance,,107517267.0,10d_avg_volume,107517267.0,4.510000228881836
+3996.HK,Ch Energy Eng,hkex_yfinance,,104968202.7,10d_avg_volume,104968202.7,1.2799999713897705
+0992.HK,Lenovo Group,hkex_yfinance,,102419006.1,10d_avg_volume,102419006.1,12.779999732971191
+6051.HK,Youzan,hkex_yfinance,,99573600.0,10d_avg_volume,99573600.0,0.11100000143051147
+2727.HK,Sh Electric,hkex_yfinance,,99449599.4,10d_avg_volume,99449599.4,5.210000038146973
+6088.HK,Fit Hon Teng,hkex_yfinance,,98913070.5,10d_avg_volume,98913070.5,8.5600004196167
+0308.HK,China Travel Hk,hkex_yfinance,,91545570.0,10d_avg_volume,91545570.0,1.2000000476837158
+1288.HK,Abc,hkex_yfinance,,90605224.1,10d_avg_volume,90605224.1,6.050000190734863
+9988.HK,Baba-W,hkex_yfinance,,88696530.1,10d_avg_volume,88696530.1,133.6999969482422
+2799.HK,Citic Famc,hkex_yfinance,,88354579.6,10d_avg_volume,88354579.6,0.6499999761581421
+0817.HK,China Jinmao,hkex_yfinance,,87106710.9,10d_avg_volume,87106710.9,1.7300000190734863
+0883.HK,Cnooc,hkex_yfinance,,86659606.0,10d_avg_volume,86659606.0,28.100000381469727
+1024.HK,Kuaishou-W,hkex_yfinance,,83002591.9,10d_avg_volume,83002591.9,47.959999084472656
+0884.HK,Cifi Hold Gp,hkex_yfinance,,78414478.1,10d_avg_volume,78414478.1,0.06800000369548798
+2477.HK,Wellcell H-New,hkex_yfinance,,75788891.8,10d_avg_volume,75788891.8,4.940000057220459
+1093.HK,Cspc Pharma,hkex_yfinance,,75671454.9,10d_avg_volume,75671454.9,7.349999904632568
+3380.HK,Logan Group,hkex_yfinance,,74642790.6,10d_avg_volume,74642790.6,1.2799999713897705
+1177.HK,Sbp Group,hkex_yfinance,,73716234.3,10d_avg_volume,73716234.3,5.190000057220459
+0136.HK,China Ruyi,hkex_yfinance,,70499099.3,10d_avg_volume,70499099.3,1.4900000095367432
+1339.HK,Picc Group,hkex_yfinance,,69706696.9,10d_avg_volume,69706696.9,5.670000076293945
+3896.HK,Kingsoft Cloud,hkex_yfinance,,69420984.6,10d_avg_volume,69420984.6,7.340000152587891
+2899.HK,Zijin Mining,hkex_yfinance,,65836773.7,10d_avg_volume,65836773.7,32.29999923706055
+2328.HK,Picc P&C,hkex_yfinance,,64983858.3,10d_avg_volume,64983858.3,15.199999809265137
+0175.HK,Geely Auto,hkex_yfinance,,63613388.3,10d_avg_volume,63613388.3,19.889999389648438
+8299.HK,Gt Gold,hkex_yfinance,,63232309.9,10d_avg_volume,63232309.9,0.4099999964237213
+6681.HK,Brainaurora-B,hkex_yfinance,,61625876.2,10d_avg_volume,61625876.2,3.609999895095825
+1359.HK,China Cinda,hkex_yfinance,,59602679.6,10d_avg_volume,59602679.6,1.090000033378601
+2628.HK,China Life,hkex_yfinance,,59509225.8,10d_avg_volume,59509225.8,29.020000457763672
+0467.HK,Unitedenergy Gp,hkex_yfinance,,58802699.8,10d_avg_volume,58802699.8,0.48500001430511475
+0968.HK,Xinyi Solar,hkex_yfinance,,57601951.7,10d_avg_volume,57601951.7,2.7300000190734863
+2600.HK,Chalco,hkex_yfinance,,54456312.2,10d_avg_volume,54456312.2,10.739999771118164
+1208.HK,Mmg,hkex_yfinance,,52821980.2,10d_avg_volume,52821980.2,8.869999885559082
+1788.HK,Guotai Junan I,hkex_yfinance,,51450112.3,10d_avg_volume,51450112.3,2.2799999713897705
+0493.HK,Gome Retail,hkex_yfinance,,51308139.0,10d_avg_volume,51308139.0,0.013000000268220901
+0182.HK,Concord Ne,hkex_yfinance,,51029230.0,10d_avg_volume,51029230.0,0.4050000011920929
+1142.HK,E&P Global,hkex_yfinance,,50854602.5,10d_avg_volume,50854602.5,0.12800000607967377
+3323.HK,Cnbm,hkex_yfinance,,50601308.0,10d_avg_volume,50601308.0,4.989999771118164
+1033.HK,Sinopec Ssc,hkex_yfinance,,50193555.7,10d_avg_volume,50193555.7,0.7599999904632568
+0688.HK,China Overseas,hkex_yfinance,,48885904.6,10d_avg_volume,48885904.6,15.729999542236328
+2013.HK,Weimob Inc,hkex_yfinance,,48413665.6,10d_avg_volume,48413665.6,1.3899999856948853
+0697.HK,Shoucheng,hkex_yfinance,,48302055.0,10d_avg_volume,48302055.0,1.7100000381469727
+6666.HK,Everg Services,hkex_yfinance,,47681905.1,10d_avg_volume,47681905.1,1.350000023841858
+2228.HK,Xtalpi,hkex_yfinance,,46919824.9,10d_avg_volume,46919824.9,7.78000020980835
+0568.HK,Shandong Molong,hkex_yfinance,,46887840.0,10d_avg_volume,46887840.0,6.300000190734863
+1164.HK,Cgn Mining,hkex_yfinance,,46367681.9,10d_avg_volume,46367681.9,3.1700000762939453
+2562.HK,Synagistics,hkex_yfinance,,46021499.6,10d_avg_volume,46021499.6,2.5
+3993.HK,Cmoc,hkex_yfinance,,45727004.1,10d_avg_volume,45727004.1,17.350000381469727
+1400.HK,Moody Tech Hldg,hkex_yfinance,,44354444.44444445,10d_avg_volume,44354444.44444445,0.019999999552965164
+0902.HK,Huaneng Power,hkex_yfinance,,43755255.2,10d_avg_volume,43755255.2,6.539999961853027
+0762.HK,China Unicom,hkex_yfinance,,43449001.9,10d_avg_volume,43449001.9,7.829999923706055
+1888.HK,Kb Laminates,hkex_yfinance,,43323908.8,10d_avg_volume,43323908.8,45.63999938964844
+1378.HK,Chinahongqiao,hkex_yfinance,,41892608.3,10d_avg_volume,41892608.3,31.440000534057617
+0390.HK,China Railway,hkex_yfinance,,40952072.0,10d_avg_volume,40952072.0,3.5299999713897705
+0650.HK,Productive Tech,hkex_yfinance,,39943544.7,10d_avg_volume,39943544.7,0.550000011920929
+1816.HK,Cgn Power,hkex_yfinance,,38758516.0,10d_avg_volume,38758516.0,3.319999933242798
+2656.HK,160 Health,hkex_yfinance,,38058181.0,10d_avg_volume,38058181.0,18.15999984741211
+0268.HK,Kingdee Int'L,hkex_yfinance,,38049770.4,10d_avg_volume,38049770.4,8.029999732971191
+1347.HK,Hua Hong Semi,hkex_yfinance,,36891029.2,10d_avg_volume,36891029.2,126.69999694824219
+9982.HK,Centralchina Mt,hkex_yfinance,,36806692.8,10d_avg_volume,36806692.8,0.1379999965429306
+3690.HK,Meituan-W,hkex_yfinance,,36599459.1,10d_avg_volume,36599459.1,83.0999984741211
+0460.HK,Sihuan Pharm,hkex_yfinance,,36335400.0,10d_avg_volume,36335400.0,1.0700000524520874
+0209.HK,Poly Xverse It,hkex_yfinance,,36070437.0,10d_avg_volume,36070437.0,0.4699999988079071
+0813.HK,Shimao Group,hkex_yfinance,,35726343.9,10d_avg_volume,35726343.9,0.13600000739097595
+0119.HK,Poly Property,hkex_yfinance,,35523348.2,10d_avg_volume,35523348.2,2.180000066757202
+1109.HK,China Res Land,hkex_yfinance,,35389619.6,10d_avg_volume,35389619.6,34.7400016784668
+2380.HK,China Power,hkex_yfinance,,34882322.3,10d_avg_volume,34882322.3,3.569999933242798
+0297.HK,Sinofert,hkex_yfinance,,33577246.9,10d_avg_volume,33577246.9,1.4600000381469727
+0918.HK,Majestic Dragon,hkex_yfinance,,33155915.0,10d_avg_volume,33155915.0,1.149999976158142
+2318.HK,Ping An,hkex_yfinance,,32851401.7,10d_avg_volume,32851401.7,60.599998474121094
+0628.HK,Tongtong Ai Soc,hkex_yfinance,,32612320.4,10d_avg_volume,32612320.4,0.5099999904632568
+6968.HK,Ganglong China,hkex_yfinance,,32472700.0,10d_avg_volume,32472700.0,0.2370000034570694
+3939.HK,Wanguo Gold Gp,hkex_yfinance,,31548781.4,10d_avg_volume,31548781.4,10.649999618530273
+0309.HK,Xh News Media,hkex_yfinance,,31000500.0,10d_avg_volume,31000500.0,0.029999999329447746
+9858.HK,Youran Dairy,hkex_yfinance,,30964778.7,10d_avg_volume,30964778.7,3.2799999713897705
+1818.HK,Zhaojin Mining,hkex_yfinance,,30839681.5,10d_avg_volume,30839681.5,21.799999237060547
+0232.HK,Con Aero Tech,hkex_yfinance,,30319227.5,10d_avg_volume,30319227.5,0.1599999964237213
+0169.HK,Wanda Hotel Dev,hkex_yfinance,,30168943.8,10d_avg_volume,30168943.8,0.11100000143051147
+3738.HK,Vobile Group,hkex_yfinance,,30140755.2,10d_avg_volume,30140755.2,2.8399999141693115
+0288.HK,Wh Group,hkex_yfinance,,30137667.1,10d_avg_volume,30137667.1,9.220000267028809
+0998.HK,Citic Bank,hkex_yfinance,,30010749.5,10d_avg_volume,30010749.5,7.739999771118164
+1171.HK,Yankuang Energy,hkex_yfinance,,29904042.3,10d_avg_volume,29904042.3,14.470000267028809
+0022.HK,Mexan,hkex_yfinance,,29784000.0,10d_avg_volume,29784000.0,0.057999998331069946
+0700.HK,Tencent,hkex_yfinance,,29217044.7,10d_avg_volume,29217044.7,457.3999938964844
+6613.HK,Lens,hkex_yfinance,,28425815.6,10d_avg_volume,28425815.6,21.219999313354492
+2208.HK,Goldwind,hkex_yfinance,,28165014.7,10d_avg_volume,28165014.7,14.729999542236328
+0653.HK,Bonjour Hold,hkex_yfinance,,27713885.0,10d_avg_volume,27713885.0,0.04399999976158142
+1988.HK,Minsheng Bank,hkex_yfinance,,26385626.7,10d_avg_volume,26385626.7,3.4800000190734863
+0588.HK,Beijing N Star,hkex_yfinance,,26344580.0,10d_avg_volume,26344580.0,0.7900000214576721
+2635.HK,Nuobikan,hkex_yfinance,,26158174.5,10d_avg_volume,26158174.5,17.700000762939453
+8279.HK,Agtech Holdings,hkex_yfinance,,26122244.2,10d_avg_volume,26122244.2,0.699999988079071
+1299.HK,Aia,hkex_yfinance,,25971230.3,10d_avg_volume,25971230.3,84.5
+1432.HK,China Shengmu,hkex_yfinance,,25855045.7,10d_avg_volume,25855045.7,0.3400000035762787
+0753.HK,Air China,hkex_yfinance,,25721511.6,10d_avg_volume,25721511.6,4.519999980926514
+2269.HK,Wuxi Bio,hkex_yfinance,,25677212.8,10d_avg_volume,25677212.8,33.02000045776367
+0826.HK,Tiangong Int'L,hkex_yfinance,,24951471.1,10d_avg_volume,24951471.1,3.559999942779541
+2587.HK,Healthyway Inc,hkex_yfinance,,24764100.0,10d_avg_volume,24764100.0,4.010000228881836
+0916.HK,China Longyuan,hkex_yfinance,,24679669.1,10d_avg_volume,24679669.1,6.5
+2722.HK,Chongqing M&E,hkex_yfinance,,24334820.9,10d_avg_volume,24334820.9,3.0199999809265137
+1117.HK,Ch Modern D,hkex_yfinance,,24033090.2,10d_avg_volume,24033090.2,1.159999966621399
+8547.HK,Pacific Legend,hkex_yfinance,,24033000.0,10d_avg_volume,24033000.0,0.164000004529953
+0354.HK,Chinasoft Int'L,hkex_yfinance,,23925591.9,10d_avg_volume,23925591.9,3.2899999618530273
+3377.HK,Sino-Ocean Gp,hkex_yfinance,,23923390.2,10d_avg_volume,23923390.2,0.07100000232458115
+1519.HK,J&T Express-W,hkex_yfinance,,23860880.0,10d_avg_volume,23860880.0,8.770000457763672
+0960.HK,Longfor Group,hkex_yfinance,,23480782.3,10d_avg_volume,23480782.3,8.369999885559082
+1341.HK,Hao Tian Intl,hkex_yfinance,,23471200.0,10d_avg_volume,23471200.0,0.019999999552965164
+1617.HK,Nanfang Comm,hkex_yfinance,,23133200.0,10d_avg_volume,23133200.0,0.6000000238418579
+2517.HK,Guoquan,hkex_yfinance,,23106192.5,10d_avg_volume,23106192.5,2.5399999618530273
+7666.HK,Metis Techbio-P,hkex_yfinance,,23078922.0,10d_avg_volume,23078922.0,17.65999984741211
+1030.HK,Seazen,hkex_yfinance,,23032359.6,10d_avg_volume,23032359.6,2.0299999713897705
+1530.HK,3Sbio,hkex_yfinance,,22812263.1,10d_avg_volume,22812263.1,19.139999389648438
+1138.HK,Cosco Ship Engy,hkex_yfinance,,22674603.4,10d_avg_volume,22674603.4,18.399999618530273
+1729.HK,Time Intercon,hkex_yfinance,,22613369.8,10d_avg_volume,22613369.8,19.420000076293945
+3330.HK,Lingbao Gold,hkex_yfinance,,22388036.7,10d_avg_volume,22388036.7,17.56999969482422
+0941.HK,China Mobile,hkex_yfinance,,22332679.3,10d_avg_volume,22332679.3,86.6500015258789
+2357.HK,Avichina,hkex_yfinance,,22051542.6,10d_avg_volume,22051542.6,3.2899999618530273
+0670.HK,China East Air,hkex_yfinance,,22043630.8,10d_avg_volume,22043630.8,3.4800000190734863
+2186.HK,Luye Pharma,hkex_yfinance,,22038614.8,10d_avg_volume,22038614.8,2.25
+1766.HK,Crrc,hkex_yfinance,,21920030.1,10d_avg_volume,21920030.1,5.25
+9992.HK,Pop Mart,hkex_yfinance,,21917066.2,10d_avg_volume,21917066.2,152.10000610351562
+7688.HK,Topnc,hkex_yfinance,,21896060.0,10d_avg_volume,21896060.0,34.959999084472656
+0433.HK,North Mining,hkex_yfinance,,21813513.7,10d_avg_volume,21813513.7,0.06400000303983688
+2202.HK,China Vanke,hkex_yfinance,,21773451.9,10d_avg_volume,21773451.9,2.859999895095825
+2050.HK,Sanhua,hkex_yfinance,,21595600.9,10d_avg_volume,21595600.9,33.5
+2338.HK,Weichai Power,hkex_yfinance,,21535572.5,10d_avg_volume,21535572.5,38.599998474121094
+1066.HK,Weigao Group,hkex_yfinance,,21497991.7,10d_avg_volume,21497991.7,3.4700000286102295
+0371.HK,Bj Ent Water,hkex_yfinance,,21300225.3,10d_avg_volume,21300225.3,2.869999885559082
+1211.HK,Byd Company,hkex_yfinance,,21244877.1,10d_avg_volume,21244877.1,90.94999694824219
+0661.HK,Cdayenonfer,hkex_yfinance,,21125785.0,10d_avg_volume,21125785.0,0.10700000077486038
+1277.HK,Kinetic Dev,hkex_yfinance,,20780124.2,10d_avg_volume,20780124.2,1.850000023841858
+1919.HK,Cosco Ship Hold,hkex_yfinance,,20774496.4,10d_avg_volume,20774496.4,15.079999923706055
+3328.HK,Bankcomm,hkex_yfinance,,20462364.7,10d_avg_volume,20462364.7,7.210000038146973
+1860.HK,Mobvista,hkex_yfinance,,19885930.7,10d_avg_volume,19885930.7,14.40999984741211
+0990.HK,Deep Source,hkex_yfinance,,19740000.0,10d_avg_volume,19740000.0,0.7300000190734863
+0604.HK,Shenzhen Invest,hkex_yfinance,,19582570.3,10d_avg_volume,19582570.3,0.8100000023841858
+1302.HK,Lifetech Sci,hkex_yfinance,,19516844.8,10d_avg_volume,19516844.8,2.049999952316284
+2233.HK,Westchinacement,hkex_yfinance,,19354586.2,10d_avg_volume,19354586.2,2.3299999237060547
+1508.HK,China Re,hkex_yfinance,,19251840.6,10d_avg_volume,19251840.6,1.25
+2858.HK,Yixin,hkex_yfinance,,19131605.5,10d_avg_volume,19131605.5,1.4800000190734863
+1953.HK,Rimbaco,hkex_yfinance,,19119000.0,10d_avg_volume,19119000.0,1.350000023841858
+6186.HK,China Feihe,hkex_yfinance,,18923824.9,10d_avg_volume,18923824.9,3.2200000286102295
+0148.HK,Kingboard Hldg,hkex_yfinance,,18919781.5,10d_avg_volume,18919781.5,55.150001525878906
+2015.HK,Li Auto-W,hkex_yfinance,,18911298.8,10d_avg_volume,18911298.8,61.650001525878906
+1114.HK,Brilliance Chi,hkex_yfinance,,18708796.1,10d_avg_volume,18708796.1,2.759999990463257
+1907.HK,China Risun Gp,hkex_yfinance,,18507200.0,10d_avg_volume,18507200.0,2.759999990463257
+1055.HK,China South Air,hkex_yfinance,,18466955.8,10d_avg_volume,18466955.8,3.700000047683716
+2238.HK,Gac Group,hkex_yfinance,,18388767.3,10d_avg_volume,18388767.3,2.5899999141693115
+0123.HK,Yuexiu Property,hkex_yfinance,,18285472.8,10d_avg_volume,18285472.8,4.329999923706055
+1635.HK,Dzug,hkex_yfinance,,18218900.0,10d_avg_volume,18218900.0,3.1500000953674316
+2701.HK,Nsing Tech,hkex_yfinance,,18210490.0,10d_avg_volume,18210490.0,15.770000457763672
+0763.HK,Zte,hkex_yfinance,,17962785.1,10d_avg_volume,17962785.1,24.479999542236328
+0117.HK,Tianli Holdings,hkex_yfinance,,17744050.0,10d_avg_volume,17744050.0,1.8700000047683716
+0580.HK,Sun.King Tech,hkex_yfinance,,17528000.0,10d_avg_volume,17528000.0,2.180000066757202
+2577.HK,Innoscience,hkex_yfinance,,17523599.3,10d_avg_volume,17523599.3,68.4000015258789
+6963.HK,Sunshine Ins,hkex_yfinance,,17505431.5,10d_avg_volume,17505431.5,3.5299999713897705
+1929.HK,Chow Tai Fook,hkex_yfinance,,17303247.2,10d_avg_volume,17303247.2,10.90999984741211
+1610.HK,Cofco Joycome,hkex_yfinance,,17157000.0,10d_avg_volume,17157000.0,1.2699999809265137
+0290.HK,Gofintech Quant,hkex_yfinance,,17108406.0,10d_avg_volume,17108406.0,8.90999984741211
+1384.HK,Deepexi Tech,hkex_yfinance,,17011478.9,10d_avg_volume,17011478.9,65.19999694824219
+1428.HK,Bright Smart,hkex_yfinance,,16993884.4,10d_avg_volume,16993884.4,10.520000457763672
+0622.HK,Oshidori,hkex_yfinance,,16982975.9,10d_avg_volume,16982975.9,2.0299999713897705
+0027.HK,Galaxy Ent,hkex_yfinance,,16942240.4,10d_avg_volume,16942240.4,32.81999969482422
+3877.HK,Cssc Shipping,hkex_yfinance,,16887100.0,10d_avg_volume,16887100.0,2.319999933242798
+3958.HK,Dfzq,hkex_yfinance,,16868489.3,10d_avg_volume,16868489.3,5.940000057220459
+0595.HK,Av Concept Hold,hkex_yfinance,,16770711.5,10d_avg_volume,16770711.5,1.4299999475479126
+6881.HK,Cgs,hkex_yfinance,,16748874.8,10d_avg_volume,16748874.8,7.889999866485596
+2866.HK,Cosco Ship Dev,hkex_yfinance,,16614114.5,10d_avg_volume,16614114.5,1.059999942779541
+3998.HK,Bosideng,hkex_yfinance,,16504116.4,10d_avg_volume,16504116.4,4.309999942779541
+3337.HK,Anton Oilfield,hkex_yfinance,,16381266.6,10d_avg_volume,16381266.6,1.0800000429153442
+1658.HK,Psbc,hkex_yfinance,,16379736.7,10d_avg_volume,16379736.7,5.039999961853027
+2949.HK,Pashun Int Rts,hkex_yfinance,,16274000.0,10d_avg_volume,16274000.0,0.017000000923871994
+1898.HK,China Coal,hkex_yfinance,,15926408.6,10d_avg_volume,15926408.6,12.920000076293945
+6869.HK,Yofc,hkex_yfinance,,15872268.7,10d_avg_volume,15872268.7,228.8000030517578
+6969.HK,Smoore Intl,hkex_yfinance,,15864277.4,10d_avg_volume,15864277.4,10.039999961853027
+0358.HK,Jiangxi Copper,hkex_yfinance,,15827727.1,10d_avg_volume,15827727.1,35.08000183105469
+1282.HK,Renze Harvest,hkex_yfinance,,15712020.0,10d_avg_volume,15712020.0,0.09099999815225601
+1258.HK,Chinfmining,hkex_yfinance,,15646304.2,10d_avg_volume,15646304.2,13.34000015258789
+1072.HK,Dongfang Elec,hkex_yfinance,,15516513.2,10d_avg_volume,15516513.2,35.7599983215332
+0788.HK,China Tower,hkex_yfinance,,15477284.8,10d_avg_volume,15477284.8,10.529999732971191
+1638.HK,Kaisa Group,hkex_yfinance,,15436697.2,10d_avg_volume,15436697.2,0.07400000095367432
+3908.HK,Cicc,hkex_yfinance,,15414637.0,10d_avg_volume,15414637.0,20.020000457763672
+0003.HK,Hk & China Gas,hkex_yfinance,,15338217.0,10d_avg_volume,15338217.0,7.320000171661377
+2343.HK,Pacific Basin,hkex_yfinance,,15228332.0,10d_avg_volume,15228332.0,3.309999942779541
+0267.HK,Citic,hkex_yfinance,,15204858.9,10d_avg_volume,15204858.9,13.020000457763672
+2231.HK,Jy Grandmark,hkex_yfinance,,15142000.0,10d_avg_volume,15142000.0,0.032999999821186066
+0836.HK,China Res Power,hkex_yfinance,,15131452.9,10d_avg_volume,15131452.9,20.200000762939453
+9888.HK,Bidu-Sw,hkex_yfinance,,15080302.8,10d_avg_volume,15080302.8,135.0
+1368.HK,Xtep Int'L,hkex_yfinance,,15022212.0,10d_avg_volume,15022212.0,4.119999885559082
+2333.HK,Gwmotor,hkex_yfinance,,14946447.7,10d_avg_volume,14946447.7,10.899999618530273
+0338.HK,Shanghai Pechem,hkex_yfinance,,14847177.7,10d_avg_volume,14847177.7,1.2100000381469727
+1787.HK,Sd Gold,hkex_yfinance,,14829392.3,10d_avg_volume,14829392.3,24.739999771118164
+2331.HK,Li Ning,hkex_yfinance,,14752435.7,10d_avg_volume,14752435.7,18.3700008392334
+1780.HK,Rongzun Int'L H,hkex_yfinance,,14744121.8,10d_avg_volume,14744121.8,2.4800000190734863
+0179.HK,Johnson Elec H,hkex_yfinance,,14685826.8,10d_avg_volume,14685826.8,25.780000686645508
+1951.HK,Jxr,hkex_yfinance,,14431950.0,10d_avg_volume,14431950.0,2.299999952316284
+0189.HK,Dongyue Group,hkex_yfinance,,14412271.2,10d_avg_volume,14412271.2,11.609999656677246
+3603.HK,Xinji Shaxi,hkex_yfinance,,14385300.0,10d_avg_volume,14385300.0,0.07800000160932541
+2319.HK,Mengniu Dairy,hkex_yfinance,,14385055.1,10d_avg_volume,14385055.1,17.399999618530273
+6690.HK,Haier Smarthome,hkex_yfinance,,14243653.8,10d_avg_volume,14243653.8,20.399999618530273
+2567.HK,Qiniu,hkex_yfinance,,14159900.0,10d_avg_volume,14159900.0,0.4300000071525574
+2618.HK,Jd Logistics,hkex_yfinance,,14128752.8,10d_avg_volume,14128752.8,13.619999885559082
+2465.HK,Lopal Tech,hkex_yfinance,,14078127.9,10d_avg_volume,14078127.9,16.600000381469727
+1618.HK,Mcc,hkex_yfinance,,13914581.7,10d_avg_volume,13914581.7,1.5099999904632568
+2668.HK,Pak Tak Int'L,hkex_yfinance,,13842000.0,10d_avg_volume,13842000.0,0.3449999988079071
+1057.HK,Zhejiang Shibao,hkex_yfinance,,13713780.0,10d_avg_volume,13713780.0,4.679999828338623
+2423.HK,Beke-W,hkex_yfinance,,13699745.8,10d_avg_volume,13699745.8,45.70000076293945
+0853.HK,Microport,hkex_yfinance,,13668568.0,10d_avg_volume,13668568.0,7.690000057220459
+0323.HK,Maanshan Iron,hkex_yfinance,,13599252.3,10d_avg_volume,13599252.3,2.180000066757202
+3900.HK,Greentown China,hkex_yfinance,,13445332.7,10d_avg_volume,13445332.7,9.850000381469727
+8529.HK,Ubot Holding,hkex_yfinance,,13425500.0,10d_avg_volume,13425500.0,0.5299999713897705
+6893.HK,Hinsang Group,hkex_yfinance,,13387400.0,10d_avg_volume,13387400.0,0.3050000071525574
+9618.HK,Jd-Sw,hkex_yfinance,,13305561.3,10d_avg_volume,13305561.3,127.80000305175781
+1088.HK,China Shenhua,hkex_yfinance,,13244498.1,10d_avg_volume,13244498.1,44.599998474121094
+1798.HK,Datang Renew,hkex_yfinance,,13240613.5,10d_avg_volume,13240613.5,1.6699999570846558
+2565.HK,Pegbio Co-B,hkex_yfinance,,13219684.9,10d_avg_volume,13219684.9,17.079999923706055
+1772.HK,Ganfenglithium,hkex_yfinance,,13210830.5,10d_avg_volume,13210830.5,70.80000305175781
+1999.HK,Man Wah Hldgs,hkex_yfinance,,13185627.2,10d_avg_volume,13185627.2,3.5899999141693115
+3968.HK,Cm Bank,hkex_yfinance,,13162282.7,10d_avg_volume,13162282.7,46.18000030517578
+6862.HK,Haidilao,hkex_yfinance,,13137766.9,10d_avg_volume,13137766.9,14.289999961853027
+8471.HK,Reach New Hldgs,hkex_yfinance,,13084000.0,10d_avg_volume,13084000.0,0.039000000804662704
+2865.HK,Drinda,hkex_yfinance,,12962927.4,10d_avg_volume,12962927.4,39.900001525878906
+0235.HK,Csc Holdings,hkex_yfinance,,12901250.0,10d_avg_volume,12901250.0,0.024000000208616257
+9688.HK,Zai Lab,hkex_yfinance,,12863497.3,10d_avg_volume,12863497.3,14.220000267028809
+2601.HK,Cpic,hkex_yfinance,,12860592.2,10d_avg_volume,12860592.2,32.34000015258789
+1003.HK,Huanxi Media,hkex_yfinance,,12787183.9,10d_avg_volume,12787183.9,0.2549999952316284
+9911.HK,Newborntown,hkex_yfinance,,12771633.4,10d_avg_volume,12771633.4,8.449999809265137
+0322.HK,Tingyi,hkex_yfinance,,12750332.0,10d_avg_volume,12750332.0,12.199999809265137
+0570.HK,Trad Chi Med,hkex_yfinance,,12675499.9,10d_avg_volume,12675499.9,1.6100000143051147
+2940.HK,Wellcell H-Old,hkex_yfinance,,12366833.0,10d_avg_volume,12366833.0,4.920000076293945
+2128.HK,China Lesso,hkex_yfinance,,12272124.1,10d_avg_volume,12272124.1,4.460000038146973
+9863.HK,Leapmotor,hkex_yfinance,,12251299.7,10d_avg_volume,12251299.7,41.86000061035156
+0815.HK,Chi Silver Gp,hkex_yfinance,,12229811.0,10d_avg_volume,12229811.0,0.4000000059604645
+6618.HK,Jd Health,hkex_yfinance,,12206800.9,10d_avg_volume,12206800.9,40.380001068115234
+1801.HK,Innovent Bio,hkex_yfinance,,12198762.2,10d_avg_volume,12198762.2,78.8499984741211
+0400.HK,Ingdan,hkex_yfinance,,12172661.5,10d_avg_volume,12172661.5,3.2899999618530273
+3698.HK,Huishang Bank,hkex_yfinance,,12141816.8,10d_avg_volume,12141816.8,5.070000171661377
+1548.HK,Genscript Bio,hkex_yfinance,,12033868.1,10d_avg_volume,12033868.1,13.050000190734863
+0326.HK,Cn Star Ent-2K,hkex_yfinance,,11949977.0,10d_avg_volume,11949977.0,6.25
+0199.HK,Itc Properties,hkex_yfinance,,11937318.9,10d_avg_volume,11937318.9,1.4900000095367432
+0880.HK,Sjm Holdings,hkex_yfinance,,11916342.5,10d_avg_volume,11916342.5,1.909999966621399
+1071.HK,Huadian Power,hkex_yfinance,,11857676.5,10d_avg_volume,11857676.5,4.389999866485596
+0147.HK,Ib Settlement,hkex_yfinance,,11846000.0,10d_avg_volume,11846000.0,0.0729999989271164
+1908.HK,C&D Intl Group,hkex_yfinance,,11828542.8,10d_avg_volume,11828542.8,15.880000114440918
+1928.HK,Sands China Ltd,hkex_yfinance,,11768162.1,10d_avg_volume,11768162.1,15.220000267028809
+0135.HK,Kunlun Energy,hkex_yfinance,,11596274.5,10d_avg_volume,11596274.5,7.5
+2631.HK,Sicc,hkex_yfinance,,11541640.8,10d_avg_volume,11541640.8,101.5
+0471.HK,Silkwave Inc,hkex_yfinance,,11530274.9,10d_avg_volume,11530274.9,0.1889999955892563
+6166.HK,Cig,hkex_yfinance,,11520288.8,10d_avg_volume,11520288.8,146.6999969482422
+1876.HK,Bud Apac,hkex_yfinance,,11494535.7,10d_avg_volume,11494535.7,7.260000228881836
+1796.HK,Metaspacex,hkex_yfinance,,11470800.0,10d_avg_volume,11470800.0,0.4350000023841858
+0596.HK,Inspur Digi Ent,hkex_yfinance,,11446888.5,10d_avg_volume,11446888.5,2.299999952316284
+0340.HK,Tongguan Gold,hkex_yfinance,,11445194.6,10d_avg_volume,11445194.6,2.319999933242798
+1115.HK,5100 Xizang,hkex_yfinance,,11342120.0,10d_avg_volume,11342120.0,0.47999998927116394
+6818.HK,Ceb Bank,hkex_yfinance,,11246639.7,10d_avg_volume,11246639.7,3.059999942779541
+2382.HK,Sunny Optical,hkex_yfinance,,11231960.9,10d_avg_volume,11231960.9,62.75
+2339.HK,Bwi Int'L,hkex_yfinance,,11201565.3,10d_avg_volume,11201565.3,7.849999904632568
+0257.HK,Eb Environment,hkex_yfinance,,11112481.6,10d_avg_volume,11112481.6,5.78000020980835
+3888.HK,Kingsoft,hkex_yfinance,,11081437.6,10d_avg_volume,11081437.6,22.020000457763672
+9868.HK,Xpeng-W,hkex_yfinance,,11005027.7,10d_avg_volume,11005027.7,58.29999923706055
+1313.HK,Cr Bldg Mat Tec,hkex_yfinance,,10995141.9,10d_avg_volume,10995141.9,1.2899999618530273
+2669.HK,China Ovs Ppt,hkex_yfinance,,10946844.6,10d_avg_volume,10946844.6,3.8299999237060547
+0220.HK,U-Presid China,hkex_yfinance,,10900800.4,10d_avg_volume,10900800.4,7.849999904632568
+6955.HK,Boan Biotech,hkex_yfinance,,10890582.8,10d_avg_volume,10890582.8,6.289999961853027
+0868.HK,Xinyi Glass,hkex_yfinance,,10809447.0,10d_avg_volume,10809447.0,10.140000343322754
+8305.HK,St Hldgs,hkex_yfinance,,10799000.0,10d_avg_volume,10799000.0,0.1850000023841858
+2591.HK,Innogen-B,hkex_yfinance,,10742620.0,10d_avg_volume,10742620.0,14.180000305175781
+0839.HK,China Edu Group,hkex_yfinance,,10736052.2,10d_avg_volume,10736052.2,2.0
+0005.HK,Hsbc Holdings,hkex_yfinance,,10689877.5,10d_avg_volume,10689877.5,138.60000610351562
+0365.HK,Sino Ict,hkex_yfinance,,10682480.0,10d_avg_volume,10682480.0,0.949999988079071
+9958.HK,Litian Pictures,hkex_yfinance,,10608600.0,10d_avg_volume,10608600.0,0.13600000739097595
+6828.HK,Bg Blue Sky,hkex_yfinance,,10524000.0,10d_avg_volume,10524000.0,0.03400000184774399
+0031.HK,China Aerospace,hkex_yfinance,,10481848.6,10d_avg_volume,10481848.6,0.5799999833106995
+6651.HK,51World,hkex_yfinance,,10447296.5,10d_avg_volume,10447296.5,82.0
+0101.HK,Hang Lung Ppt,hkex_yfinance,,10434119.3,10d_avg_volume,10434119.3,8.350000381469727
+8300.HK,Jin Mi Fang Gp,hkex_yfinance,,10432000.0,10d_avg_volume,10432000.0,0.03799999877810478
+1942.HK,Mog Digitech,hkex_yfinance,,10340800.0,10d_avg_volume,10340800.0,0.14800000190734863
+0419.HK,Hony Media,hkex_yfinance,,10297463.7,10d_avg_volume,10297463.7,0.45500001311302185
+0270.HK,Guangdong Inv,hkex_yfinance,,10278112.7,10d_avg_volume,10278112.7,8.539999961853027
+9929.HK,Sem Hldgs,hkex_yfinance,,10218000.0,10d_avg_volume,10218000.0,1.8600000143051147
+1020.HK,Ciprun Tech,hkex_yfinance,,10154800.0,10d_avg_volume,10154800.0,0.23800000548362732
+3389.HK,Hengdeli,hkex_yfinance,,10139541.8,10d_avg_volume,10139541.8,0.24699999392032623
+6196.HK,Bankofzhengzhou,hkex_yfinance,,10129050.2,10d_avg_volume,10129050.2,1.0099999904632568
+1157.HK,Zoomlion,hkex_yfinance,,10116875.7,10d_avg_volume,10116875.7,7.309999942779541
+2225.HK,Jinhai Med Tech,hkex_yfinance,,10083993.6,10d_avg_volume,10083993.6,3.740000009536743
+1070.HK,Tcl Electronics,hkex_yfinance,,10053185.8,10d_avg_volume,10053185.8,16.020000457763672
+2388.HK,Boc Hong Kong,hkex_yfinance,,9989564.5,10d_avg_volume,9989564.5,47.02000045776367
+3320.HK,Chinares Pharma,hkex_yfinance,,9984092.7,10d_avg_volume,9984092.7,4.75
+1396.HK,Gd-Hkgba Hldgs,hkex_yfinance,,9969153.7,10d_avg_volume,9969153.7,16.889999389648438
+2659.HK,Bao Pharma-B,hkex_yfinance,,9948790.0,10d_avg_volume,9948790.0,27.040000915527344
+6683.HK,Starplus Legend,hkex_yfinance,,9921675.0,10d_avg_volume,9921675.0,5.630000114440918
+6806.HK,Swhy,hkex_yfinance,,9842034.8,10d_avg_volume,9842034.8,2.7200000286102295
+2171.HK,Carsgen-B,hkex_yfinance,,9828193.1,10d_avg_volume,9828193.1,17.770000457763672
+3311.HK,China State Con,hkex_yfinance,,9767746.7,10d_avg_volume,9767746.7,9.100000381469727
+0300.HK,Midea Group,hkex_yfinance,,9763677.2,10d_avg_volume,9763677.2,90.55000305175781
+1300.HK,Trigiant,hkex_yfinance,,9742800.0,10d_avg_volume,9742800.0,2.0899999141693115
+2655.HK,Guoxia Tech,hkex_yfinance,,9739420.0,10d_avg_volume,9739420.0,27.31999969482422
+0118.HK,Cosmos Mach,hkex_yfinance,,9693600.0,10d_avg_volume,9693600.0,0.24500000476837158
+1401.HK,Future Mach Ltd,hkex_yfinance,,9662200.0,10d_avg_volume,9662200.0,0.33500000834465027
+1592.HK,Anchorstone,hkex_yfinance,,9657750.0,10d_avg_volume,9657750.0,0.3700000047683716
+1833.HK,Pa Gooddoctor,hkex_yfinance,,9650630.4,10d_avg_volume,9650630.4,9.630000114440918
+0201.HK,Magnificent,hkex_yfinance,,9647455.6,10d_avg_volume,9647455.6,0.07000000029802322
+8527.HK,Jlogo Hldgs,hkex_yfinance,,9629000.0,10d_avg_volume,9629000.0,0.10400000214576721
+2689.HK,Nd Paper,hkex_yfinance,,9618220.1,10d_avg_volume,9618220.1,5.980000019073486
+1921.HK,Dalipal Hldg,hkex_yfinance,,9529512.0,10d_avg_volume,9529512.0,3.240000009536743
+0819.HK,Tianneng Power,hkex_yfinance,,9521940.5,10d_avg_volume,9521940.5,6.079999923706055
+2155.HK,Morimatsu Intl,hkex_yfinance,,9495958.8,10d_avg_volume,9495958.8,8.420000076293945
+2611.HK,Gtht,hkex_yfinance,,9473922.7,10d_avg_volume,9473922.7,13.130000114440918
+2009.HK,Bbmg,hkex_yfinance,,9425665.2,10d_avg_volume,9425665.2,0.7200000286102295
+1316.HK,Nexteer,hkex_yfinance,,9420437.0,10d_avg_volume,9420437.0,4.679999828338623
+1735.HK,Central New Egy,hkex_yfinance,,9413100.0,10d_avg_volume,9413100.0,10.199999809265137
+0631.HK,Sany Int'L,hkex_yfinance,,9332116.0,10d_avg_volume,9332116.0,9.850000381469727
+0001.HK,Ckh Holdings,hkex_yfinance,,9321536.8,10d_avg_volume,9321536.8,71.30000305175781
+0656.HK,Fosun Intl,hkex_yfinance,,9204087.6,10d_avg_volume,9204087.6,4.039999961853027
+6060.HK,Za Online,hkex_yfinance,,9116866.3,10d_avg_volume,9116866.3,10.829999923706055
+0639.HK,Shougang Res,hkex_yfinance,,9108565.4,10d_avg_volume,9108565.4,2.5
+0914.HK,Conch Cement,hkex_yfinance,,9066994.6,10d_avg_volume,9066994.6,18.959999084472656
+2018.HK,Aac Tech,hkex_yfinance,,9049217.5,10d_avg_volume,9049217.5,42.220001220703125
+0966.HK,China Taiping,hkex_yfinance,,9035575.5,10d_avg_volume,9035575.5,20.639999389648438
+0293.HK,Cathay Pac Air,hkex_yfinance,,8952489.5,10d_avg_volume,8952489.5,11.9399995803833
+0525.HK,Guangshen Rail,hkex_yfinance,,8916189.8,10d_avg_volume,8916189.8,2.319999933242798
+2157.HK,Lepu Bio,hkex_yfinance,,8869760.0,10d_avg_volume,8869760.0,4.449999809265137
+0012.HK,Henderson Land,hkex_yfinance,,8856197.2,10d_avg_volume,8856197.2,32.2599983215332
+1797.HK,East Buy,hkex_yfinance,,8855907.5,10d_avg_volume,8855907.5,23.1200008392334
+2650.HK,Zhida Tech,hkex_yfinance,,8791380.0,10d_avg_volume,8791380.0,19.40999984741211
+1800.HK,China Comm Cons,hkex_yfinance,,8756237.5,10d_avg_volume,8756237.5,4.46999979019165
+3393.HK,Wasion Holdings,hkex_yfinance,,8670285.2,10d_avg_volume,8670285.2,25.34000015258789
+0152.HK,Shenzhen Int'L,hkex_yfinance,,8618106.2,10d_avg_volume,8618106.2,6.260000228881836
+0081.HK,Ch Ovs G Oceans,hkex_yfinance,,8605066.0,10d_avg_volume,8605066.0,2.890000104904175
+9696.HK,Tianqi Lithium,hkex_yfinance,,8549620.9,10d_avg_volume,8549620.9,54.20000076293945
+1375.HK,Cc Securities,hkex_yfinance,,8533900.0,10d_avg_volume,8533900.0,1.809999942779541
+1186.HK,China Rail Cons,hkex_yfinance,,8509123.7,10d_avg_volume,8509123.7,4.989999771118164
+0285.HK,Byd Electronic,hkex_yfinance,,8473278.1,10d_avg_volume,8473278.1,26.280000686645508
+6680.HK,Jlmag,hkex_yfinance,,8472003.6,10d_avg_volume,8472003.6,19.56999969482422
+0856.HK,Vstecs,hkex_yfinance,,8393639.7,10d_avg_volume,8393639.7,10.069999694824219
+3692.HK,Hansoh Pharma,hkex_yfinance,,8388858.1,10d_avg_volume,8388858.1,33.599998474121094
+3868.HK,Xinyi Energy,hkex_yfinance,,8324060.0,10d_avg_volume,8324060.0,1.2200000286102295
+2358.HK,Jiu Rong Hold,hkex_yfinance,,8315000.0,10d_avg_volume,8315000.0,0.012000000104308128
+6030.HK,Citic Sec,hkex_yfinance,,8308742.8,10d_avg_volume,8308742.8,25.700000762939453
+0552.HK,Chinacomservice,hkex_yfinance,,8302665.3,10d_avg_volume,8302665.3,4.400000095367432
+2313.HK,Shenzhou Intl,hkex_yfinance,,8208878.8,10d_avg_volume,8208878.8,45.31999969482422
+0068.HK,Manycore Tech,hkex_yfinance,,8202284.7,10d_avg_volume,8202284.7,19.290000915527344
+3808.HK,Sinotruk,hkex_yfinance,,8157731.0,10d_avg_volume,8157731.0,36.2400016784668
+0731.HK,C&D Newin,hkex_yfinance,,8126580.0,10d_avg_volume,8126580.0,0.5400000214576721
+3618.HK,Cqrc Bank,hkex_yfinance,,8123179.0,10d_avg_volume,8123179.0,6.769999980926514
+0909.HK,Ming Yuan Cloud,hkex_yfinance,,8099800.1,10d_avg_volume,8099800.1,2.0299999713897705
+1776.HK,Gf Sec,hkex_yfinance,,8096681.9,10d_avg_volume,8096681.9,16.200000762939453
+0956.HK,China Suntien,hkex_yfinance,,8065853.1,10d_avg_volume,8065853.1,3.5899999141693115
+1811.HK,Cgn New Energy,hkex_yfinance,,8049200.0,10d_avg_volume,8049200.0,2.700000047683716
+2665.HK,Seyond,hkex_yfinance,,8023980.0,10d_avg_volume,8023980.0,7.46999979019165
+0866.HK,China Qinfa,hkex_yfinance,,8012600.0,10d_avg_volume,8012600.0,2.450000047683716
+1762.HK,Wanka Online,hkex_yfinance,,7997025.7,10d_avg_volume,7997025.7,1.3300000429153442
+6082.HK,Biren Tech,hkex_yfinance,,7979004.7,10d_avg_volume,7979004.7,49.70000076293945
+3303.HK,Jutal Oil Ser,hkex_yfinance,,7965394.2,10d_avg_volume,7965394.2,0.5600000023841858
+1348.HK,Quali-Smart,hkex_yfinance,,7953600.0,10d_avg_volume,7953600.0,0.36000001430511475
+6162.HK,Tr Interiors,hkex_yfinance,,7913800.0,10d_avg_volume,7913800.0,0.2849999964237213
+3898.HK,Times Electric,hkex_yfinance,,7839324.3,10d_avg_volume,7839324.3,40.02000045776367
+2342.HK,Comba,hkex_yfinance,,7815162.0,10d_avg_volume,7815162.0,1.3899999856948853
+1336.HK,Nci,hkex_yfinance,,7788347.6,10d_avg_volume,7788347.6,47.540000915527344
+1147.HK,Edensoft,hkex_yfinance,,7784000.0,10d_avg_volume,7784000.0,0.14100000262260437
+0894.HK,Man Yue Tech,hkex_yfinance,,7728200.0,10d_avg_volume,7728200.0,1.399999976158142
+3678.HK,Holly Futures,hkex_yfinance,,7718346.5,10d_avg_volume,7718346.5,2.6500000953674316
+1091.HK,South Manganese,hkex_yfinance,,7710070.4,10d_avg_volume,7710070.4,0.5299999713897705
+0347.HK,Angang Steel,hkex_yfinance,,7698100.3,10d_avg_volume,7698100.3,1.340000033378601
+0384.HK,China Gas Hold,hkex_yfinance,,7646034.4,10d_avg_volume,7646034.4,7.46999979019165
+0553.HK,Nanjing Panda,hkex_yfinance,,7613389.0,10d_avg_volume,7613389.0,4.53000020980835
+9969.HK,Innocare,hkex_yfinance,,7571758.2,10d_avg_volume,7571758.2,11.859999656677246
+0165.HK,China Eb Ltd,hkex_yfinance,,7564814.7,10d_avg_volume,7564814.7,6.860000133514404
+1815.HK,Everest Gold,hkex_yfinance,,7535749.6,10d_avg_volume,7535749.6,0.8600000143051147
+1133.HK,Harbin Electric,hkex_yfinance,,7530684.1,10d_avg_volume,7530684.1,22.100000381469727
+0381.HK,Aom Int'L,hkex_yfinance,,7492197.0,10d_avg_volume,7492197.0,0.12700000405311584
+6693.HK,Chifeng Gold,hkex_yfinance,,7488194.5,10d_avg_volume,7488194.5,32.939998626708984
+1630.HK,Kin Shing Hldgs,hkex_yfinance,,7475400.0,10d_avg_volume,7475400.0,0.375
+2556.HK,Marketingforce,hkex_yfinance,,7466990.0,10d_avg_volume,7466990.0,42.040000915527344
+0008.HK,Pccw,hkex_yfinance,,7421579.2,10d_avg_volume,7421579.2,6.099999904632568
+2883.HK,China Oilfield,hkex_yfinance,,7414661.3,10d_avg_volume,7414661.3,8.630000114440918
+0717.HK,Emperor Capital,hkex_yfinance,,7406700.8,10d_avg_volume,7406700.8,0.08699999749660492
+2616.HK,Cstone Pharma-B,hkex_yfinance,,7398364.6,10d_avg_volume,7398364.6,7.679999828338623
+2498.HK,Robosense,hkex_yfinance,,7396129.3,10d_avg_volume,7396129.3,30.459999084472656
+2016.HK,Czbank,hkex_yfinance,,7385462.3,10d_avg_volume,7385462.3,2.4200000762939453
+3360.HK,Fe Horizon,hkex_yfinance,,7351901.2,10d_avg_volume,7351901.2,7.380000114440918
+2788.HK,Chuangxin Ind,hkex_yfinance,,7335436.7,10d_avg_volume,7335436.7,20.860000610351562
+1773.HK,Tianli Int Hldg,hkex_yfinance,,7279700.0,10d_avg_volume,7279700.0,1.5800000429153442
+1910.HK,Samsonite,hkex_yfinance,,7250232.5,10d_avg_volume,7250232.5,14.489999771118164
+0576.HK,Zhejiangexpress,hkex_yfinance,,7219697.6,10d_avg_volume,7219697.6,6.559999942779541
+1413.HK,Feg Holdings,hkex_yfinance,,7209100.0,10d_avg_volume,7209100.0,0.20200000703334808
+0291.HK,China Res Beer,hkex_yfinance,,7176661.1,10d_avg_volume,7176661.1,26.440000534057617
+6886.HK,Htsc,hkex_yfinance,,7171428.4,10d_avg_volume,7171428.4,15.710000038146973
+9880.HK,Ubtech Robotics,hkex_yfinance,,7139296.0,10d_avg_volume,7139296.0,109.0
+0017.HK,New World Dev,hkex_yfinance,,7097886.1,10d_avg_volume,7097886.1,8.34000015258789
+1686.HK,Sunevision,hkex_yfinance,,7094599.2,10d_avg_volume,7094599.2,6.420000076293945
+2020.HK,Anta Sports,hkex_yfinance,,7080821.6,10d_avg_volume,7080821.6,76.94999694824219
+3336.HK,Ju Teng Intl,hkex_yfinance,,7050917.0,10d_avg_volume,7050917.0,2.9800000190734863
+0151.HK,Want Want China,hkex_yfinance,,7030854.9,10d_avg_volume,7030854.9,4.050000190734863
+0361.HK,Hanfort Dev H,hkex_yfinance,,7030000.0,10d_avg_volume,7030000.0,0.054999999701976776
+6823.HK,Hkt-Ss,hkex_yfinance,,6982493.1,10d_avg_volume,6982493.1,12.6899995803833
+1765.HK,Xj Intl Hldgs,hkex_yfinance,,6854500.0,10d_avg_volume,6854500.0,0.1550000011920929
+0881.HK,Zhongsheng Hldg,hkex_yfinance,,6815981.5,10d_avg_volume,6815981.5,6.440000057220459
+1152.HK,Momentum Fin,hkex_yfinance,,6785200.0,10d_avg_volume,6785200.0,0.25999999046325684
+1478.HK,Q Tech,hkex_yfinance,,6784099.1,10d_avg_volume,6784099.1,8.710000038146973
+0585.HK,Imagi Int'L,hkex_yfinance,,6753222.2,10d_avg_volume,6753222.2,3.180000066757202
+1854.HK,China Wantian,hkex_yfinance,,6751111.111111111,10d_avg_volume,6751111.111111111,1.0499999523162842
+0931.HK,China Hk Power,hkex_yfinance,,6745115.2,10d_avg_volume,6745115.2,0.375
+3983.HK,China Bluechem,hkex_yfinance,,6738907.4,10d_avg_volume,6738907.4,2.5
+1385.HK,Shanghai Fudan,hkex_yfinance,,6725633.5,10d_avg_volume,6725633.5,37.119998931884766
+1709.HK,Dl Holdings Gp,hkex_yfinance,,6724100.0,10d_avg_volume,6724100.0,1.100000023841858
+9926.HK,Akeso,hkex_yfinance,,6719217.0,10d_avg_volume,6719217.0,113.0
+0586.HK,Conch Venture,hkex_yfinance,,6682684.7,10d_avg_volume,6682684.7,10.800000190734863
+1205.HK,Citic Resources,hkex_yfinance,,6668757.0,10d_avg_volume,6668757.0,0.5799999833106995
+2158.HK,Yidu Tech,hkex_yfinance,,6586560.0,10d_avg_volume,6586560.0,5.380000114440918
+3700.HK,Inkeverse,hkex_yfinance,,6584000.0,10d_avg_volume,6584000.0,1.0099999904632568
+2535.HK,Wk Group,hkex_yfinance,,6581000.0,10d_avg_volume,6581000.0,0.5699999928474426
+0780.HK,Tongchengtravel,hkex_yfinance,,6570426.1,10d_avg_volume,6570426.1,16.139999389648438
+3396.HK,Legendholding,hkex_yfinance,,6549860.8,10d_avg_volume,6549860.8,9.949999809265137
+3933.HK,United Lab,hkex_yfinance,,6549805.5,10d_avg_volume,6549805.5,8.880000114440918
+1676.HK,Gaodi Holdings,hkex_yfinance,,6545600.0,10d_avg_volume,6545600.0,0.21199999749660492
+1660.HK,Seven Elements,hkex_yfinance,,6536800.0,10d_avg_volume,6536800.0,0.30000001192092896
+1045.HK,Apt Satellite,hkex_yfinance,,6505773.8,10d_avg_volume,6505773.8,3.2799999713897705
+6098.HK,Cg Services,hkex_yfinance,,6480788.4,10d_avg_volume,6480788.4,6.179999828338623
+3319.HK,A-Living,hkex_yfinance,,6476828.9,10d_avg_volume,6476828.9,2.549999952316284
+2418.HK,Deewin,hkex_yfinance,,6476400.0,10d_avg_volume,6476400.0,3.9700000286102295
+1873.HK,Viva Biotech,hkex_yfinance,,6400650.0,10d_avg_volume,6400650.0,1.4199999570846558
+6865.HK,Flat Glass,hkex_yfinance,,6355664.3,10d_avg_volume,6355664.3,7.940000057220459
+0669.HK,Techtronic Ind,hkex_yfinance,,6329504.0,10d_avg_volume,6329504.0,115.30000305175781
+0809.HK,Global Bio-Chem,hkex_yfinance,,6280000.0,10d_avg_volume,6280000.0,0.06400000303983688
+8193.HK,Asiapac Fin Inv,hkex_yfinance,,6274200.0,10d_avg_volume,6274200.0,0.33500000834465027
+0917.HK,Qunabox Group,hkex_yfinance,,6262100.0,10d_avg_volume,6262100.0,13.550000190734863
+2039.HK,Cimc,hkex_yfinance,,6252132.5,10d_avg_volume,6252132.5,9.40999984741211
+9633.HK,Nongfu Spring,hkex_yfinance,,6217988.7,10d_avg_volume,6217988.7,42.880001068115234
+6031.HK,Sany Heavy Ind,hkex_yfinance,,6209803.4,10d_avg_volume,6209803.4,21.079999923706055
+6676.HK,Zg Group-W,hkex_yfinance,,6118393.0,10d_avg_volume,6118393.0,1.0399999618530273
+2096.HK,Simcere Pharma,hkex_yfinance,,6111905.3,10d_avg_volume,6111905.3,10.670000076293945
+0177.HK,Jiangsu Express,hkex_yfinance,,6097225.9,10d_avg_volume,6097225.9,10.399999618530273
+0521.HK,Cwt Int'L,hkex_yfinance,,6084450.0,10d_avg_volume,6084450.0,0.25
+0376.HK,Yunfeng Fin,hkex_yfinance,,6082568.5,10d_avg_volume,6082568.5,2.2200000286102295
+2259.HK,Zijin Gold Intl,hkex_yfinance,,6032872.6,10d_avg_volume,6032872.6,137.89999389648438
+0632.HK,Chk Oil,hkex_yfinance,,6028128.0,10d_avg_volume,6028128.0,0.23399999737739563
+3339.HK,Lonking,hkex_yfinance,,6014407.2,10d_avg_volume,6014407.2,3.009999990463257
+1979.HK,Ten Pao Group,hkex_yfinance,,5983200.0,10d_avg_volume,5983200.0,2.940000057220459
+0667.HK,China East Edu,hkex_yfinance,,5971750.0,10d_avg_volume,5971750.0,4.960000038146973
+8128.HK,Chyy Gp,hkex_yfinance,,5970666.666666667,10d_avg_volume,5970666.666666667,0.03500000014901161
+2521.HK,Shenghui Clean,hkex_yfinance,,5963250.0,10d_avg_volume,5963250.0,1.1399999856948853
+6603.HK,Ifbh,hkex_yfinance,,5961349.5,10d_avg_volume,5961349.5,9.569999694824219
+8176.HK,Superrobotics,hkex_yfinance,,5960500.0,10d_avg_volume,5960500.0,0.017000000923871994
+1528.HK,Rs Macalline,hkex_yfinance,,5957553.2,10d_avg_volume,5957553.2,1.350000023841858
+1958.HK,Baic Motor,hkex_yfinance,,5951545.1,10d_avg_volume,5951545.1,1.2200000286102295
+6682.HK,Phancy,hkex_yfinance,,5951453.2,10d_avg_volume,5951453.2,31.959999084472656
+0512.HK,Grand Pharma,hkex_yfinance,,5945069.6,10d_avg_volume,5945069.6,5.579999923706055
+0621.HK,Taung Gold,hkex_yfinance,,5941100.0,10d_avg_volume,5941100.0,0.48500001430511475
+0425.HK,Minth Group,hkex_yfinance,,5935323.4,10d_avg_volume,5935323.4,36.439998626708984
+2715.HK,Estun,hkex_yfinance,,5917975.0,10d_avg_volume,5917975.0,14.420000076293945
+3833.HK,Xinxin Mining,hkex_yfinance,,5917815.8,10d_avg_volume,5917815.8,2.1700000762939453
+0887.HK,Emperor Watch&J,hkex_yfinance,,5898395.0,10d_avg_volume,5898395.0,0.2849999964237213
+1099.HK,Sinopharm,hkex_yfinance,,5892133.1,10d_avg_volume,5892133.1,17.670000076293945
+0579.HK,Jncec,hkex_yfinance,,5876510.3,10d_avg_volume,5876510.3,2.200000047683716
+2198.HK,China Sanjiang,hkex_yfinance,,5860585.6,10d_avg_volume,5860585.6,4.880000114440918
+6099.HK,Cmsc,hkex_yfinance,,5837777.4,10d_avg_volume,5837777.4,14.970000267028809
+0565.HK,Art Group Hold,hkex_yfinance,,5806000.0,10d_avg_volume,5806000.0,2.8499999046325684
+1050.HK,Karrie Int'L,hkex_yfinance,,5792956.4,10d_avg_volume,5792956.4,2.799999952316284
+1585.HK,Yadea,hkex_yfinance,,5772348.2,10d_avg_volume,5772348.2,11.75
+1361.HK,361 Degrees,hkex_yfinance,,5741851.5,10d_avg_volume,5741851.5,5.070000171661377
+0083.HK,Sino Land,hkex_yfinance,,5717465.1,10d_avg_volume,5717465.1,12.359999656677246
+0598.HK,Sinotrans,hkex_yfinance,,5712788.1,10d_avg_volume,5712788.1,4.949999809265137
+1516.HK,Sunac Services,hkex_yfinance,,5702195.9,10d_avg_volume,5702195.9,1.0299999713897705
+8400.HK,Asia Pioneer,hkex_yfinance,,5699001.0,10d_avg_volume,5699001.0,0.1080000028014183
+2178.HK,Petro-King,hkex_yfinance,,5696900.0,10d_avg_volume,5696900.0,0.23499999940395355
+1278.HK,Chinanewtown,hkex_yfinance,,5664319.0,10d_avg_volume,5664319.0,0.07900000363588333
+2590.HK,Geekplus-W,hkex_yfinance,,5652259.7,10d_avg_volume,5652259.7,17.110000610351562
+2609.HK,Bayzed Health,hkex_yfinance,,5645539.8,10d_avg_volume,5645539.8,5.090000152587891
+1783.HK,Envision Green,hkex_yfinance,,5621500.0,10d_avg_volume,5621500.0,3.119999885559082
+1997.HK,Wharf Reic,hkex_yfinance,,5610376.2,10d_avg_volume,5610376.2,24.739999771118164
+6871.HK,Robotphoenix,hkex_yfinance,,5596211.666666667,10d_avg_volume,5596211.666666667,41.70000076293945
+0013.HK,Hutchmed,hkex_yfinance,,5558134.1,10d_avg_volume,5558134.1,18.56999969482422
+3329.HK,Bocom Intl,hkex_yfinance,,5537255.3,10d_avg_volume,5537255.3,0.47999998927116394
+1720.HK,Putian Comm,hkex_yfinance,,5534800.0,10d_avg_volume,5534800.0,0.5099999904632568
+9999.HK,Ntes-S,hkex_yfinance,,5534790.6,10d_avg_volume,5534790.6,178.10000610351562
+1511.HK,Uisee Tech,hkex_yfinance,,5521050.0,10d_avg_volume,5521050.0,58.5
+1364.HK,Guming,hkex_yfinance,,5497157.8,10d_avg_volume,5497157.8,22.260000228881836
+1128.HK,Wynn Macau,hkex_yfinance,,5447907.6,10d_avg_volume,5447907.6,5.630000114440918
+0679.HK,Asia Tele-Net,hkex_yfinance,,5426540.0,10d_avg_volume,5426540.0,12.8100004196167
+3677.HK,Zenergy,hkex_yfinance,,5397086.3,10d_avg_volume,5397086.3,7.360000133514404
+1803.HK,Bj Sports & Ent,hkex_yfinance,,5380500.0,10d_avg_volume,5380500.0,0.07500000298023224
+0066.HK,Mtr Corporation,hkex_yfinance,,5348761.1,10d_avg_volume,5348761.1,33.15999984741211
