@@ -15,6 +15,10 @@ on:
         description: "Minimum 10-day average volume"
         required: true
         default: "500000"
+      source:
+        description: "HK candidate source: hkex or seed"
+        required: true
+        default: "hkex"
 
 permissions:
   contents: write
@@ -37,6 +41,7 @@ jobs:
           HK_UNIVERSE_LIMIT: ${{ github.event.inputs.limit }}
           HK_MIN_MARKET_CAP: ${{ github.event.inputs.min_market_cap }}
           HK_MIN_LIQUIDITY_VOLUME: ${{ github.event.inputs.min_liquidity_volume }}
+          HK_UNIVERSE_SOURCE: ${{ github.event.inputs.source }}
         run: python src/update_hk_universe.py
 
       - name: Upload HK universe artifact

@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.5.6
+# MOS Radar：安全边际雷达 V6.5.7
 
 MOS Radar 目前支持美股和港股两套独立扫描通道。V6.5.2 起，自动任务改为每个交易日盘前各完整扫描一次并发送邮件：美股盘前一次，港股盘前一次。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
@@ -16,6 +16,7 @@ MOS Radar 目前支持美股和港股两套独立扫描通道。V6.5.2 起，自
 - 如果 `data/hk_universe.csv` 被更新成空文件，扫描会自动回退到 `data/hk_universe_seed.csv`，避免发送空报告
 - 如果 Yahoo 对某个港股返回缺价/疑似退市，系统会静默跳过该 ticker，避免 Action 日志被 404 和 failed download 刷屏
 - 港股报告使用 `HK$` 显示股价和每股估值，行业、估值法、模型状态和风险理由统一转成中文展示，避免把内部英文枚举发到邮件里
+- 港股股票池更新默认从 HKEX 官方证券清单读取普通股候选，再用 Yahoo 10日均量和价格验证；如果 HKEX 下载失败，才回退到 85 家种子池
 - 港股股票池更新默认最小市值为 5亿报价货币；如果 Yahoo 缺少港股市值，系统不会把该股票直接删除，而是按价格和10日平均成交量先保留，市值只作为排序和可用时的过滤条件
 
 ## 安全边际公式
@@ -269,8 +270,9 @@ GitHub Actions → `MOS Radar - HK - Update Universe` → `Run workflow`
 
 ```text
 limit = 120
-min_market_cap = 5000000000
+min_market_cap = 500000000
 min_liquidity_volume = 500000
+source = hkex
 ```
 
 输出 artifact：
@@ -350,7 +352,7 @@ mos-radar-hk-historical-YYYY-MM-DD
 
 ## 重要提醒
 
-1. V6.5.6 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.5.7 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。
