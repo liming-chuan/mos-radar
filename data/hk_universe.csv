@@ -1,86 +1,85 @@
 ticker,name,source,market_cap,liquidity_volume,volume_source,avg_volume,last_price
-0001.HK,CK Hutchison Holdings,hk_seed,,,,,
-0002.HK,CLP Holdings,hk_seed,,,,,
-0003.HK,Hong Kong and China Gas,hk_seed,,,,,
-0005.HK,HSBC Holdings,hk_seed,,,,,
-0006.HK,Power Assets Holdings,hk_seed,,,,,
-0011.HK,Hang Seng Bank,hk_seed,,,,,
-0012.HK,Henderson Land Development,hk_seed,,,,,
-0016.HK,Sun Hung Kai Properties,hk_seed,,,,,
-0017.HK,New World Development,hk_seed,,,,,
-0027.HK,Galaxy Entertainment,hk_seed,,,,,
-0066.HK,MTR Corporation,hk_seed,,,,,
-0101.HK,Hang Lung Properties,hk_seed,,,,,
-0175.HK,Geely Automobile,hk_seed,,,,,
-0241.HK,Alibaba Health Information Technology,hk_seed,,,,,
-0267.HK,CITIC Limited,hk_seed,,,,,
-0268.HK,Kingdee International Software,hk_seed,,,,,
-0285.HK,BYD Electronic,hk_seed,,,,,
-0288.HK,WH Group,hk_seed,,,,,
-0291.HK,China Resources Beer,hk_seed,,,,,
-0316.HK,Orient Overseas International,hk_seed,,,,,
-0386.HK,China Petroleum and Chemical,hk_seed,,,,,
-0388.HK,Hong Kong Exchanges and Clearing,hk_seed,,,,,
-0669.HK,Techtronic Industries,hk_seed,,,,,
-0688.HK,China Overseas Land and Investment,hk_seed,,,,,
-0700.HK,Tencent Holdings,hk_seed,,,,,
-0762.HK,China Unicom Hong Kong,hk_seed,,,,,
-0823.HK,Link REIT,hk_seed,,,,,
-0836.HK,China Resources Power,hk_seed,,,,,
-0857.HK,PetroChina,hk_seed,,,,,
-0868.HK,Xinyi Glass,hk_seed,,,,,
-0881.HK,Zhongsheng Group,hk_seed,,,,,
-0883.HK,CNOOC,hk_seed,,,,,
-0939.HK,China Construction Bank,hk_seed,,,,,
-0941.HK,China Mobile,hk_seed,,,,,
-0960.HK,Longfor Group,hk_seed,,,,,
-0968.HK,Xinyi Solar,hk_seed,,,,,
-0981.HK,SMIC,hk_seed,,,,,
-0992.HK,Lenovo Group,hk_seed,,,,,
-1024.HK,Kuaishou Technology,hk_seed,,,,,
-1038.HK,CK Infrastructure Holdings,hk_seed,,,,,
-1044.HK,Hengan International,hk_seed,,,,,
-1088.HK,China Shenhua Energy,hk_seed,,,,,
-1093.HK,CSPC Pharmaceutical,hk_seed,,,,,
-1099.HK,Sinopharm Group,hk_seed,,,,,
-1109.HK,China Resources Land,hk_seed,,,,,
-1113.HK,CK Asset Holdings,hk_seed,,,,,
-1177.HK,Sino Biopharmaceutical,hk_seed,,,,,
-1209.HK,China Resources Mixc Lifestyle,hk_seed,,,,,
-1211.HK,BYD Company,hk_seed,,,,,
-1299.HK,AIA Group,hk_seed,,,,,
-1378.HK,China Hongqiao Group,hk_seed,,,,,
-1398.HK,Industrial and Commercial Bank of China,hk_seed,,,,,
-1810.HK,Xiaomi Corporation,hk_seed,,,,,
-1876.HK,Budweiser Brewing APAC,hk_seed,,,,,
-1928.HK,Sands China,hk_seed,,,,,
-1929.HK,Chow Tai Fook Jewellery,hk_seed,,,,,
-1997.HK,Wharf Real Estate Investment,hk_seed,,,,,
-2007.HK,Country Garden Holdings,hk_seed,,,,,
-2015.HK,Li Auto,hk_seed,,,,,
-2020.HK,ANTA Sports Products,hk_seed,,,,,
-2269.HK,Wuxi Biologics,hk_seed,,,,,
-2313.HK,Shenzhou International,hk_seed,,,,,
-2318.HK,Ping An Insurance,hk_seed,,,,,
-2319.HK,China Mengniu Dairy,hk_seed,,,,,
-2331.HK,Li Ning,hk_seed,,,,,
-2382.HK,Sunny Optical Technology,hk_seed,,,,,
-2388.HK,BOC Hong Kong Holdings,hk_seed,,,,,
-2628.HK,China Life Insurance,hk_seed,,,,,
-2688.HK,ENN Energy Holdings,hk_seed,,,,,
-2899.HK,Zijin Mining Group,hk_seed,,,,,
-3690.HK,Meituan,hk_seed,,,,,
-3692.HK,Hansoh Pharmaceutical,hk_seed,,,,,
-3968.HK,China Merchants Bank,hk_seed,,,,,
-3988.HK,Bank of China,hk_seed,,,,,
-6098.HK,Country Garden Services,hk_seed,,,,,
-6618.HK,JD Health International,hk_seed,,,,,
-6690.HK,Haier Smart Home,hk_seed,,,,,
-6862.HK,Haidilao International,hk_seed,,,,,
-9618.HK,JD.com,hk_seed,,,,,
-9633.HK,Nongfu Spring,hk_seed,,,,,
-9868.HK,Xpeng,hk_seed,,,,,
-9888.HK,Baidu,hk_seed,,,,,
-9961.HK,Trip.com Group,hk_seed,,,,,
-9988.HK,Alibaba Group Holding,hk_seed,,,,,
-9999.HK,NetEase,hk_seed,,,,,
+0001.HK,CK Hutchison Holdings,hk_seed_yfinance,,9318736.8,10d_avg_volume,9318736.8,71.19999694824219
+0002.HK,CLP Holdings,hk_seed_yfinance,,2865924.5,10d_avg_volume,2865924.5,75.3499984741211
+0003.HK,Hong Kong and China Gas,hk_seed_yfinance,,15326517.0,10d_avg_volume,15326517.0,7.329999923706055
+0005.HK,HSBC Holdings,hk_seed_yfinance,,10687876.0,10d_avg_volume,10687876.0,138.60000610351562
+0006.HK,Power Assets Holdings,hk_seed_yfinance,,2867708.9,10d_avg_volume,2867708.9,64.9000015258789
+0012.HK,Henderson Land Development,hk_seed_yfinance,,8853797.2,10d_avg_volume,8853797.2,32.2599983215332
+0016.HK,Sun Hung Kai Properties,hk_seed_yfinance,,4911295.1,10d_avg_volume,4911295.1,135.89999389648438
+0017.HK,New World Development,hk_seed_yfinance,,7096086.1,10d_avg_volume,7096086.1,8.329999923706055
+0027.HK,Galaxy Entertainment,hk_seed_yfinance,,16939940.4,10d_avg_volume,16939940.4,32.79999923706055
+0066.HK,MTR Corporation,hk_seed_yfinance,,5343643.6,10d_avg_volume,5343643.6,33.15999984741211
+0101.HK,Hang Lung Properties,hk_seed_yfinance,,10430419.3,10d_avg_volume,10430419.3,8.350000381469727
+0175.HK,Geely Automobile,hk_seed_yfinance,,63592688.3,10d_avg_volume,63592688.3,19.899999618530273
+0241.HK,Alibaba Health Information Technology,hk_seed_yfinance,,143641864.4,10d_avg_volume,143641864.4,3.930000066757202
+0267.HK,CITIC Limited,hk_seed_yfinance,,15198658.9,10d_avg_volume,15198658.9,13.020000457763672
+0268.HK,Kingdee International Software,hk_seed_yfinance,,38037270.4,10d_avg_volume,38037270.4,8.0
+0285.HK,BYD Electronic,hk_seed_yfinance,,8457128.1,10d_avg_volume,8457128.1,26.299999237060547
+0288.HK,WH Group,hk_seed_yfinance,,30135867.1,10d_avg_volume,30135867.1,9.220000267028809
+0291.HK,China Resources Beer,hk_seed_yfinance,,7169461.1,10d_avg_volume,7169461.1,26.479999542236328
+0316.HK,Orient Overseas International,hk_seed_yfinance,,909310.5,10d_avg_volume,909310.5,142.8000030517578
+0386.HK,China Petroleum and Chemical,hk_seed_yfinance,,107493267.0,10d_avg_volume,107493267.0,4.5
+0388.HK,Hong Kong Exchanges and Clearing,hk_seed_yfinance,,3620844.9,10d_avg_volume,3620844.9,410.3999938964844
+0669.HK,Techtronic Industries,hk_seed_yfinance,,6327454.0,10d_avg_volume,6327454.0,114.9000015258789
+0688.HK,China Overseas Land and Investment,hk_seed_yfinance,,48873254.6,10d_avg_volume,48873254.6,15.75
+0700.HK,Tencent Holdings,hk_seed_yfinance,,29202541.5,10d_avg_volume,29202541.5,458.6000061035156
+0762.HK,China Unicom Hong Kong,hk_seed_yfinance,,43440601.9,10d_avg_volume,43440601.9,7.840000152587891
+0823.HK,Link REIT,hk_seed_yfinance,,10332131.6,10d_avg_volume,10332131.6,40.84000015258789
+0836.HK,China Resources Power,hk_seed_yfinance,,15127452.9,10d_avg_volume,15127452.9,20.219999313354492
+0857.HK,PetroChina,hk_seed_yfinance,,116647376.5,10d_avg_volume,116647376.5,11.220000267028809
+0868.HK,Xinyi Glass,hk_seed_yfinance,,10806147.0,10d_avg_volume,10806147.0,10.149999618530273
+0881.HK,Zhongsheng Group,hk_seed_yfinance,,6813481.5,10d_avg_volume,6813481.5,6.440000057220459
+0883.HK,CNOOC,hk_seed_yfinance,,86621906.0,10d_avg_volume,86621906.0,28.100000381469727
+0939.HK,China Construction Bank,hk_seed_yfinance,,175742191.4,10d_avg_volume,175742191.4,8.760000228881836
+0941.HK,China Mobile,hk_seed_yfinance,,22313229.3,10d_avg_volume,22313229.3,86.55000305175781
+0960.HK,Longfor Group,hk_seed_yfinance,,23471173.3,10d_avg_volume,23471173.3,8.369999885559082
+0968.HK,Xinyi Solar,hk_seed_yfinance,,57589151.7,10d_avg_volume,57589151.7,2.7300000190734863
+0981.HK,SMIC,hk_seed_yfinance,,117709459.4,10d_avg_volume,117709459.4,74.44999694824219
+0992.HK,Lenovo Group,hk_seed_yfinance,,102348806.1,10d_avg_volume,102348806.1,12.760000228881836
+1024.HK,Kuaishou Technology,hk_seed_yfinance,,82984071.9,10d_avg_volume,82984071.9,47.900001525878906
+1038.HK,CK Infrastructure Holdings,hk_seed_yfinance,,1277893.7,10d_avg_volume,1277893.7,65.19999694824219
+1044.HK,Hengan International,hk_seed_yfinance,,2605632.8,10d_avg_volume,2605632.8,26.100000381469727
+1088.HK,China Shenhua Energy,hk_seed_yfinance,,13241448.1,10d_avg_volume,13241448.1,44.58000183105469
+1093.HK,CSPC Pharmaceutical,hk_seed_yfinance,,75607254.9,10d_avg_volume,75607254.9,7.340000152587891
+1099.HK,Sinopharm Group,hk_seed_yfinance,,5891413.1,10d_avg_volume,5891413.1,17.68000030517578
+1109.HK,China Resources Land,hk_seed_yfinance,,35379619.6,10d_avg_volume,35379619.6,34.720001220703125
+1113.HK,CK Asset Holdings,hk_seed_yfinance,,4168958.1,10d_avg_volume,4168958.1,50.599998474121094
+1177.HK,Sino Biopharmaceutical,hk_seed_yfinance,,73663034.3,10d_avg_volume,73663034.3,5.179999828338623
+1209.HK,China Resources Mixc Lifestyle,hk_seed_yfinance,,2892886.0,10d_avg_volume,2892886.0,45.15999984741211
+1211.HK,BYD Company,hk_seed_yfinance,,21234887.1,10d_avg_volume,21234887.1,90.8499984741211
+1299.HK,AIA Group,hk_seed_yfinance,,25954870.3,10d_avg_volume,25954870.3,84.4000015258789
+1378.HK,China Hongqiao Group,hk_seed_yfinance,,41885558.3,10d_avg_volume,41885558.3,31.399999618530273
+1398.HK,Industrial and Commercial Bank of China,hk_seed_yfinance,,156359314.0,10d_avg_volume,156359314.0,6.840000152587891
+1810.HK,Xiaomi Corporation,hk_seed_yfinance,,116367897.2,10d_avg_volume,116367897.2,30.059999465942383
+1876.HK,Budweiser Brewing APAC,hk_seed_yfinance,,11486355.7,10d_avg_volume,11486355.7,7.260000228881836
+1928.HK,Sands China,hk_seed_yfinance,,11767322.1,10d_avg_volume,11767322.1,15.220000267028809
+1929.HK,Chow Tai Fook Jewellery,hk_seed_yfinance,,17301107.2,10d_avg_volume,17301107.2,10.90999984741211
+1997.HK,Wharf Real Estate Investment,hk_seed_yfinance,,5609976.2,10d_avg_volume,5609976.2,24.739999771118164
+2007.HK,Country Garden Holdings,hk_seed_yfinance,,256194972.3,10d_avg_volume,256194972.3,0.25
+2015.HK,Li Auto,hk_seed_yfinance,,18905608.8,10d_avg_volume,18905608.8,61.650001525878906
+2020.HK,ANTA Sports Products,hk_seed_yfinance,,7078798.6,10d_avg_volume,7078798.6,77.0
+2269.HK,Wuxi Biologics,hk_seed_yfinance,,25669624.1,10d_avg_volume,25669624.1,33.02000045776367
+2313.HK,Shenzhou International,hk_seed_yfinance,,8203128.8,10d_avg_volume,8203128.8,45.279998779296875
+2318.HK,Ping An Insurance,hk_seed_yfinance,,32845801.7,10d_avg_volume,32845801.7,60.650001525878906
+2319.HK,China Mengniu Dairy,hk_seed_yfinance,,14380555.1,10d_avg_volume,14380555.1,17.40999984741211
+2331.HK,Li Ning,hk_seed_yfinance,,14746335.7,10d_avg_volume,14746335.7,18.360000610351562
+2382.HK,Sunny Optical Technology,hk_seed_yfinance,,11228620.9,10d_avg_volume,11228620.9,62.79999923706055
+2388.HK,BOC Hong Kong Holdings,hk_seed_yfinance,,9972114.5,10d_avg_volume,9972114.5,46.97999954223633
+2628.HK,China Life Insurance,hk_seed_yfinance,,59490725.8,10d_avg_volume,59490725.8,29.040000915527344
+2688.HK,ENN Energy Holdings,hk_seed_yfinance,,3084021.9,10d_avg_volume,3084021.9,58.54999923706055
+2899.HK,Zijin Mining Group,hk_seed_yfinance,,65744173.7,10d_avg_volume,65744173.7,32.400001525878906
+3690.HK,Meituan,hk_seed_yfinance,,36588049.1,10d_avg_volume,36588049.1,83.1500015258789
+3692.HK,Hansoh Pharmaceutical,hk_seed_yfinance,,8383058.1,10d_avg_volume,8383058.1,33.540000915527344
+3968.HK,China Merchants Bank,hk_seed_yfinance,,13150682.7,10d_avg_volume,13150682.7,46.15999984741211
+3988.HK,Bank of China,hk_seed_yfinance,,195113152.6,10d_avg_volume,195113152.6,5.239999771118164
+6098.HK,Country Garden Services,hk_seed_yfinance,,6478788.4,10d_avg_volume,6478788.4,6.150000095367432
+6618.HK,JD Health International,hk_seed_yfinance,,12201180.9,10d_avg_volume,12201180.9,40.31999969482422
+6690.HK,Haier Smart Home,hk_seed_yfinance,,14243113.8,10d_avg_volume,14243113.8,20.3799991607666
+6862.HK,Haidilao International,hk_seed_yfinance,,13133066.9,10d_avg_volume,13133066.9,14.279999732971191
+9618.HK,JD.com,hk_seed_yfinance,,13300366.3,10d_avg_volume,13300366.3,127.80000305175781
+9633.HK,Nongfu Spring,hk_seed_yfinance,,6215388.7,10d_avg_volume,6215388.7,42.91999816894531
+9868.HK,Xpeng,hk_seed_yfinance,,11004657.7,10d_avg_volume,11004657.7,58.25
+9888.HK,Baidu,hk_seed_yfinance,,15076242.8,10d_avg_volume,15076242.8,135.10000610351562
+9961.HK,Trip.com Group,hk_seed_yfinance,,2001555.1,10d_avg_volume,2001555.1,378.79998779296875
+9988.HK,Alibaba Group Holding,hk_seed_yfinance,,88656550.1,10d_avg_volume,88656550.1,133.8000030517578
+9999.HK,NetEase,hk_seed_yfinance,,5534690.6,10d_avg_volume,5534690.6,178.10000610351562
