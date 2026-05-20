@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import os
 import time
+import contextlib
+import io
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -43,6 +46,17 @@ def safe_float(value):
         return None
 
 
+def quiet_yfinance_call(fn):
+    logger = logging.getLogger("yfinance")
+    old_level = logger.level
+    logger.setLevel(logging.CRITICAL)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return fn()
+    finally:
+        logger.setLevel(old_level)
+
+
 def load_seed() -> pd.DataFrame:
     if not SEED_PATH.exists():
         raise FileNotFoundError(f"Missing {SEED_PATH}")
@@ -80,7 +94,9 @@ def batch_prices(tickers: list[str]) -> dict[str, dict[str, float | None]]:
     if not tickers:
         return {}
     try:
-        data = yf.download(tickers, period="10d", interval="1d", auto_adjust=False, progress=False, threads=True)
+        data = quiet_yfinance_call(
+            lambda: yf.download(tickers, period="10d", interval="1d", auto_adjust=False, progress=False, threads=False)
+        )
     except Exception:
         data = pd.DataFrame()
     out: dict[str, dict[str, float | None]] = {}
@@ -124,7 +140,7 @@ def fast_info_rows(seed: pd.DataFrame, sleep_seconds: float = 0.03) -> pd.DataFr
         market_cap = None
         try:
             t = yf.Ticker(ticker)
-            fi = t.fast_info
+            fi = quiet_yfinance_call(lambda: t.fast_info)
             try:
                 market_cap = safe_float(fi.get("market_cap"))
             except Exception:
@@ -155,7 +171,7 @@ def fast_info_rows(seed: pd.DataFrame, sleep_seconds: float = 0.03) -> pd.DataFr
 
 def build_universe() -> pd.DataFrame:
     limit = getenv_int("HK_UNIVERSE_LIMIT", getenv_int("UNIVERSE_LIMIT", 300))
-    min_market_cap = getenv_int("HK_MIN_MARKET_CAP", getenv_int("MIN_MARKET_CAP", 5_000_000_000))
+    min_market_cap = getenv_int("HK_MIN_MARKET_CAP", getenv_int("MIN_MARKET_CAP", 500_000_000))
     min_liquidity_volume = getenv_int("HK_MIN_LIQUIDITY_VOLUME", getenv_int("MIN_LIQUIDITY_VOLUME", 500_000))
     print(
         "HK universe config:",
@@ -171,9 +187,21 @@ def build_universe() -> pd.DataFrame:
         return existing_or_seed_universe(seed, "HK verification returned zero rows")
     df["market_cap"] = pd.to_numeric(df["market_cap"], errors="coerce")
     df["liquidity_volume"] = pd.to_numeric(df["liquidity_volume"], errors="coerce")
+    before_filters = len(df)
+    missing_cap = int(df["market_cap"].isna().sum())
+    missing_liquidity = int(df["liquidity_volume"].isna().sum())
+    print(
+        "HK verification coverage:",
+        f"rows={before_filters}",
+        f"missing_market_cap={missing_cap}",
+        f"missing_liquidity_volume={missing_liquidity}",
+        flush=True,
+    )
+    cap_ok = df["market_cap"].isna() | (df["market_cap"] >= min_market_cap)
+    liquidity_ok = df["liquidity_volume"].fillna(0) >= min_liquidity_volume
     df = df[
-        (df["market_cap"].fillna(0) >= min_market_cap)
-        & (df["liquidity_volume"].fillna(0) >= min_liquidity_volume)
+        cap_ok
+        & liquidity_ok
     ]
     print("rows after HK filters:", len(df), flush=True)
     if df.empty:

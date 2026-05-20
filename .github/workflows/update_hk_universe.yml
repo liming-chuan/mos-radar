@@ -10,7 +10,7 @@ on:
       min_market_cap:
         description: "Minimum market cap in quote currency"
         required: true
-        default: "5000000000"
+        default: "500000000"
       min_liquidity_volume:
         description: "Minimum 10-day average volume"
         required: true
