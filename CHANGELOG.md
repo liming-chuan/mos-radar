@@ -2,6 +2,12 @@
 
 All notable MOS Radar version changes are recorded here.
 
+## v6.5.4 - 2026-05-20
+
+- Added quiet yfinance wrappers around HK price and financial-statement calls to suppress noisy Yahoo 404 / failed-download logs.
+- Added a recent-price precheck for HK tickers so Yahoo-missing symbols are marked `NO_DATA` quickly instead of repeatedly retrying fallback downloads.
+- Updated README, model version, and version metadata.
+
 ## v6.5.3 - 2026-05-20
 
 - Fixed empty HK emails caused by `data/hk_universe.csv` being overwritten with zero tickers.

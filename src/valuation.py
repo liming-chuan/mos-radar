@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import contextlib
+import io
+import logging
 import math
 import os
 import time
@@ -15,7 +18,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.5.3"
+MODEL_VERSION = "MOS_Radar_V6.5.4"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -285,6 +288,17 @@ def retry_call(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
     raise last_error
 
 
+def quiet_yfinance_call(fn):
+    logger = logging.getLogger("yfinance")
+    old_level = logger.level
+    logger.setLevel(logging.CRITICAL)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return fn()
+    finally:
+        logger.setLevel(old_level)
+
+
 def normalize_tnx_quote(raw: float | None) -> float | None:
     value = safe_float(raw)
     if value is None or value <= 0:
@@ -382,7 +396,7 @@ def effective_discount_rate(cfg: dict, risk_free_rate: float | None) -> float:
 
 def latest_download_price(symbol: str) -> float | None:
     try:
-        data = yf.download(symbol, period="5d", interval="1d", auto_adjust=False, progress=False, threads=False)
+        data = quiet_yfinance_call(lambda: yf.download(symbol, period="5d", interval="1d", auto_adjust=False, progress=False, threads=False))
         if data is None or data.empty:
             return None
         series = None
@@ -410,12 +424,12 @@ def latest_download_price(symbol: str) -> float | None:
         return None
 
 
-def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | None]:
+def get_price_and_cap(t: yf.Ticker, info: dict, fallback_price: float | None = None) -> tuple[float | None, float | None]:
     price = None
     market_cap = None
 
     try:
-        fi = t.fast_info
+        fi = quiet_yfinance_call(lambda: t.fast_info)
         price = (
             fast_info_value(fi, "last_price")
             or fast_info_value(fi, "lastPrice")
@@ -429,7 +443,7 @@ def get_price_and_cap(t: yf.Ticker, info: dict) -> tuple[float | None, float | N
     except Exception:
         pass
 
-    price = coalesce_none(safe_float(price), safe_float(info.get("currentPrice")), safe_float(info.get("regularMarketPrice")))
+    price = coalesce_none(safe_float(price), safe_float(info.get("currentPrice")), safe_float(info.get("regularMarketPrice")), safe_float(fallback_price))
     if price is None:
         symbol = str(getattr(t, "ticker", "") or info.get("symbol") or "").upper()
         if symbol:
@@ -1165,15 +1179,24 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
     result = AnalysisResult(ticker=ticker)
 
     try:
+        prechecked_price = None
+        if current_market() == "hk":
+            prechecked_price = latest_download_price(ticker)
+            if prechecked_price is None or prechecked_price <= 0:
+                result.rating = "NO_DATA"
+                result.price_data_status = "NO_RECENT_YAHOO_PRICE"
+                result.reason = "Yahoo 近期价格缺失，跳过该港股，避免无效 ticker 反复重试"
+                return result
+
         t = yf.Ticker(ticker)
 
         info = {}
         try:
-            info = retry_call(f"{ticker}.info", lambda: t.info or {})
+            info = retry_call(f"{ticker}.info", lambda: quiet_yfinance_call(lambda: t.info or {}))
         except Exception:
             info = {}
 
-        price, market_cap = get_price_and_cap(t, info)
+        price, market_cap = get_price_and_cap(t, info, fallback_price=prechecked_price)
 
         result.price = price
         result.market_cap = market_cap
@@ -1235,32 +1258,32 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         quarterly_cashflow = None
 
         try:
-            annual_financials = retry_call(f"{ticker}.financials", lambda: t.financials)
+            annual_financials = retry_call(f"{ticker}.financials", lambda: quiet_yfinance_call(lambda: t.financials))
         except Exception:
             annual_financials = None
 
         try:
-            annual_balance = retry_call(f"{ticker}.balance_sheet", lambda: t.balance_sheet)
+            annual_balance = retry_call(f"{ticker}.balance_sheet", lambda: quiet_yfinance_call(lambda: t.balance_sheet))
         except Exception:
             annual_balance = None
 
         try:
-            annual_cashflow = retry_call(f"{ticker}.cashflow", lambda: t.cashflow)
+            annual_cashflow = retry_call(f"{ticker}.cashflow", lambda: quiet_yfinance_call(lambda: t.cashflow))
         except Exception:
             annual_cashflow = None
 
         try:
-            quarterly_financials = retry_call(f"{ticker}.quarterly_financials", lambda: t.quarterly_financials, attempts=2, base_sleep=0.3)
+            quarterly_financials = retry_call(f"{ticker}.quarterly_financials", lambda: quiet_yfinance_call(lambda: t.quarterly_financials), attempts=2, base_sleep=0.3)
         except Exception:
             quarterly_financials = None
 
         try:
-            quarterly_cashflow = retry_call(f"{ticker}.quarterly_cashflow", lambda: t.quarterly_cashflow, attempts=2, base_sleep=0.3)
+            quarterly_cashflow = retry_call(f"{ticker}.quarterly_cashflow", lambda: quiet_yfinance_call(lambda: t.quarterly_cashflow), attempts=2, base_sleep=0.3)
         except Exception:
             quarterly_cashflow = None
 
         try:
-            quarterly_balance = retry_call(f"{ticker}.quarterly_balance_sheet", lambda: t.quarterly_balance_sheet, attempts=2, base_sleep=0.3)
+            quarterly_balance = retry_call(f"{ticker}.quarterly_balance_sheet", lambda: quiet_yfinance_call(lambda: t.quarterly_balance_sheet), attempts=2, base_sleep=0.3)
         except Exception:
             quarterly_balance = None
 
