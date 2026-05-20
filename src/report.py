@@ -17,20 +17,145 @@ def pct(x) -> str:
         return "N/A"
 
 
-def money(x) -> str:
+def money(x, symbol: str = "$") -> str:
     try:
         if pd.isna(x):
             return "N/A"
         x = float(x)
         if abs(x) >= 1e12:
-            return f"${x/1e12:.2f}T"
+            return f"{symbol}{x/1e12:.2f}T"
         if abs(x) >= 1e9:
-            return f"${x/1e9:.2f}B"
+            return f"{symbol}{x/1e9:.2f}B"
         if abs(x) >= 1e6:
-            return f"${x/1e6:.2f}M"
-        return f"${x:.2f}"
+            return f"{symbol}{x/1e6:.2f}M"
+        return f"{symbol}{x:.2f}"
     except Exception:
         return "N/A"
+
+
+SECTOR_ZH = {
+    "Technology": "科技",
+    "Financial Services": "金融服务",
+    "Consumer Cyclical": "可选消费",
+    "Consumer Defensive": "防御消费",
+    "Communication Services": "通信服务",
+    "Healthcare": "医疗健康",
+    "Industrials": "工业",
+    "Basic Materials": "基础材料",
+    "Energy": "能源",
+    "Utilities": "公用事业",
+    "Real Estate": "房地产",
+    "Unknown": "未知",
+}
+
+MODEL_STATUS_ZH = {
+    "GENERAL_OWNER_FCF_MODEL": "通用所有者自由现金流模型",
+    "SOFTWARE_OWNER_FCF_SBC_ADJUSTED_NEEDS_NRR_RPO_RULE_OF_40_REVIEW": "软件/科技所有者自由现金流模型，需人工复核股权激励、收入留存、订单和40法则",
+    "COMMODITY_CYCLE_LIMITED_NEEDS_MID_CYCLE_PRICE_COST_RESERVE_REVIEW": "资源周期模型，需人工复核中周期价格、成本和储量",
+    "SEMICONDUCTOR_CYCLE_LIMITED_NEEDS_INVENTORY_MARGIN_CAPEX_REVIEW": "半导体周期模型，需人工复核库存、毛利率和资本开支",
+    "BANK_LIMITED_PB_ROE_NEEDS_CET1_NIM_NPL_DEPOSIT_COST": "银行市净率/净资产收益率初筛，需人工复核资本充足率、息差、不良率和存款成本",
+    "INSURANCE_LIMITED_PB_ROE_NEEDS_COMBINED_RATIO_FLOAT_RESERVES": "保险市净率/净资产收益率初筛，需人工复核综合成本率、浮存金和准备金",
+    "FINANCIAL_LIMITED_PB_ROE_NEEDS_INDUSTRY_SPECIFIC_REVIEW": "金融股市净率/净资产收益率初筛，需行业专门复核",
+    "REIT_SKIPPED_NEEDS_AFFO_NOI_CAP_RATE": "房地产信托需调整后运营现金流、净运营收入、资本化率模型，当前跳过",
+}
+
+METHOD_ZH = {
+    "normalized_net_income_pe": "正常化净利润倍数",
+    "asset_plus_fcf_8x": "净资产现金 + 自由现金流8倍",
+    "normalized_fcf_multiple": "正常化所有者自由现金流倍数",
+    "latest_fcf_capped_10x": "最近所有者自由现金流封顶10倍",
+    "conservative_5y_dcf": "保守5年现金流折现",
+    "tangible_book_0_8x": "有形账面价值0.8倍",
+    "ncav_2_3": "净流动资产2/3",
+}
+
+PERIOD_ZH = {
+    "TTM": "最近四季滚动",
+    "ANNUAL_FALLBACK": "年报口径",
+    "MISSING": "缺失",
+    "N/A": "N/A",
+}
+
+REASON_TOKEN_ZH = {
+    "trap_count_ge_2": "风险信号不少于2个",
+    "trap_count_ge_3": "风险信号不少于3个",
+    "financial_limited_pb_roe_model": "金融股市净率/净资产收益率模型有限",
+    "low_data_quality": "数据质量偏低",
+    "weak_cashflow_score": "现金流评分偏弱",
+    "weak_quality_score": "质量评分偏弱",
+    "debt_to_ebitda_over_5": "债务/经营利润超过5倍",
+    "interest_coverage_under_2": "利息覆盖低于2倍",
+    "precious_metals_cycle_model": "贵金属周期模型",
+    "abnormal_fcf_yield": "自由现金流收益率异常偏高",
+    "latest_fcf_negative": "最近自由现金流为负",
+    "avg_fcf_not_positive": "平均自由现金流不为正",
+    "revenue_decline": "收入下滑",
+    "revenue_decline_streak": "收入连续下滑",
+    "gross_margin_decline": "毛利率下滑",
+    "operating_margin_decline": "经营利润率下滑",
+    "high_fcf_volatility": "自由现金流波动过大",
+    "high_debt_to_ebitda": "债务/经营利润偏高",
+    "weak_interest_coverage": "利息覆盖偏弱",
+    "debt_exceeds_market_cap": "债务超过市值",
+    "debt_over_5x_avg_fcf": "债务超过5倍平均FCF",
+    "negative_operating_margin": "经营利润率为负",
+    "NO_VALID_VALUATION": "没有有效估值",
+}
+
+
+def display_sector(value: str) -> str:
+    s = str(value or "")
+    return SECTOR_ZH.get(s, s or "未知")
+
+
+def display_model_status(value: str) -> str:
+    s = str(value or "")
+    return MODEL_STATUS_ZH.get(s, s)
+
+
+def display_method(value: str) -> str:
+    s = str(value or "")
+    if s in METHOD_ZH:
+        return METHOD_ZH[s]
+    if s.startswith("financial_pb_roe_tangible_book_"):
+        return "金融股市净率/净资产收益率：有形账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
+    if s.startswith("financial_pb_roe_book_"):
+        return "金融股市净率/净资产收益率：账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
+    return s
+
+
+def display_period(value: str) -> str:
+    s = str(value or "")
+    return PERIOD_ZH.get(s, s or "N/A")
+
+
+def translate_tokens(text: str) -> str:
+    out = str(text or "")
+    for key, value in {**METHOD_ZH, **MODEL_STATUS_ZH, **REASON_TOKEN_ZH}.items():
+        out = out.replace(key, value)
+    return out
+
+
+def display_candidates(value: str, symbol: str = "$") -> str:
+    s = str(value or "").strip()
+    if not s:
+        return ""
+    parts = []
+    for raw in s.split(";"):
+        item = raw.strip()
+        if not item:
+            continue
+        if "=" not in item:
+            parts.append(translate_tokens(item))
+            continue
+        key, val = item.split("=", 1)
+        label = display_method(key.strip())
+        try:
+            amount = money(float(val), symbol=symbol)
+        except Exception:
+            amount = translate_tokens(val.strip())
+        parts.append(f"{label}={amount}")
+    return "; ".join(parts)
 
 
 def num(x) -> str:
@@ -150,7 +275,7 @@ def rating_badge(rating: str) -> str:
 
 
 def short_reason(x, limit: int = 80) -> str:
-    s = str(x or "")
+    s = translate_tokens(str(x or ""))
     s = s.replace("\n", " ").strip()
     if len(s) > limit:
         return escape(s[:limit] + "...")
@@ -211,7 +336,7 @@ def diversified_sample(df: pd.DataFrame, limit: int = 30, per_sector: int = 5) -
     return df.loc[selected].copy()
 
 
-def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_pool: bool = False) -> str:
+def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_pool: bool = False, currency_symbol: str = "$") -> str:
     if df.empty:
         return f"""
         <h2>{escape(title)}</h2>
@@ -227,7 +352,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
     for _, r in df.iterrows():
         ticker = escape(str(r.get("ticker", "")))
         name = escape(str(r.get("company_name", "") or ""))
-        sector = escape(str(r.get("sector", "") or ""))
+        sector = escape(display_sector(str(r.get("sector", "") or "")))
         rating = rating_badge(str(r.get("rating", "N/A")))
 
         rows.append(
@@ -236,16 +361,16 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <td class="ticker">{ticker}</td>
                 <td>{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
-                <td>{escape(str(r.get("financial_period_type", "") or "N/A"))}</td>
-                <td>{short_reason(str(r.get("valuation_method", "") or ""), limit=46)}</td>
+                <td>{escape(display_period(str(r.get("financial_period_type", "") or "N/A")))}</td>
+                <td>{escape(display_method(str(r.get("valuation_method", "") or "")))}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
                 {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
-                <td class="num">{money(r.get("price"))}</td>
-                <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
-                <td class="num">{money(r.get("buy_price_20mos"))}</td>
-                <td class="num">{money(r.get("buy_price_35mos"))}</td>
-                <td class="num">{money(r.get("buy_price_50mos"))}</td>
+                <td class="num">{money(r.get("price"), currency_symbol)}</td>
+                <td class="num">{money(r.get("intrinsic_value_per_share"), currency_symbol)}</td>
+                <td class="num">{money(r.get("buy_price_20mos"), currency_symbol)}</td>
+                <td class="num">{money(r.get("buy_price_35mos"), currency_symbol)}</td>
+                <td class="num">{money(r.get("buy_price_50mos"), currency_symbol)}</td>
                 <td class="num">{pct(r.get("fcf_yield"))}</td>
                 <td class="num">{num(r.get("debt_to_ebitda"))}</td>
                 <td class="reason">{short_reason(r.get("reason"), limit=110)}</td>
@@ -271,8 +396,8 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>20%观察价</th>
                 <th>35%观察价</th>
                 <th>50%强关注价</th>
-                <th>FCF Yield</th>
-                <th>债务/EBITDA</th>
+                <th>自由现金流收益率</th>
+                <th>债务/经营利润</th>
                 <th>理由</th>
             </tr>
         </thead>
@@ -283,7 +408,7 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
     """
 
 
-def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> str:
+def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, currency_symbol: str = "$") -> str:
     if df.empty:
         return f"""
         <h2>{escape(title)}</h2>
@@ -299,7 +424,7 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
     for _, r in df.iterrows():
         ticker = escape(str(r.get("ticker", "")))
         name = escape(str(r.get("company_name", "") or ""))
-        sector = escape(str(r.get("sector", "") or ""))
+        sector = escape(display_sector(str(r.get("sector", "") or "")))
         rating = rating_badge(str(r.get("rating", "N/A")))
 
         rows.append(
@@ -308,13 +433,13 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <td class="ticker">{ticker}</td>
                 <td class="company">{name}<br><span class="sub">{sector}</span></td>
                 <td>{rating}</td>
-                <td>{escape(str(r.get("financial_period_type", "") or "N/A"))}</td>
-                <td>{short_reason(str(r.get("valuation_method", "") or ""), limit=46)}</td>
+                <td>{escape(display_period(str(r.get("financial_period_type", "") or "N/A")))}</td>
+                <td>{escape(display_method(str(r.get("valuation_method", "") or "")))}</td>
                 <td class="num">{pct(r.get("margin_of_safety"))}</td>
                 {f'<td class="num">{pct(r.get("return_since_backtest"))}</td>' if show_backtest_return else ''}
                 <td class="num">{num(r.get("final_score"))}</td>
-                <td class="num">{money(r.get("price"))}</td>
-                <td class="num">{money(r.get("intrinsic_value_per_share"))}</td>
+                <td class="num">{money(r.get("price"), currency_symbol)}</td>
+                <td class="num">{money(r.get("intrinsic_value_per_share"), currency_symbol)}</td>
                 <td class="num">{pct(r.get("fcf_yield"))}</td>
                 <td class="num">{num(r.get("debt_to_ebitda"))}</td>
                 <td class="reason">{short_reason(r.get("reason"), limit=140)}</td>
@@ -337,8 +462,8 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None) -> 
                 <th>分数</th>
                 <th>现价</th>
                 <th>保守价值/股</th>
-                <th>FCF Yield</th>
-                <th>债务/EBITDA</th>
+                <th>自由现金流收益率</th>
+                <th>债务/经营利润</th>
                 <th>理由</th>
             </tr>
         </thead>
@@ -412,7 +537,7 @@ def sector_distribution_html(df: pd.DataFrame) -> str:
         rows.append(
             f"""
             <tr>
-                <td>{escape(str(sector))}</td>
+                <td>{escape(display_sector(str(sector)))}</td>
                 <td class="num">{int(row["count"])}</td>
                 <td class="num">{pct(row["count"] / total if total else None)}</td>
                 <td class="num">{int(row["sab"])}</td>
@@ -478,7 +603,7 @@ def historical_price_status_html(df: pd.DataFrame) -> str:
 
 
 
-def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：最低估值法与候选值") -> str:
+def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：最低估值法与候选值", currency_symbol: str = "$") -> str:
     if df.empty or "valuation_candidates" not in df.columns:
         return ""
     sample = sort_for_report(df.copy()).head(30)
@@ -490,10 +615,10 @@ def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：�
                 <td class="ticker">{escape(str(r.get('ticker', '')))}</td>
                 <td>{escape(str(r.get('company_name', '') or ''))}</td>
                 <td>{rating_badge(str(r.get('rating', 'N/A')))}</td>
-                <td>{escape(str(r.get('financial_period_type', '') or 'N/A'))}</td>
-                <td>{escape(str(r.get('industry_model_status', '') or ''))}</td>
-                <td>{escape(str(r.get('valuation_method', '') or ''))}</td>
-                <td class="reason">{short_reason(r.get('valuation_candidates'), limit=220)}</td>
+                <td>{escape(display_period(str(r.get('financial_period_type', '') or 'N/A')))}</td>
+                <td>{escape(display_model_status(str(r.get('industry_model_status', '') or '')))}</td>
+                <td>{escape(display_method(str(r.get('valuation_method', '') or '')))}</td>
+                <td class="reason">{escape(display_candidates(str(r.get('valuation_candidates', '') or ''), currency_symbol))}</td>
             </tr>
             """
         )
@@ -508,7 +633,7 @@ def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：�
                 <th>财报口径</th>
                 <th>行业模型状态</th>
                 <th>最低估值法</th>
-                <th>估值候选</th>
+                <th>估值候选（总值）</th>
             </tr>
         </thead>
         <tbody>{''.join(rows)}</tbody>
@@ -516,15 +641,15 @@ def valuation_detail_html(df: pd.DataFrame, title: str = "候选估值拆解：�
     """
 
 
-def holdings_risk_html(df: pd.DataFrame) -> str:
+def holdings_risk_html(df: pd.DataFrame, currency_symbol: str = "$") -> str:
     if df.empty or "rating" not in df.columns:
         return ""
     risk = df[df["rating"].isin(["C_THIN", "PASS", "D_TRAP", "NO_DATA", "SKIP", "ERROR"])].copy()
     if risk.empty:
         return ""
-    return compact_table(sort_for_report(risk), "持仓风险复核：偏薄、无边际或数据不足", limit=None)
+    return compact_table(sort_for_report(risk), "持仓风险复核：偏薄、无边际或数据不足", limit=None, currency_symbol=currency_symbol)
 
-def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进入 S/A/B 的样本 Top 30") -> str:
+def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进入 S/A/B 的样本 Top 30", currency_symbol: str = "$") -> str:
     if df.empty or "rating" not in df.columns:
         return ""
 
@@ -533,10 +658,10 @@ def diagnostic_sample_html(df: pd.DataFrame, title: str = "扫描诊断：未进
         return ""
 
     watch = diversified_sample(sort_for_report(watch), limit=30, per_sector=5)
-    return compact_table(watch, title, limit=30)
+    return compact_table(watch, title, limit=30, currency_symbol=currency_symbol)
 
 
-def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30) -> str:
+def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30, currency_symbol: str = "$") -> str:
     if df.empty or "rating" not in df.columns or "margin_of_safety" not in df.columns:
         return ""
 
@@ -554,7 +679,7 @@ def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30) -> str:
         return ""
 
     near = sort_by_mos_score(near)
-    return compact_table(near, title, limit=limit)
+    return compact_table(near, title, limit=limit, currency_symbol=currency_symbol)
 
 
 def generate_report(
@@ -581,6 +706,7 @@ def generate_report(
 
     title = title_map.get(mode, "安全边际报告")
     market_label = {"us": "美股", "hk": "港股"}.get(str(market).lower(), str(market).upper())
+    currency_symbol = "HK$" if str(market).lower() == "hk" else "$"
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     backtest_date = ""
     if "backtest_date" in df.columns:
@@ -606,14 +732,15 @@ def generate_report(
     rating_diag_html = rating_distribution_html(df)
     sector_diag_html = sector_distribution_html(market_df)
     historical_status_html = historical_price_status_html(df) if mode == "historical_replay" else ""
-    near_miss = near_miss_html(operating_market_df, "非金融接近候选：安全边际偏薄但值得复核 Top 30", limit=30)
-    financial_near_miss = near_miss_html(financial_market_df, "金融股观察池：PB/ROE 接近候选 Top 20", limit=20)
+    near_miss = near_miss_html(operating_market_df, "非金融接近候选：安全边际偏薄但值得复核 Top 30", limit=30, currency_symbol=currency_symbol)
+    financial_near_miss = near_miss_html(financial_market_df, "金融股观察池：市净率/净资产收益率接近候选 Top 20", limit=20, currency_symbol=currency_symbol)
     diagnostic_html = diagnostic_sample_html(
         operating_market_df,
         "扫描诊断：非金融未进入 S/A/B 的样本 Top 30",
+        currency_symbol=currency_symbol,
     )
-    valuation_detail = valuation_detail_html(market_high if not market_high.empty else operating_market_df)
-    holdings_risk = holdings_risk_html(holdings_df)
+    valuation_detail = valuation_detail_html(market_high if not market_high.empty else operating_market_df, currency_symbol=currency_symbol)
+    holdings_risk = holdings_risk_html(holdings_df, currency_symbol=currency_symbol)
 
     total_holdings = len(holdings_df)
     market_high_count = len(market_high)
@@ -637,18 +764,21 @@ def generate_report(
         holdings_df,
         "我的持仓池：全部持仓安全边际",
         limit=None,
+        currency_symbol=currency_symbol,
     )
 
     market_html = html_table(
         market_high,
         f"非金融经营型股票池：安全边际较厚候选 Top {top_mos_count}",
         limit=top_mos_count,
+        currency_symbol=currency_symbol,
     )
 
     financial_html = compact_table(
         sort_for_report(financial_high),
         "金融股观察池：S/A/B 候选",
         limit=20,
+        currency_symbol=currency_symbol,
     )
 
     thicker_html = ""
@@ -659,7 +789,7 @@ def generate_report(
 
         if not thicker.empty:
             thicker = thicker.sort_values(["price_change_since_scan", "margin_of_safety"], ascending=[True, False])
-            thicker_html = html_table(thicker, "盘中下跌后安全边际继续变厚的市场候选", limit=20)
+            thicker_html = html_table(thicker, "盘中下跌后安全边际继续变厚的市场候选", limit=20, currency_symbol=currency_symbol)
 
     html = f"""<!doctype html>
 <html>
@@ -836,7 +966,7 @@ def generate_report(
         </div>
 
         <div class="note">
-            持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用 PB/ROE 口径，不能和普通 FCF 公司混排。
+            持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用市净率/净资产收益率口径，不能和普通自由现金流公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。S/A/B 只代表值得研究，不代表买入。
             {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
@@ -884,7 +1014,7 @@ def generate_report(
             <b>PASS</b>：当前价格高于保守价值。<br>
             <b>D_TRAP</b>：疑似价值陷阱，必须人工排雷。<br>
             <b>NO_DATA</b>：数据不足，不能判断。<br>
-            <b>财报口径</b>：TTM 表示最近四个季度滚动口径；ANNUAL_FALLBACK 表示季度数据不足，退回最新年报口径。
+            <b>财报口径</b>：最近四季滚动表示最近四个季度合计；年报口径表示季度数据不足，退回最新年报。
         </div>
     </div>
 </div>
