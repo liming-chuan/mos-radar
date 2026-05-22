@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from io import StringIO
 from pathlib import Path
 
@@ -43,14 +44,32 @@ def is_bad_symbol(symbol: str) -> bool:
 
 
 def is_bad_name(name: str) -> bool:
-    n = str(name).lower()
-    bad_keywords = [
-        "warrant", "rights", "right", "unit", "units",
-        "preferred", "preference", "depositary",
-        "acquisition corp", "acquisition corporation",
-        "blank check", "spac",
+    n = str(name or "").lower()
+    if "%" in n:
+        return True
+    bad_patterns = [
+        r"\bwarrants?\b",
+        r"\brights?\b",
+        r"\bunits?\b",
+        r"\bpreferred\b",
+        r"\bpreference\b",
+        r"\bdepositary( share| shares)?\b",
+        r"\bdebentures?\b",
+        r"\bnotes?\b",
+        r"\bsenior notes?\b",
+        r"\bsubordinated\b",
+        r"\bbonds?\b",
+        r"\bbaby bond\b",
+        r"\bcapital securities\b",
+        r"\btrust\b",
+        r"\bterm trust\b",
+        r"\bincome trust\b",
+        r"\bclosed[- ]end\b",
+        r"\bacquisition corp(oration)?\b",
+        r"\bblank check\b",
+        r"\bspac\b",
     ]
-    return any(k in n for k in bad_keywords)
+    return any(re.search(pattern, n) for pattern in bad_patterns)
 
 
 def fetch_nasdaq_listed() -> pd.DataFrame:

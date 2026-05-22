@@ -52,6 +52,7 @@ MODEL_STATUS_ZH = {
     "GENERAL_OWNER_FCF_MODEL": "通用所有者自由现金流模型",
     "SOFTWARE_OWNER_FCF_SBC_ADJUSTED_NEEDS_NRR_RPO_RULE_OF_40_REVIEW": "软件/科技所有者自由现金流模型，需人工复核股权激励、收入留存、订单和40法则",
     "COMMODITY_CYCLE_LIMITED_NEEDS_MID_CYCLE_PRICE_COST_RESERVE_REVIEW": "资源周期模型，需人工复核中周期价格、成本和储量",
+    "AGRI_CYCLE_LIMITED_NEEDS_NORMALIZED_MARGIN_VOLUME_REVIEW": "农业/农产品周期模型，需人工复核正常化利润率、产量和商品价格",
     "SEMICONDUCTOR_CYCLE_LIMITED_NEEDS_INVENTORY_MARGIN_CAPEX_REVIEW": "半导体周期模型，需人工复核库存、毛利率和资本开支",
     "BANK_LIMITED_PB_ROE_NEEDS_CET1_NIM_NPL_DEPOSIT_COST": "银行市净率/净资产收益率初筛，需人工复核资本充足率、息差、不良率和存款成本",
     "INSURANCE_LIMITED_PB_ROE_NEEDS_COMBINED_RATIO_FLOAT_RESERVES": "保险市净率/净资产收益率初筛，需人工复核综合成本率、浮存金和准备金",
@@ -87,6 +88,10 @@ REASON_TOKEN_ZH = {
     "interest_coverage_under_2": "利息覆盖低于2倍",
     "precious_metals_cycle_model": "贵金属周期模型",
     "abnormal_fcf_yield": "自由现金流收益率异常偏高",
+    "cyclical_profit_reversal_risk": "周期股利润反转风险",
+    "hk_penny_low_turnover_trap": "港股低价且成交金额不足",
+    "hk_price_below_1": "港股股价低于1港元",
+    "hk_low_turnover": "港股成交金额不足",
     "latest_fcf_negative": "最近自由现金流为负",
     "avg_fcf_not_positive": "平均自由现金流不为正",
     "revenue_decline": "收入下滑",
@@ -121,6 +126,9 @@ def display_method(value: str) -> str:
         return "金融股市净率/净资产收益率：有形账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
     if s.startswith("financial_pb_roe_book_"):
         return "金融股市净率/净资产收益率：账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
+    if s.endswith("_hk_holding_0_65x"):
+        base = s.replace("_hk_holding_0_65x", "")
+        return display_method(base) + "，港股控股公司0.65倍折价"
     return s
 
 
@@ -838,6 +846,16 @@ def generate_report(
         color: #374151;
         margin-top: 10px;
     }}
+    .warning {{
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid #fca5a5;
+        background: #fff1f2;
+        color: #991b1b;
+        border-radius: 8px;
+        line-height: 1.8;
+        font-weight: 700;
+    }}
     .summary {{
         display: table;
         width: 100%;
@@ -968,8 +986,9 @@ def generate_report(
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用市净率/净资产收益率口径，不能和普通自由现金流公司混排。
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。S/A/B 只代表值得研究，不代表买入。
-            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP。' if mode == 'historical_replay' and backtest_date else ''}
+            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP，财务与历史价格严重错配会标记为 DATA_MISMATCH。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
+        {f'<div class="warning">重要警示：历史价格压力测试存在未来函数风险。当前财务数据并不代表回放日期当时已经披露的信息，结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
     </div>
 
     <div class="card">

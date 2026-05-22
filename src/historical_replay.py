@@ -110,7 +110,7 @@ def _result_from_row(row: pd.Series) -> AnalysisResult:
         setattr(result, name, value)
 
     numeric_fields = {
-        "price", "market_cap", "enterprise_value", "financial_to_quote_fx", "revenue_ttm", "revenue_5y_cagr",
+        "price", "market_cap", "enterprise_value", "financial_to_quote_fx", "liquidity_volume", "liquidity_value", "revenue_ttm", "revenue_5y_cagr",
         "gross_margin", "operating_margin", "net_margin", "net_income_ttm",
         "reported_fcf_ttm", "sbc_ttm", "fcf_ttm", "fcf_3y_avg", "fcf_5y_avg",
         "fcf_volatility", "fcf_yield", "fcf_conversion", "cash", "total_debt",
@@ -164,6 +164,15 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
 
     if result.market_cap is not None:
         result.enterprise_value = (result.market_cap or 0) + (result.total_debt or 0) - (result.cash or 0)
+
+    if result.model_type != "financial_pb_roe" and result.market_cap is not None and result.market_cap > 0:
+        pe_on_current_earnings = result.market_cap / result.net_income_ttm if result.net_income_ttm is not None and result.net_income_ttm > 0 else None
+        pfcf_on_current_fcf = result.market_cap / result.fcf_ttm if result.fcf_ttm is not None and result.fcf_ttm > 0 else None
+        if (pe_on_current_earnings is not None and pe_on_current_earnings < 1.0) or (pfcf_on_current_fcf is not None and pfcf_on_current_fcf < 1.0):
+            result.historical_price_status = "DATA_MISMATCH"
+            result.rating = "NO_DATA"
+            result.reason = "历史价格压力测试数据错配：当前财务数据套用到历史价格后估值倍数异常，疑似未来函数，不能判断"
+            return result
 
     if result.intrinsic_value_per_share is None or result.intrinsic_value_per_share <= 0:
         result.margin_of_safety = None

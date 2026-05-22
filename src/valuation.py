@@ -5,6 +5,7 @@ import io
 import logging
 import math
 import os
+import re
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -18,7 +19,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.5.7"
+MODEL_VERSION = "MOS_Radar_V6.5.8"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -31,7 +32,10 @@ class AnalysisResult:
     industry: str = ""
     quote_currency: str = ""
     financial_currency: str = ""
+    quote_type: str = ""
     financial_to_quote_fx: float | None = None
+    liquidity_volume: float | None = None
+    liquidity_value: float | None = None
     price: float | None = None
     market_cap: float | None = None
     enterprise_value: float | None = None
@@ -190,6 +194,8 @@ def industry_model_status(sector: str, industry: str, model_type: str) -> str:
         return "SEMICONDUCTOR_CYCLE_LIMITED_NEEDS_INVENTORY_MARGIN_CAPEX_REVIEW"
     if model_type in {"energy_cyclical", "materials_cyclical", "precious_metals_miner"}:
         return "COMMODITY_CYCLE_LIMITED_NEEDS_MID_CYCLE_PRICE_COST_RESERVE_REVIEW"
+    if model_type == "agri_cyclical":
+        return "AGRI_CYCLE_LIMITED_NEEDS_NORMALIZED_MARGIN_VOLUME_REVIEW"
     if model_type == "software_tech":
         return "SOFTWARE_OWNER_FCF_SBC_ADJUSTED_NEEDS_NRR_RPO_RULE_OF_40_REVIEW"
     return "GENERAL_OWNER_FCF_MODEL"
@@ -424,6 +430,46 @@ def latest_download_price(symbol: str) -> float | None:
         return None
 
 
+def latest_download_price_volume(symbol: str, period: str = "10d") -> tuple[float | None, float | None]:
+    try:
+        data = quiet_yfinance_call(lambda: yf.download(symbol, period=period, interval="1d", auto_adjust=False, progress=False, threads=False))
+        if data is None or data.empty:
+            return None, None
+
+        close_series = None
+        volume_series = None
+        if isinstance(data.columns, pd.MultiIndex):
+            for field in ["Adj Close", "Close"]:
+                if field in data.columns.get_level_values(0):
+                    frame = data[field]
+                    close_series = frame[symbol] if symbol in frame.columns else frame.iloc[:, 0]
+                    break
+            if "Volume" in data.columns.get_level_values(0):
+                frame = data["Volume"]
+                volume_series = frame[symbol] if symbol in frame.columns else frame.iloc[:, 0]
+        else:
+            for field in ["Adj Close", "Close"]:
+                if field in data.columns:
+                    close_series = data[field]
+                    break
+            if "Volume" in data.columns:
+                volume_series = data["Volume"]
+
+        price = None
+        avg_volume = None
+        if close_series is not None:
+            close_vals = pd.to_numeric(close_series, errors="coerce").dropna()
+            if not close_vals.empty:
+                price = safe_float(close_vals.iloc[-1])
+        if volume_series is not None:
+            volume_vals = pd.to_numeric(volume_series, errors="coerce").dropna()
+            if not volume_vals.empty:
+                avg_volume = safe_float(volume_vals.tail(10).mean())
+        return price, avg_volume
+    except Exception:
+        return None, None
+
+
 def get_price_and_cap(t: yf.Ticker, info: dict, fallback_price: float | None = None) -> tuple[float | None, float | None]:
     price = None
     market_cap = None
@@ -497,6 +543,16 @@ def sector_config(sector: str, industry: str) -> dict[str, float | str]:
             "terminal_multiple": 4.0,
             "discount_rate": 0.15,
             "risk_premium": 0.10,
+            "growth_cap": 0.00,
+        })
+    elif any(x in i for x in ["farm products", "agricultural inputs", "agriculture"]):
+        cfg.update({
+            "model": "agri_cyclical",
+            "fcf_multiple": 5.0,
+            "pe_multiple": 8.0,
+            "terminal_multiple": 5.0,
+            "discount_rate": 0.13,
+            "risk_premium": 0.09,
             "growth_cap": 0.00,
         })
     elif "semiconductor" in i:
@@ -654,8 +710,18 @@ def needs_nav_or_special_model(company_name: str, sector: str, industry: str) ->
         "fund",
         "income fund",
         "closed-end",
+        "closed end",
         "business development",
         "bdc",
+        "trust",
+        "preferred",
+        "preference",
+        "debenture",
+        "debentures",
+        "note",
+        "notes",
+        "subordinated",
+        "%",
     ]
     if any(k in name or k in i for k in hard_keywords):
         return True
@@ -664,6 +730,39 @@ def needs_nav_or_special_model(company_name: str, sector: str, industry: str) ->
         k in name for k in ["capital", "investment", "income", "credit"]
     )
     return asset_management_like
+
+
+def is_non_common_security_name(company_name: str, industry: str = "") -> bool:
+    text = f"{company_name or ''} {industry or ''}".lower()
+    if "%" in text:
+        return True
+    patterns = [
+        r"\bpreferred\b",
+        r"\bpreference\b",
+        r"\bdepositary( share| shares)?\b",
+        r"\bdebentures?\b",
+        r"\bnotes?\b",
+        r"\bsubordinated\b",
+        r"\bbonds?\b",
+        r"\bbaby bond\b",
+        r"\bcapital securities\b",
+        r"\bterm trust\b",
+        r"\bclosed[- ]end\b",
+        r"\bincome fund\b",
+    ]
+    return any(re.search(pattern, text) for pattern in patterns)
+
+
+def is_hk_holding_company(company_name: str, sector: str, industry: str) -> bool:
+    if current_market() != "hk":
+        return False
+    text = f"{company_name or ''} {sector or ''} {industry or ''}".lower()
+    strong_terms = [
+        "conglomerate", "conglomerates", "investment holding", "investment holdings",
+        "holding company", "diversified", "multi-sector",
+    ]
+    known_hk_holding_names = ["citic", "ck hutchison", "fosun", "swire pacific", "china resources"]
+    return any(k in text for k in strong_terms) or any(k in text for k in known_hk_holding_names)
 
 
 def calc_cagr(latest: float | None, oldest: float | None, years: int) -> float | None:
@@ -770,11 +869,13 @@ def estimate_intrinsic_value(
     growth_cap = float(cfg.get("growth_cap", 0.08))
 
     if fcf_candidates:
-        cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner"}
+        cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}
         if model in cyclical_models:
             cycle_candidates = [x for x in [fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
+            if fcf_5y_avg is not None and fcf_5y_avg > 0:
+                cycle_candidates.append(fcf_5y_avg * 0.85)
             if latest_fcf is not None and latest_fcf > 0:
-                cycle_candidates.append(latest_fcf * 0.5)
+                cycle_candidates.append(latest_fcf * 0.40)
             fcf_base = min(cycle_candidates) if cycle_candidates else min(fcf_candidates)
         else:
             # 保守 owner FCF 基数：取最近、3年、5年中较低的正值，防止高点误判
@@ -782,7 +883,7 @@ def estimate_intrinsic_value(
 
         valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
 
-        if model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner"} and latest_fcf is not None and latest_fcf > 0:
+        if model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"} and latest_fcf is not None and latest_fcf > 0:
             valuations.append(("latest_fcf_capped_10x", latest_fcf * min(10.0, fcf_multiple) + cash - debt))
 
         growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
@@ -803,7 +904,7 @@ def estimate_intrinsic_value(
         ni_base = min(ni_candidates)
         valuations.append(("normalized_net_income_pe", ni_base * pe_multiple + cash - debt))
 
-    asset_heavy_models = {"energy_cyclical", "materials_cyclical", "industrial_normalized", "precious_metals_miner", "consumer_cyclical"}
+    asset_heavy_models = {"energy_cyclical", "materials_cyclical", "industrial_normalized", "precious_metals_miner", "consumer_cyclical", "agri_cyclical"}
     if ncav is not None and ncav > 0:
         if model in asset_heavy_models or (market_cap is not None and ncav >= market_cap):
             valuations.append(("ncav_2_3", ncav * 0.67))
@@ -1005,6 +1106,7 @@ def detect_traps(
     accrual_ratio,
     model_type,
     latest_net_income,
+    fcf_yield=None,
 ) -> list[str]:
     flags = []
 
@@ -1058,9 +1160,12 @@ def detect_traps(
     elif accrual_ratio is not None and accrual_ratio > 0.10:
         flags.append("high_accrual_ratio")
 
-    if model_type in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized"}:
-        if latest_fcf is not None and fcf_5y_avg is not None and fcf_5y_avg > 0 and latest_fcf > 2.5 * fcf_5y_avg:
+    cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}
+    if model_type in cyclical_models:
+        if latest_fcf is not None and fcf_5y_avg is not None and fcf_5y_avg > 0 and latest_fcf > 2.0 * fcf_5y_avg:
             flags.append("possible_cycle_peak_fcf")
+        if fcf_yield is not None and fcf_yield > 0.12 and (revenue_decline_streak or gross_margin_decline or (revenue_cagr is not None and revenue_cagr < -0.03)):
+            flags.append("cyclical_profit_reversal_risk")
 
     return flags
 
@@ -1099,6 +1204,19 @@ def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
     if result.trap_count >= 2:
         cap = "C_THIN"
         reasons.append("trap_count_ge_2")
+
+    if str(result.ticker).upper().endswith(".HK"):
+        hk_penny = result.price is not None and result.price < 1.0
+        hk_low_turnover = result.liquidity_value is not None and result.liquidity_value < 5_000_000
+        if hk_penny and hk_low_turnover:
+            cap = cap_rating(cap or "S", "D_TRAP")
+            reasons.append("hk_penny_low_turnover_trap")
+        elif hk_penny:
+            cap = cap_rating(cap or "S", "C_THIN")
+            reasons.append("hk_price_below_1")
+        elif hk_low_turnover:
+            cap = cap_rating(cap or "S", "C_THIN")
+            reasons.append("hk_low_turnover")
 
     if result.model_type == "financial_pb_roe":
         cap = cap_rating(cap or "S", "B")
@@ -1180,8 +1298,9 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
     try:
         prechecked_price = None
+        prechecked_avg_volume = None
         if current_market() == "hk":
-            prechecked_price = latest_download_price(ticker)
+            prechecked_price, prechecked_avg_volume = latest_download_price_volume(ticker)
             if prechecked_price is None or prechecked_price <= 0:
                 result.rating = "NO_DATA"
                 result.price_data_status = "NO_RECENT_YAHOO_PRICE"
@@ -1205,6 +1324,22 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.industry = info.get("industry") or ""
         result.quote_currency = str(info.get("currency") or "").upper()
         result.financial_currency = str(info.get("financialCurrency") or "").upper()
+        result.quote_type = str(info.get("quoteType") or "").upper()
+        result.liquidity_volume = prechecked_avg_volume
+        if price is not None and prechecked_avg_volume is not None:
+            result.liquidity_value = price * prechecked_avg_volume
+
+        if result.quote_type and result.quote_type != "EQUITY":
+            result.rating = "SKIP"
+            result.price_data_status = "SKIP_NON_EQUITY"
+            result.reason = f"非普通股或非股票资产类型，跳过估值：quoteType={result.quote_type}"
+            return result
+
+        if is_non_common_security_name(result.company_name, result.industry):
+            result.rating = "SKIP"
+            result.price_data_status = "SKIP_NON_COMMON_STOCK"
+            result.reason = "非普通股/债券/优先股/封闭基金等证券，跳过估值，避免财务分子分母错配"
+            return result
 
         if price is None or price <= 0:
             result.rating = "NO_DATA"
@@ -1468,6 +1603,11 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             risk_free_rate=result.risk_free_rate,
         )
 
+        if intrinsic is not None and is_hk_holding_company(result.company_name, sector, industry):
+            intrinsic *= 0.65
+            method = f"{method}_hk_holding_0_65x"
+            result.data_quality_notes = f"{result.data_quality_notes};hk_holding_company_discount_0_65x" if result.data_quality_notes else "hk_holding_company_discount_0_65x"
+
         result.valuation_method = method
         result.valuation_candidates = valuation_candidates
 
@@ -1501,6 +1641,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 accrual_ratio=result.accrual_ratio,
                 model_type=result.model_type,
                 latest_net_income=latest_net_income,
+                fcf_yield=result.fcf_yield,
             )
 
         if intrinsic is not None:
