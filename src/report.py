@@ -126,9 +126,9 @@ def display_method(value: str) -> str:
         return "金融股市净率/净资产收益率：有形账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
     if s.startswith("financial_pb_roe_book_"):
         return "金融股市净率/净资产收益率：账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
-    if s.endswith("_hk_holding_0_65x"):
-        base = s.replace("_hk_holding_0_65x", "")
-        return display_method(base) + "，港股控股公司0.65倍折价"
+    if "_holding_" in s and s.endswith("x"):
+        base, discount = s.rsplit("_holding_", 1)
+        return display_method(base) + "，控股/投资资产折价 " + discount.replace("x", "倍")
     return s
 
 
@@ -988,7 +988,7 @@ def generate_report(
             20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。S/A/B 只代表值得研究，不代表买入。
             {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP，财务与历史价格严重错配会标记为 DATA_MISMATCH。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
-        {f'<div class="warning">重要警示：历史价格压力测试存在未来函数风险。当前财务数据并不代表回放日期当时已经披露的信息，结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
+        {f'<div class="warning">⚠️ 警告：本回放测试存在未来函数（Lookahead Bias）。系统使用当前的财务数据匹配历史股价。回放算出的高安全边际可能是由于公司近年利润大幅增长导致，不代表历史真实的投资机会。本结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
     </div>
 
     <div class="card">

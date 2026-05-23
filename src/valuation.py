@@ -19,9 +19,13 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.5.8"
+MODEL_VERSION = "MOS_Radar_V6.5.9"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
+
+
+class YahooRateLimitError(RuntimeError):
+    pass
 
 
 @dataclass
@@ -65,6 +69,8 @@ class AnalysisResult:
     total_liabilities: float | None = None
     ncav: float | None = None
     tangible_equity: float | None = None
+    long_term_investments: float | None = None
+    investment_assets_ratio: float | None = None
     ebitda: float | None = None
     debt_to_ebitda: float | None = None
     interest_coverage: float | None = None
@@ -282,6 +288,21 @@ def fast_info_value(fast_info, key: str):
             return None
 
 
+def is_yahoo_rate_limit_error(error: Exception) -> bool:
+    text = f"{type(error).__name__}: {error}".lower()
+    return any(
+        token in text
+        for token in [
+            "429",
+            "too many requests",
+            "rate limit",
+            "ratelimit",
+            "401",
+            "unauthorized",
+        ]
+    )
+
+
 def retry_call(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
     last_error = None
     for i in range(attempts):
@@ -289,9 +310,20 @@ def retry_call(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
             return fn()
         except Exception as e:
             last_error = e
+            if is_yahoo_rate_limit_error(e):
+                raise YahooRateLimitError(f"{label}: {type(e).__name__}: {e}") from e
             if i < attempts - 1:
                 time.sleep(base_sleep * (i + 1))
     raise last_error
+
+
+def fetch_yfinance_object(label: str, fn, attempts: int = 3, base_sleep: float = 0.5):
+    try:
+        return retry_call(label, fn, attempts=attempts, base_sleep=base_sleep)
+    except YahooRateLimitError:
+        raise
+    except Exception:
+        return None
 
 
 def quiet_yfinance_call(fn):
@@ -753,16 +785,30 @@ def is_non_common_security_name(company_name: str, industry: str = "") -> bool:
     return any(re.search(pattern, text) for pattern in patterns)
 
 
-def is_hk_holding_company(company_name: str, sector: str, industry: str) -> bool:
-    if current_market() != "hk":
-        return False
+def is_holding_company(
+    company_name: str,
+    sector: str,
+    industry: str,
+    investment_assets_ratio: float | None = None,
+) -> bool:
+    if investment_assets_ratio is not None and investment_assets_ratio > 0.40:
+        return True
     text = f"{company_name or ''} {sector or ''} {industry or ''}".lower()
     strong_terms = [
         "conglomerate", "conglomerates", "investment holding", "investment holdings",
         "holding company", "diversified", "multi-sector",
     ]
-    known_hk_holding_names = ["citic", "ck hutchison", "fosun", "swire pacific", "china resources"]
-    return any(k in text for k in strong_terms) or any(k in text for k in known_hk_holding_names)
+    known_holding_names = [
+        "citic", "ck hutchison", "fosun", "swire pacific", "china resources",
+        "berkshire hathaway",
+    ]
+    return any(k in text for k in strong_terms) or any(k in text for k in known_holding_names)
+
+
+def holding_company_discount(investment_assets_ratio: float | None) -> float:
+    if investment_assets_ratio is not None and investment_assets_ratio > 0.40:
+        return 0.70
+    return 0.65 if current_market() == "hk" else 0.70
 
 
 def calc_cagr(latest: float | None, oldest: float | None, years: int) -> float | None:
@@ -881,26 +927,30 @@ def estimate_intrinsic_value(
             # 保守 owner FCF 基数：取最近、3年、5年中较低的正值，防止高点误判
             fcf_base = min(fcf_candidates)
 
-        valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
+        if model in cyclical_models:
+            valuations.append(("cycle_asset_plus_fcf_4x", cash - debt + fcf_base * 4.0))
+        else:
+            valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
 
         if model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"} and latest_fcf is not None and latest_fcf > 0:
             valuations.append(("latest_fcf_capped_10x", latest_fcf * min(10.0, fcf_multiple) + cash - debt))
 
-        growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
-        dcf = dcf_value(
-            fcf_base=fcf_base,
-            growth=growth,
-            terminal_multiple=terminal_multiple,
-            discount_rate=discount_rate,
-            cash=cash,
-            debt=debt,
-        )
-        if dcf is not None:
-            valuations.append(("conservative_5y_dcf", dcf))
+        if model not in cyclical_models:
+            growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
+            dcf = dcf_value(
+                fcf_base=fcf_base,
+                growth=growth,
+                terminal_multiple=terminal_multiple,
+                discount_rate=discount_rate,
+                cash=cash,
+                debt=debt,
+            )
+            if dcf is not None:
+                valuations.append(("conservative_5y_dcf", dcf))
 
-        valuations.append(("asset_plus_fcf_8x", cash - debt + fcf_base * 8.0))
+            valuations.append(("asset_plus_fcf_8x", cash - debt + fcf_base * 8.0))
 
-    if ni_candidates:
+    if ni_candidates and model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}:
         ni_base = min(ni_candidates)
         valuations.append(("normalized_net_income_pe", ni_base * pe_multiple + cash - debt))
 
@@ -1312,6 +1362,11 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         info = {}
         try:
             info = retry_call(f"{ticker}.info", lambda: quiet_yfinance_call(lambda: t.info or {}))
+        except YahooRateLimitError as e:
+            result.rating = "NO_DATA"
+            result.price_data_status = "YAHOO_RATE_LIMIT"
+            result.reason = f"Yahoo 数据源触发 401/429 限流，终止该 ticker 后续请求：{e}"
+            return result
         except Exception:
             info = {}
 
@@ -1393,34 +1448,17 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         quarterly_cashflow = None
 
         try:
-            annual_financials = retry_call(f"{ticker}.financials", lambda: quiet_yfinance_call(lambda: t.financials))
-        except Exception:
-            annual_financials = None
-
-        try:
-            annual_balance = retry_call(f"{ticker}.balance_sheet", lambda: quiet_yfinance_call(lambda: t.balance_sheet))
-        except Exception:
-            annual_balance = None
-
-        try:
-            annual_cashflow = retry_call(f"{ticker}.cashflow", lambda: quiet_yfinance_call(lambda: t.cashflow))
-        except Exception:
-            annual_cashflow = None
-
-        try:
-            quarterly_financials = retry_call(f"{ticker}.quarterly_financials", lambda: quiet_yfinance_call(lambda: t.quarterly_financials), attempts=2, base_sleep=0.3)
-        except Exception:
-            quarterly_financials = None
-
-        try:
-            quarterly_cashflow = retry_call(f"{ticker}.quarterly_cashflow", lambda: quiet_yfinance_call(lambda: t.quarterly_cashflow), attempts=2, base_sleep=0.3)
-        except Exception:
-            quarterly_cashflow = None
-
-        try:
-            quarterly_balance = retry_call(f"{ticker}.quarterly_balance_sheet", lambda: quiet_yfinance_call(lambda: t.quarterly_balance_sheet), attempts=2, base_sleep=0.3)
-        except Exception:
-            quarterly_balance = None
+            annual_financials = fetch_yfinance_object(f"{ticker}.financials", lambda: quiet_yfinance_call(lambda: t.financials))
+            annual_balance = fetch_yfinance_object(f"{ticker}.balance_sheet", lambda: quiet_yfinance_call(lambda: t.balance_sheet))
+            annual_cashflow = fetch_yfinance_object(f"{ticker}.cashflow", lambda: quiet_yfinance_call(lambda: t.cashflow))
+            quarterly_financials = fetch_yfinance_object(f"{ticker}.quarterly_financials", lambda: quiet_yfinance_call(lambda: t.quarterly_financials), attempts=2, base_sleep=0.3)
+            quarterly_cashflow = fetch_yfinance_object(f"{ticker}.quarterly_cashflow", lambda: quiet_yfinance_call(lambda: t.quarterly_cashflow), attempts=2, base_sleep=0.3)
+            quarterly_balance = fetch_yfinance_object(f"{ticker}.quarterly_balance_sheet", lambda: quiet_yfinance_call(lambda: t.quarterly_balance_sheet), attempts=2, base_sleep=0.3)
+        except YahooRateLimitError as e:
+            result.rating = "NO_DATA"
+            result.price_data_status = "YAHOO_RATE_LIMIT"
+            result.reason = f"Yahoo 数据源触发 401/429 限流，终止该 ticker 后续财报请求：{e}"
+            return result
 
         annual_financials = scale_financial_df(annual_financials, fx_factor)
         annual_balance = scale_financial_df(annual_balance, fx_factor)
@@ -1462,6 +1500,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         current_assets_s = row(balance, ["Current Assets", "Total Current Assets"])
         total_liabilities_s = row(balance, ["Total Liabilities Net Minority Interest", "Total Liabilities"])
         total_assets_s = row(balance, ["Total Assets"])
+        long_term_investments_s = row(balance, [
+            "Long Term Investments",
+            "Investmentin Financial Assets",
+            "Investment In Financial Assets",
+            "Available For Sale Securities",
+            "Investments And Advances",
+        ])
         goodwill_s = row(balance, ["Goodwill"])
         goodwill_and_intangibles_s = row(balance, ["Goodwill And Other Intangible Assets"])
         other_intangible_s = row(balance, ["Other Intangible Assets", "Intangible Assets"])
@@ -1515,6 +1560,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         current_assets = series_latest(current_assets_s)
         total_liabilities = series_latest(total_liabilities_s)
         total_assets = series_latest(total_assets_s)
+        long_term_investments = series_latest(long_term_investments_s)
         goodwill = series_latest(goodwill_s)
         other_intangible = series_latest(other_intangible_s)
         goodwill_and_intangibles = series_latest(goodwill_and_intangibles_s)
@@ -1540,6 +1586,9 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.total_liabilities = total_liabilities
         result.ncav = current_assets - total_liabilities if current_assets is not None and total_liabilities is not None else None
         result.tangible_equity = equity - goodwill_and_intangibles if equity is not None and goodwill_and_intangibles is not None else None
+        result.long_term_investments = long_term_investments
+        if long_term_investments is not None and total_assets is not None and total_assets > 0:
+            result.investment_assets_ratio = long_term_investments / total_assets
         result.ebitda = ebitda
         result.equity = equity
         result.risk_free_rate = get_risk_free_rate()
@@ -1603,10 +1652,14 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             risk_free_rate=result.risk_free_rate,
         )
 
-        if intrinsic is not None and is_hk_holding_company(result.company_name, sector, industry):
-            intrinsic *= 0.65
-            method = f"{method}_hk_holding_0_65x"
-            result.data_quality_notes = f"{result.data_quality_notes};hk_holding_company_discount_0_65x" if result.data_quality_notes else "hk_holding_company_discount_0_65x"
+        if intrinsic is not None and is_holding_company(result.company_name, sector, industry, result.investment_assets_ratio):
+            discount = holding_company_discount(result.investment_assets_ratio)
+            intrinsic *= discount
+            method = f"{method}_holding_{discount:.2f}x"
+            note = f"holding_company_discount_{discount:.2f}x"
+            if result.investment_assets_ratio is not None:
+                note += f"_investment_assets_ratio={result.investment_assets_ratio:.2f}"
+            result.data_quality_notes = f"{result.data_quality_notes};{note}" if result.data_quality_notes else note
 
         result.valuation_method = method
         result.valuation_candidates = valuation_candidates
@@ -1680,6 +1733,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 debt,
                 equity,
                 total_assets,
+                result.investment_assets_ratio,
                 result.roe,
                 result.gross_margin,
                 result.operating_margin,
