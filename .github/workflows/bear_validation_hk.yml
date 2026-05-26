@@ -1,0 +1,88 @@
+name: MOS Radar - HK - Bear Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      bear_dates:
+        description: "Comma-separated HK bear-market dates"
+        required: true
+        default: "2016-02-12,2020-03-23,2022-10-31"
+      forward_windows:
+        description: "Forward windows in days, comma-separated"
+        required: true
+        default: "365,730,1095"
+      benchmark_ticker:
+        description: "Benchmark ticker"
+        required: true
+        default: "2800.HK"
+      cohort_ratings:
+        description: "Ratings to validate"
+        required: true
+        default: "S,A,B"
+      backtest_use_latest:
+        description: "Use latest saved HK scan instead of running a fresh scan first"
+        required: false
+        default: "false"
+      dry_run:
+        description: "Set true to generate artifacts without sending email"
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  bear-validation-hk:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mos-radar-hk-bear-validation
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run HK bear validation
+        env:
+          MARKET: hk
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          HOLDINGS_TICKERS_HK: ${{ secrets.HOLDINGS_TICKERS_HK }}
+          TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
+          TRAP_COUNT: ${{ vars.TRAP_COUNT }}
+          THIN_COUNT: ${{ vars.THIN_COUNT }}
+          MAX_TICKERS: ${{ vars.HK_MAX_TICKERS }}
+          REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          RUN_MODE: bear_validation
+          BEAR_DATES: ${{ github.event.inputs.bear_dates }}
+          FORWARD_WINDOWS: ${{ github.event.inputs.forward_windows }}
+          BENCHMARK_TICKER: ${{ github.event.inputs.benchmark_ticker }}
+          COHORT_RATINGS: ${{ github.event.inputs.cohort_ratings }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
+        run: python src/main.py
+
+      - name: Upload HK bear validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mos-radar-hk-bear-validation
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            data/results/hk_*bear_validation*.csv
+            reports/hk/*bear_validation*.md

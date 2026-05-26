@@ -1,44 +1,13 @@
-# MOS Radar v6.5.9 Code Snapshot
-Generated: 2026-05-23 11:20:18
-Source: current git-tracked project files in /Users/mac/Desktop/mos-radar
-Note: private/generated runtime files, .env, reports/, data/results/, and CODE_SNAPSHOT files are not included.
+# MOS Radar v6.6.0 Code Snapshot
+Generated: 2026-05-26 17:37:59
+Source: project files in /Users/mac/Desktop/mos-radar
+Note: private/generated runtime files, .env, reports/, data/results/, cache/, and CODE_SNAPSHOT files are not included.
 
-## File Index
+Files included: 31
 
-- `.github/workflows/historical_replay.yml`
-- `.github/workflows/historical_replay_hk.yml`
-- `.github/workflows/mos_radar.yml`
-- `.github/workflows/mos_radar_hk.yml`
-- `.github/workflows/update_hk_universe.yml`
-- `.github/workflows/update_universe.yml`
-- `.gitignore`
-- `CHANGELOG.md`
-- `README.md`
-- `VERSION`
-- `data/feedback.csv`
-- `data/hk_holdings.example.csv`
-- `data/hk_universe.csv`
-- `data/hk_universe_seed.csv`
-- `data/holdings.example.csv`
-- `data/universe.csv`
-- `requirements.txt`
-- `src/emailer.py`
-- `src/historical_replay.py`
-- `src/main.py`
-- `src/price_update.py`
-- `src/report.py`
-- `src/update_hk_universe.py`
-- `src/update_universe.py`
-- `src/valuation.py`
-- `state/.gitkeep`
-- `state/hk_mos_market_latest.csv`
-- `state/mos_market_latest.csv`
+## .github/workflows/historical_replay.yml
 
----
-
-## `.github/workflows/historical_replay.yml`
-
-```yaml
+```text
 name: MOS Radar - US - Historical Replay
 
 on:
@@ -113,9 +82,9 @@ jobs:
             reports/*.md
 ```
 
-## `.github/workflows/historical_replay_hk.yml`
+## .github/workflows/historical_replay_hk.yml
 
-```yaml
+```text
 name: MOS Radar - HK - Historical Replay
 
 on:
@@ -191,9 +160,9 @@ jobs:
             reports/hk/*.md
 ```
 
-## `.github/workflows/mos_radar.yml`
+## .github/workflows/mos_radar.yml
 
-```yaml
+```text
 name: MOS Radar - US - Daily Scanner
 
 on:
@@ -285,9 +254,9 @@ jobs:
           fi
 ```
 
-## `.github/workflows/mos_radar_hk.yml`
+## .github/workflows/mos_radar_hk.yml
 
-```yaml
+```text
 name: MOS Radar - HK - Daily Scanner
 
 on:
@@ -379,9 +348,9 @@ jobs:
           fi
 ```
 
-## `.github/workflows/update_hk_universe.yml`
+## .github/workflows/update_hk_universe.yml
 
-```yaml
+```text
 name: MOS Radar - HK - Update Universe
 
 on:
@@ -446,9 +415,9 @@ jobs:
           git push
 ```
 
-## `.github/workflows/update_universe.yml`
+## .github/workflows/update_universe.yml
 
-```yaml
+```text
 name: MOS Radar - US - Update Universe
 
 on:
@@ -508,7 +477,7 @@ jobs:
           git push
 ```
 
-## `.gitignore`
+## .gitignore
 
 ```text
 .venv/
@@ -527,12 +496,20 @@ data/hk_holdings.csv
 state/hk_*.private.csv
 ```
 
-## `CHANGELOG.md`
+## CHANGELOG.md
 
-```markdown
+```text
 # 更新记录
 
 这里记录 MOS Radar 每个版本的重要变化。
+
+## v6.6.0 - 2026-05-26
+
+- 新增 `bear_validation` 模式，用于一次验证多个熊市日期下筛出的 S/A/B 候选后续是否跑赢大盘。
+- 新增 `src/bear_validation.py`，输出候选明细和按熊市日期/观察窗口聚合的收益、基准收益、超额收益和跑赢比例。
+- 新增 `MOS Radar - US - Bear Validation` 和 `MOS Radar - HK - Bear Validation` 两个 GitHub Actions。
+- 美股默认验证日期为 `2009-03-09,2020-03-23,2022-10-14`，默认基准为 `SPY`；港股默认验证日期为 `2016-02-12,2020-03-23,2022-10-31`，默认基准为 `2800.HK`。
+- 报告明确标注该功能仍存在未来函数和幸存者偏差，只能验证模型方向性，不能作为严格 point-in-time 历史回测。
 
 ## v6.5.9 - 2026-05-23
 
@@ -788,10 +765,10 @@ state/hk_*.private.csv
 - Before pushing a new version, run local validation with a small ticker sample.
 ```
 
-## `README.md`
+## README.md
 
-```markdown
-# MOS Radar：安全边际雷达 V6.5.9
+```text
+# MOS Radar：安全边际雷达 V6.6.0
 
 MOS Radar 目前支持美股和港股两套独立扫描通道。V6.5.2 起，自动任务改为每个交易日盘前各完整扫描一次并发送邮件：美股盘前一次，港股盘前一次。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
@@ -833,6 +810,15 @@ Owner FCF = 经营现金流 - 资本开支 - 股权激励 SBC
 
 REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 
+
+## V6.6.0 熊市候选方向性验证
+
+- 新增美股/港股独立熊市验证 Action：一次输入 3 个或更多熊市日期，系统会在每个熊市价格点重新筛出 S/A/B 候选。
+- 候选会按后续观察窗口计算收益、大盘收益、超额收益和跑赢比例；默认观察 365、730、1095 天。
+- 美股默认基准为 `SPY`，港股默认基准为 `2800.HK`；可以在 Action 表单里手动改成其他指数或 ETF。
+- 输出两张 CSV：`bear_validation_summary.csv` 汇总每个熊市日期/观察窗口的胜率和 alpha，`bear_validation_candidates.csv` 保留候选明细。
+- 本功能用于验证系统方向性：熊市时筛出的安全边际候选，后续是否倾向于跑赢大盘；它不是严格 point-in-time 回测。
+- 报告顶部会明确提示未来函数和幸存者偏差：系统仍使用当前可得财务数据、当前股票池和历史价格。
 
 ## V6.5.9 估值引擎鲁棒性升级
 
@@ -1011,6 +997,8 @@ V6.5 新增港股独立运行通道，不影响原来的美股扫描。港股使
 MOS Radar - HK - Update Universe
 MOS Radar - HK - Daily Scanner
 MOS Radar - HK - Historical Replay
+MOS Radar - US - Bear Validation
+MOS Radar - HK - Bear Validation
 ```
 
 港股相关文件独立保存：
@@ -1068,6 +1056,33 @@ dry_run = false
 
 ```text
 mos-radar-historical-YYYY-MM-DD
+```
+
+### 美股熊市候选方向性验证
+
+GitHub Actions → `MOS Radar - US - Bear Validation` → `Run workflow`：
+
+```text
+bear_dates = 2009-03-09,2020-03-23,2022-10-14
+forward_windows = 365,730,1095
+benchmark_ticker = SPY
+cohort_ratings = S,A,B
+backtest_use_latest = false
+dry_run = true
+```
+
+输出 artifact：
+
+```text
+mos-radar-us-bear-validation
+```
+
+里面包含：
+
+```text
+data/results/bear_validation_summary.csv
+data/results/bear_validation_candidates.csv
+reports/latest_bear_validation.md
 ```
 
 ### 港股股票池更新
@@ -1147,49 +1162,77 @@ mos-radar-hk-historical-YYYY-MM-DD
 
 里面包含港股历史价格压力测试 CSV 和 `reports/hk/*.md` 报告。
 
+### 港股熊市候选方向性验证
+
+GitHub Actions → `MOS Radar - HK - Bear Validation` → `Run workflow`：
+
+```text
+bear_dates = 2016-02-12,2020-03-23,2022-10-31
+forward_windows = 365,730,1095
+benchmark_ticker = 2800.HK
+cohort_ratings = S,A,B
+backtest_use_latest = false
+dry_run = true
+```
+
+输出 artifact：
+
+```text
+mos-radar-hk-bear-validation
+```
+
+里面包含：
+
+```text
+data/results/hk_bear_validation_summary.csv
+data/results/hk_bear_validation_candidates.csv
+reports/hk/latest_bear_validation.md
+```
+
 ### 历史压力测试说明
 
 - 历史模式是价格压力测试，不是严格 point-in-time 财报回测。
-- 系统会先按当前 V6.5 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
+- 系统会先按当前 MOS Radar 模型计算保守价值，再用历史日期附近收盘价重算安全边际。
 - 美股输出文件保存为 `data/results/historical_replay_YYYY-MM-DD.csv`。
 - 港股输出文件保存为 `data/results/hk_historical_replay_YYYY-MM-DD.csv`。
 - `dry_run=false` 会发送邮件；`dry_run=true` 只生成 artifact 不发邮件。
 - `backtest_use_latest=true` 会跳过重新扫描，直接用已有 latest CSV 做价格回放，速度更快但依赖旧结果。
 - 当时尚未上市、改名、分拆或 Yahoo 缺少历史价的股票会显示为 `SKIP`，不会作为模型失败处理。
 - 严格历史回测需要 SEC/港交所公告日期、当时可见财报和当时股本数据，免费 yfinance 不能可靠完成这一层。
+- 熊市候选方向性验证同样不是严格回测；它重点看候选组合相对大盘的后续收益、超额收益和跑赢比例，用来评估模型方向是否有用。
 
 ## 重要提醒
 
-1. V6.5.9 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.6.0 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。
 ```
 
-## `VERSION`
+## VERSION
 
 ```text
-6.5.9
+6.6.0
 ```
 
-## `data/feedback.csv`
+## data/feedback.csv
 
-```csv
+```text
 ticker,label,comment
 ```
 
-## `data/hk_holdings.example.csv`
+## data/hk_holdings.example.csv
 
-```csv
+```text
 ticker
 0700.HK
 9988.HK
 0005.HK
 ```
 
-## `data/hk_universe.csv`
+## data/hk_universe.csv
 
-```csv
+```text
 ticker,name,source,market_cap,liquidity_volume,volume_source,avg_volume,last_price
 2255.HK,Haichang Hldg,hkex_yfinance,,708458000.0,10d_avg_volume,708458000.0,0.4399999976158142
 2473.HK,Xxf,hkex_yfinance,,565760827.6,10d_avg_volume,565760827.6,0.8299999833106995
@@ -2589,9 +2632,9 @@ ticker,name,source,market_cap,liquidity_volume,volume_source,avg_volume,last_pri
 6622.HK,Zhaoke Ophth-B,hkex_yfinance,,500350.0,10d_avg_volume,500350.0,2.6700000762939453
 ```
 
-## `data/hk_universe_seed.csv`
+## data/hk_universe_seed.csv
 
-```csv
+```text
 ticker,name
 0001.HK,CK Hutchison Holdings
 0002.HK,CLP Holdings
@@ -2680,17 +2723,17 @@ ticker,name
 9999.HK,NetEase
 ```
 
-## `data/holdings.example.csv`
+## data/holdings.example.csv
 
-```csv
+```text
 ticker,note
 AAPL,example
 MSFT,example
 ```
 
-## `data/universe.csv`
+## data/universe.csv
 
-```csv
+```text
 ticker,name,source,market_cap,liquidity_volume,volume_source,avg_volume,last_price
 NVDA,NVIDIA Corporation - Common Stock,nasdaq,5478011792629.0,179967406.0,last_volume,,225.32
 GOOGL,Alphabet Inc. - Class A Common Stock,nasdaq,4807386480000.0,20204908.0,last_volume,,396.78
@@ -4694,7 +4737,7 @@ INTA,"Intapp, Inc. - Common Stock",nasdaq,1617522879.0,1541323.0,last_volume,,20
 MQ,"Marqeta, Inc. - Class A Common Stock",nasdaq,1615555493.0,3157901.0,last_volume,,3.81
 ```
 
-## `requirements.txt`
+## requirements.txt
 
 ```text
 yfinance>=0.2.54
@@ -4704,9 +4747,9 @@ python-dateutil>=2.9.0
 requests>=2.31
 ```
 
-## `src/emailer.py`
+## src/emailer.py
 
-```python
+```text
 from __future__ import annotations
 
 import os
@@ -4760,9 +4803,9 @@ def send_email(subject: str, body: str):
             server.sendmail(smtp_user, [mail_to], msg.as_string())
 ```
 
-## `src/historical_replay.py`
+## src/historical_replay.py
 
-```python
+```text
 from __future__ import annotations
 
 import contextlib
@@ -5037,9 +5080,9 @@ def run_historical_replay(df: pd.DataFrame, backtest_date: str) -> pd.DataFrame:
     return apply_historical_replay(df, prices, backtest_date)
 ```
 
-## `src/main.py`
+## src/main.py
 
-```python
+```text
 from __future__ import annotations
 
 import json
@@ -5050,6 +5093,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from bear_validation import build_config, generate_bear_validation_report, run_bear_validation
 from emailer import send_email
 from historical_replay import run_historical_replay
 from price_update import update_prices_only
@@ -5433,6 +5477,24 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
             save_public_market_state(df)
 
 
+def save_bear_validation_files(candidates: pd.DataFrame, summary: pd.DataFrame, body: str) -> None:
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    candidates_path = RESULTS_PATH.parent / f"{MARKET_PREFIX}bear_validation_candidates.csv"
+    summary_path = RESULTS_PATH.parent / f"{MARKET_PREFIX}bear_validation_summary.csv"
+
+    candidates.to_csv(candidates_path, index=False)
+    summary.to_csv(summary_path, index=False)
+
+    (REPORTS_DIR / f"bear_validation_{timestamp}.md").write_text(body, encoding="utf-8")
+    (REPORTS_DIR / "latest_bear_validation.md").write_text(body, encoding="utf-8")
+
+    print(f"Saved bear validation candidates: {candidates_path} rows={len(candidates)}", flush=True)
+    print(f"Saved bear validation summary: {summary_path} rows={len(summary)}", flush=True)
+
+
 def subject_for(mode: str) -> str:
     today = datetime.now().strftime("%Y-%m-%d")
     label = MARKET_LABELS.get(MARKET, MARKET.upper())
@@ -5445,6 +5507,7 @@ def subject_for(mode: str) -> str:
         "afternoon_update": f"【MOS Radar {label}】{today} 下午安全边际变化",
         "manual": f"【MOS Radar {label}】{today} 手动安全边际扫描",
         "historical_replay": f"【MOS Radar {label}】{today} 历史价格压力测试",
+        "bear_validation": f"【MOS Radar {label}】{today} 熊市候选方向性验证",
     }
 
     return mapping.get(mode, f"【MOS Radar {label}】{today} 安全边际报告")
@@ -5468,6 +5531,30 @@ def main() -> None:
         df = run_historical_replay(base_df, backtest_date)
         df = annotate_pools(df)
         df["scan_time"] = datetime.now().isoformat(timespec="seconds")
+
+    elif mode == "bear_validation":
+        use_latest = env_bool("BACKTEST_USE_LATEST", default=False)
+        base_df = load_latest_state_required() if use_latest else run_full_scan()
+        config = build_config(
+            market=MARKET,
+            bear_dates=os.getenv("BEAR_DATES"),
+            forward_windows=os.getenv("FORWARD_WINDOWS"),
+            benchmark_ticker=os.getenv("BENCHMARK_TICKER"),
+            cohort_ratings=os.getenv("COHORT_RATINGS"),
+            include_holdings=env_bool("BEAR_INCLUDE_HOLDINGS", default=False),
+        )
+        candidates, summary = run_bear_validation(base_df, config)
+        candidates = annotate_pools(candidates) if not candidates.empty else candidates
+        report_body = generate_bear_validation_report(candidates, summary, config)
+        save_bear_validation_files(candidates, summary, report_body)
+
+        dry_run = env_bool("DRY_RUN", default=False)
+        if dry_run:
+            print("DRY_RUN=true, email not sent.", flush=True)
+        else:
+            send_email(subject_for(mode), report_body)
+            print("Email sent.", flush=True)
+        return
 
     elif mode == "morning_email":
         df = load_latest_state_required()
@@ -5500,7 +5587,7 @@ def main() -> None:
     dry_run = env_bool("DRY_RUN", default=False)
 
     should_send = (
-        mode in {"premarket_scan", "morning_email", "noon_update", "afternoon_update", "manual", "historical_replay"}
+        mode in {"premarket_scan", "morning_email", "noon_update", "afternoon_update", "manual", "historical_replay", "bear_validation"}
         or (mode == "full_after_close" and send_after_close)
     )
 
@@ -5517,9 +5604,9 @@ if __name__ == "__main__":
     main()
 ```
 
-## `src/price_update.py`
+## src/price_update.py
 
-```python
+```text
 from __future__ import annotations
 
 import contextlib
@@ -5771,9 +5858,9 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
     return df
 ```
 
-## `src/report.py`
+## src/report.py
 
-```python
+```text
 from __future__ import annotations
 
 from datetime import datetime
@@ -6824,9 +6911,9 @@ def generate_report(
     return html
 ```
 
-## `src/update_hk_universe.py`
+## src/update_hk_universe.py
 
-```python
+```text
 from __future__ import annotations
 
 import os
@@ -7191,9 +7278,9 @@ if __name__ == "__main__":
     main()
 ```
 
-## `src/update_universe.py`
+## src/update_universe.py
 
-```python
+```text
 from __future__ import annotations
 
 import os
@@ -7452,9 +7539,9 @@ if __name__ == "__main__":
     main()
 ```
 
-## `src/valuation.py`
+## src/valuation.py
 
-```python
+```text
 from __future__ import annotations
 
 import contextlib
@@ -7476,7 +7563,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.5.9"
+MODEL_VERSION = "MOS_Radar_V6.6.0"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -9299,14 +9386,15 @@ def results_to_dataframe(results: list[AnalysisResult]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 ```
 
-## `state/.gitkeep`
+## state/.gitkeep
 
 ```text
+
 ```
 
-## `state/hk_mos_market_latest.csv`
+## state/hk_mos_market_latest.csv
 
-```csv
+```text
 ticker,company_name,sector,industry,quote_currency,financial_currency,financial_to_quote_fx,price,market_cap,enterprise_value,revenue_ttm,financial_period_type,data_quality_notes,revenue_5y_cagr,gross_margin,operating_margin,net_margin,net_income_ttm,reported_fcf_ttm,sbc_ttm,fcf_ttm,fcf_3y_avg,fcf_5y_avg,fcf_volatility,fcf_yield,fcf_conversion,cash,total_debt,net_cash,total_assets,total_liabilities,ncav,tangible_equity,ebitda,debt_to_ebitda,interest_coverage,equity,roe,share_dilution_3y,intrinsic_value_total,intrinsic_value_per_share,buy_price_20mos,buy_price_35mos,buy_price_50mos,margin_of_safety,valuation_method,valuation_candidates,industry_model_status,model_type,model_version,risk_free_rate,discount_rate_used,accrual_ratio,mos_score,cashflow_score,balance_sheet_score,quality_score,trend_score,data_quality_score,confidence_score,final_score,trap_flags,trap_count,rating_cap,feedback_label,is_historical_replay,backtest_date,current_price,current_market_cap,return_since_backtest,historical_price_status,rating,price_data_status,cache_status,cache_age_days,reason,margin_of_safety_at_scan,scan_time
 2255.HK,Haichang Ocean Park Holdings Ltd.,Consumer Cyclical,Leisure,HKD,CNY,1.1519999504089355,0.41999998688697815,5549880666.724503,11108092651.4557,1784633395.175457,ANNUAL_FALLBACK,financials_converted_CNY_to_HKD_fx=1.1520;quarterly_ttm_unavailable_used_annual_fallback,0.25009584950208463,0.1959970590532553,-0.30065241766349654,-0.6170275394229522,-1101167952.5971413,-522026473.5279083,,-522026473.5279083,-624910437.09898,-676263426.8883467,,-0.0940608465075348,0.47406616973976723,1199324108.3717346,6757536093.102932,-5558211984.731197,12429063400.956154,9193352436.246395,-7521034428.236008,3140001656.829834,-336767601.50289536,,-1.450985217838284,3161000311.925888,-0.3483605959931835,0.6285431036373912,2512001325.463867,0.1901014791328068,0.158417899277339,0.14081591046874578,0.12673431942187122,-0.547377416504627,tangible_book_0_8x,tangible_book_0_8x=2512001325,GENERAL_OWNER_FCF_MODEL,consumer_cyclical,MOS_Radar_V6.5.7,0.045859999656677246,0.12585999965667724,-0.04659574582463553,0,0.0,0.0,0.0,5.0,10.0,60.0,15.0,"latest_fcf_negative,avg_fcf_not_positive,gross_margin_decline,operating_margin_decline,weak_interest_coverage,debt_exceeds_market_cap,negative_operating_margin,negative_net_margin,heavy_dilution",9,,,False,,,,,,D_TRAP,,MISS,0,"疑似价值陷阱：latest_fcf_negative,avg_fcf_not_positive,gross_margin_decline,operating_margin_decline,weak_interest_coverage,debt_exceeds_market_cap,negative_operating_margin,negative_net_margin,heavy_dilution",-0.547377416504627,2026-05-22T05:56:48
 2473.HK,XXF Group Holdings Limited,Financial Services,Credit Services,HKD,CNY,1.1519999504089355,0.7900000214576721,1466437539.8308039,4263527979.4222116,2145561891.638279,ANNUAL_FALLBACK,financials_converted_CNY_to_HKD_fx=1.1520;quarterly_ttm_unavailable_used_annual_fallback,0.17724700146690098,0.257234624828252,0.12846670571881275,0.024620570458429598,52824957.72600174,-611050725.69561,,-611050725.69561,-409497966.3720131,-371400464.0120268,,,,428358509.5601082,3225448949.151516,-2797090439.591408,4408510274.223328,3397122285.7613564,-1112921808.0911636,980175701.8055916,442346092.9579735,,,1004860756.7429543,0.05256943051216646,0.0,588105421.083355,0.3168244692704943,0.26402039105874525,0.23468479205221798,0.21121631284699618,-0.5989563789050231,financial_pb_roe_tangible_book_0.60x,financial_pb_roe_tangible_book_0.60x=588105421,FINANCIAL_LIMITED_PB_ROE_NEEDS_INDUSTRY_SPECIFIC_REVIEW,financial_pb_roe,MOS_Radar_V6.5.7,0.045859999656677246,0.12585999965667724,0.1505895738302596,0,0.0,0.0,5.0,0.0,10.0,80.0,15.0,,0,,,False,,,,,,PASS,,MISS,0,金融股当前价格高于保守 PB/ROE 价值，没有安全边际,-0.5989563789050231,2026-05-22T05:56:48
@@ -10706,9 +10794,9 @@ ticker,company_name,sector,industry,quote_currency,financial_currency,financial_
 6622.HK,Zhaoke Ophthalmology Limited,Healthcare,Biotechnology,HKD,CNY,1.1519999504089355,2.619999885559082,1435681368.7298088,667351545.804718,36834046.414375305,ANNUAL_FALLBACK,financials_converted_CNY_to_HKD_fx=1.1520;quarterly_ttm_unavailable_used_annual_fallback,,0.5020641771439295,-8.61562519547132,-6.535997998373679,-240747253.63636017,-305326066.8563843,7176959.691047668,-312503026.54743195,-391173871.1608251,-470870763.73004913,,-0.21766879013266915,1.2980543778890048,1105126224.4267464,336796401.5016556,768329822.9250908,2229479328.025818,414057582.17573166,1168612941.6937828,1373466180.8753014,-170007544.68154907,,-30.325407309555263,1815421745.8500862,-0.13261230024741621,0.003352332324552565,,,,,,,NO_VALID_VALUATION,,GENERAL_OWNER_FCF_MODEL,biotech_special_case,MOS_Radar_V6.5.7,0.045859999656677246,0.14585999965667726,0.03218499136056615,0,5.0,10.0,3.0,2.0,10.0,67.5,30.0,"latest_fcf_negative,avg_fcf_not_positive,gross_margin_decline,weak_interest_coverage,negative_operating_margin,negative_net_margin",6,,,False,,,,,,NO_DATA,,MISS,0,估值数据不足：NO_VALID_VALUATION,,2026-05-22T05:56:48
 ```
 
-## `state/mos_market_latest.csv`
+## state/mos_market_latest.csv
 
-```csv
+```text
 ticker,company_name,sector,industry,quote_currency,financial_currency,financial_to_quote_fx,price,market_cap,enterprise_value,revenue_ttm,financial_period_type,data_quality_notes,revenue_5y_cagr,gross_margin,operating_margin,net_margin,net_income_ttm,reported_fcf_ttm,sbc_ttm,fcf_ttm,fcf_3y_avg,fcf_5y_avg,fcf_volatility,fcf_yield,fcf_conversion,cash,total_debt,net_cash,total_assets,total_liabilities,ncav,tangible_equity,ebitda,debt_to_ebitda,interest_coverage,equity,roe,share_dilution_3y,intrinsic_value_total,intrinsic_value_per_share,buy_price_20mos,buy_price_35mos,buy_price_50mos,margin_of_safety,valuation_method,valuation_candidates,industry_model_status,model_type,model_version,risk_free_rate,discount_rate_used,accrual_ratio,mos_score,cashflow_score,balance_sheet_score,quality_score,trend_score,data_quality_score,confidence_score,final_score,trap_flags,trap_count,rating_cap,feedback_label,is_historical_replay,backtest_date,current_price,current_market_cap,return_since_backtest,historical_price_status,rating,price_data_status,cache_status,cache_age_days,reason,margin_of_safety_at_scan,scan_time
 NVDA,NVIDIA Corporation,Technology,Semiconductors,USD,USD,1.0,218.16000366210938,5284053448699.951,5283164448699.951,253491000000.0,TTM,,1.0004509499443963,0.741454331711974,0.6402002437956377,0.629659435640713,159613000000.0,119076000000.0,6840000000.0,112236000000.0,56626000000.0,42744250000.0,0.788617376362613,0.021240511870222224,0.7031758064819281,13237000000.0,12348000000.0,889000000.0,259474000000.0,64000000000.0,86995000000.0,171460000000.0,192970000000.0,0.06398922112245427,544.5805369127517,195474000000.0,0.8165433766127465,-0.005194675935433546,342843000000.0,14.154783039511168,11.795652532925974,10.485024473711976,9.436522026340779,-0.9351174239003297,asset_plus_fcf_8x,asset_plus_fcf_8x=342843000000; normalized_fcf_multiple=428331500000; conservative_5y_dcf=467729414775; normalized_net_income_pe=625345250000,SEMICONDUCTOR_CYCLE_LIMITED_NEEDS_INVENTORY_MARGIN_CAPEX_REVIEW,cyclical_semiconductor,MOS_Radar_V6.5.7,0.045799999237060546,0.12579999923706053,0.18258862159599806,0,13.0,13.0,15.0,10.0,10.0,89.5,61.0,"high_accrual_ratio,possible_cycle_peak_fcf",2,,,False,,,,,,PASS,,MISS,0,当前价格高于保守内在价值，没有安全边际,-0.9351174239003297,2026-05-22T16:40:04
 GOOGL,Alphabet Inc.,Communication Services,Internet Content & Information,USD,USD,1.0,386.82000732421875,4686496196386.443,4738917196386.443,422499000000.0,TTM,,0.12511745609215974,0.603677168466671,0.32693331818536847,0.37919143003888767,160208000000.0,64429000000.0,26188000000.0,38241000000.0,48442333333.333336,46493750000.0,0.07598416251506002,0.008159827384365744,0.2386959452711475,38063000000.0,90484000000.0,-52421000000.0,703919000000.0,225173000000.0,-11420000000.0,411528000000.0,218815000000.0,0.41351826885725385,111.84534412955466,478746000000.0,0.33464091605987306,0.000991407799074695,253507000000.0,20.924284473409326,17.436903727841106,15.499469980303203,13.949522982272883,-0.9459069229170679,asset_plus_fcf_8x,asset_plus_fcf_8x=253507000000; latest_fcf_capped_10x=329989000000; normalized_fcf_multiple=368230000000; conservative_5y_dcf=477871531748; normalized_net_income_pe=1045744000000,GENERAL_OWNER_FCF_MODEL,communication_services,MOS_Radar_V6.5.7,0.045799999237060546,0.11,0.17326851526951254,0,10.0,5.0,15.0,8.0,10.0,85.0,48.0,"weak_cash_conversion,high_accrual_ratio",2,,,False,,,,,,PASS,,MISS,0,当前价格高于保守内在价值，没有安全边际,-0.9459069229170679,2026-05-22T16:40:04
@@ -12710,3 +12798,582 @@ INTA,"Intapp, Inc.",Technology,Software - Application,USD,USD,1.0,19.98999977111
 MQ,"Marqeta, Inc.",Technology,Software - Infrastructure,USD,USD,1.0,3.9649999141693115,1681280154.6501863,1021577154.6501863,651609000.0,TTM,,-0.05827072184675586,0.7000900846980321,-0.03959122725438108,0.003328683305479206,2169000.0,117257000.0,98890000.0,18367000.0,-63700333.333333336,-78878750.0,,0.010924413726766143,8.467957584140157,674790000.0,15087000.0,659703000.0,1476713000.0,734431000.0,453987000.0,539914000.0,4888000.0,3.0865384615384617,,742282000.0,0.002922070048849359,-0.05275453378394912,690069000.0,1.62740487848094,1.35617073206745,1.2054850951710667,1.0849365856539601,-0.5895573988122292,normalized_net_income_pe,normalized_net_income_pe=690069000; asset_plus_fcf_8x=806639000; conservative_5y_dcf=816465745; latest_fcf_capped_10x=843373000; normalized_fcf_multiple=898474000,SOFTWARE_OWNER_FCF_SBC_ADJUSTED_NEEDS_NRR_RPO_RULE_OF_40_REVIEW,software_tech,MOS_Radar_V6.5.7,0.045799999237060546,0.11579999923706055,-0.010968956053071924,0,10.0,12.0,4.0,3.0,10.0,80.0,39.0,"avg_fcf_not_positive,revenue_decline,negative_operating_margin",3,,,False,,,,,,D_TRAP,,MISS,0,"疑似价值陷阱：avg_fcf_not_positive,revenue_decline,negative_operating_margin",-0.5895573988122292,2026-05-22T16:40:04
 ```
 
+## .github/workflows/bear_validation.yml
+
+```text
+name: MOS Radar - US - Bear Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      bear_dates:
+        description: "Comma-separated bear-market dates"
+        required: true
+        default: "2009-03-09,2020-03-23,2022-10-14"
+      forward_windows:
+        description: "Forward windows in days, comma-separated"
+        required: true
+        default: "365,730,1095"
+      benchmark_ticker:
+        description: "Benchmark ticker"
+        required: true
+        default: "SPY"
+      cohort_ratings:
+        description: "Ratings to validate"
+        required: true
+        default: "S,A,B"
+      backtest_use_latest:
+        description: "Use latest saved scan instead of running a fresh scan first"
+        required: false
+        default: "false"
+      dry_run:
+        description: "Set true to generate artifacts without sending email"
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  bear-validation:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mos-radar-us-bear-validation
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run US bear validation
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          HOLDINGS_TICKERS: ${{ secrets.HOLDINGS_TICKERS }}
+          TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
+          TRAP_COUNT: ${{ vars.TRAP_COUNT }}
+          THIN_COUNT: ${{ vars.THIN_COUNT }}
+          MAX_TICKERS: ${{ vars.MAX_TICKERS }}
+          REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          RUN_MODE: bear_validation
+          BEAR_DATES: ${{ github.event.inputs.bear_dates }}
+          FORWARD_WINDOWS: ${{ github.event.inputs.forward_windows }}
+          BENCHMARK_TICKER: ${{ github.event.inputs.benchmark_ticker }}
+          COHORT_RATINGS: ${{ github.event.inputs.cohort_ratings }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
+        run: python src/main.py
+
+      - name: Upload bear validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mos-radar-us-bear-validation
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            data/results/*bear_validation*.csv
+            reports/*bear_validation*.md
+```
+
+## .github/workflows/bear_validation_hk.yml
+
+```text
+name: MOS Radar - HK - Bear Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      bear_dates:
+        description: "Comma-separated HK bear-market dates"
+        required: true
+        default: "2016-02-12,2020-03-23,2022-10-31"
+      forward_windows:
+        description: "Forward windows in days, comma-separated"
+        required: true
+        default: "365,730,1095"
+      benchmark_ticker:
+        description: "Benchmark ticker"
+        required: true
+        default: "2800.HK"
+      cohort_ratings:
+        description: "Ratings to validate"
+        required: true
+        default: "S,A,B"
+      backtest_use_latest:
+        description: "Use latest saved HK scan instead of running a fresh scan first"
+        required: false
+        default: "false"
+      dry_run:
+        description: "Set true to generate artifacts without sending email"
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  bear-validation-hk:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mos-radar-hk-bear-validation
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run HK bear validation
+        env:
+          MARKET: hk
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          HOLDINGS_TICKERS_HK: ${{ secrets.HOLDINGS_TICKERS_HK }}
+          TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
+          TRAP_COUNT: ${{ vars.TRAP_COUNT }}
+          THIN_COUNT: ${{ vars.THIN_COUNT }}
+          MAX_TICKERS: ${{ vars.HK_MAX_TICKERS }}
+          REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          RUN_MODE: bear_validation
+          BEAR_DATES: ${{ github.event.inputs.bear_dates }}
+          FORWARD_WINDOWS: ${{ github.event.inputs.forward_windows }}
+          BENCHMARK_TICKER: ${{ github.event.inputs.benchmark_ticker }}
+          COHORT_RATINGS: ${{ github.event.inputs.cohort_ratings }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
+        run: python src/main.py
+
+      - name: Upload HK bear validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mos-radar-hk-bear-validation
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            data/results/hk_*bear_validation*.csv
+            reports/hk/*bear_validation*.md
+```
+
+## src/bear_validation.py
+
+```text
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from html import escape
+from typing import Iterable
+
+import pandas as pd
+
+from historical_replay import fetch_historical_prices, run_historical_replay
+from report import money, pct, rating_badge
+from valuation import MODEL_VERSION, safe_float
+
+
+US_DEFAULT_BEAR_DATES = "2009-03-09,2020-03-23,2022-10-14"
+HK_DEFAULT_BEAR_DATES = "2016-02-12,2020-03-23,2022-10-31"
+DEFAULT_FORWARD_WINDOWS = "365,730,1095"
+DEFAULT_COHORT_RATINGS = "S,A,B"
+
+
+@dataclass(frozen=True)
+class BearValidationConfig:
+    market: str
+    bear_dates: list[str]
+    forward_windows: list[int]
+    benchmark_ticker: str
+    cohort_ratings: set[str]
+    include_holdings: bool = False
+
+
+def default_bear_dates(market: str) -> str:
+    return HK_DEFAULT_BEAR_DATES if str(market).lower() == "hk" else US_DEFAULT_BEAR_DATES
+
+
+def default_benchmark(market: str) -> str:
+    return "2800.HK" if str(market).lower() == "hk" else "SPY"
+
+
+def parse_csv_list(value: str | None, default: str) -> list[str]:
+    raw = value if value is not None and str(value).strip() else default
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in str(raw).replace("\n", ",").split(","):
+        x = item.strip()
+        if not x or x in seen:
+            continue
+        seen.add(x)
+        out.append(x)
+    return out
+
+
+def parse_bear_dates(value: str | None, market: str) -> list[str]:
+    dates = parse_csv_list(value, default_bear_dates(market))
+    parsed: list[str] = []
+    for item in dates:
+        parsed.append(datetime.strptime(item, "%Y-%m-%d").strftime("%Y-%m-%d"))
+    return parsed
+
+
+def parse_forward_windows(value: str | None) -> list[int]:
+    raw = parse_csv_list(value, DEFAULT_FORWARD_WINDOWS)
+    windows: list[int] = []
+    for item in raw:
+        days = int(float(item))
+        if days > 0 and days not in windows:
+            windows.append(days)
+    return windows
+
+
+def parse_ratings(value: str | None) -> set[str]:
+    ratings = parse_csv_list(value, DEFAULT_COHORT_RATINGS)
+    return {x.strip().upper() for x in ratings if x.strip()}
+
+
+def build_config(
+    market: str,
+    bear_dates: str | None,
+    forward_windows: str | None,
+    benchmark_ticker: str | None,
+    cohort_ratings: str | None,
+    include_holdings: bool = False,
+) -> BearValidationConfig:
+    market = str(market or "us").strip().lower() or "us"
+    return BearValidationConfig(
+        market=market,
+        bear_dates=parse_bear_dates(bear_dates, market),
+        forward_windows=parse_forward_windows(forward_windows),
+        benchmark_ticker=(benchmark_ticker or default_benchmark(market)).strip().upper(),
+        cohort_ratings=parse_ratings(cohort_ratings),
+        include_holdings=include_holdings,
+    )
+
+
+def _parse_date(value: str) -> datetime:
+    return datetime.strptime(str(value), "%Y-%m-%d")
+
+
+def _target_date(start_date: str, days: int) -> str:
+    return (_parse_date(start_date) + timedelta(days=int(days))).strftime("%Y-%m-%d")
+
+
+def _is_true(value) -> bool:
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y"}
+    return bool(value)
+
+
+def _clean_tickers(values: Iterable) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        ticker = str(value or "").strip().upper()
+        if not ticker or ticker in seen:
+            continue
+        seen.add(ticker)
+        out.append(ticker)
+    return out
+
+
+def _select_cohort(df: pd.DataFrame, config: BearValidationConfig) -> pd.DataFrame:
+    if df.empty or "rating" not in df.columns:
+        return pd.DataFrame()
+    out = df[df["rating"].astype(str).str.upper().isin(config.cohort_ratings)].copy()
+    if not config.include_holdings and "is_holding" in out.columns:
+        out = out[~out["is_holding"].map(_is_true)].copy()
+    if "historical_price_status" in out.columns:
+        out = out[out["historical_price_status"].fillna("").astype(str).isin(["OK", ""])]
+    return out.reset_index(drop=True)
+
+
+def _benchmark_return(benchmark_ticker: str, start_date: str, end_date: str) -> float | None:
+    prices = fetch_historical_prices([benchmark_ticker], start_date, lookahead_days=10)
+    start_price = safe_float(prices.get(benchmark_ticker))
+    prices = fetch_historical_prices([benchmark_ticker], end_date, lookahead_days=10)
+    end_price = safe_float(prices.get(benchmark_ticker))
+    if start_price is None or start_price <= 0 or end_price is None or end_price <= 0:
+        return None
+    return end_price / start_price - 1
+
+
+def _add_forward_returns(cohort: pd.DataFrame, config: BearValidationConfig, bear_date: str) -> pd.DataFrame:
+    cohort = cohort.copy()
+    tickers = _clean_tickers(cohort.get("ticker", pd.Series(dtype=object)).tolist())
+    if not tickers:
+        return cohort
+
+    start_price = pd.to_numeric(cohort.get("price", pd.Series(index=cohort.index)), errors="coerce")
+
+    for days in config.forward_windows:
+        target = _target_date(bear_date, days)
+        prices = fetch_historical_prices(tickers, target, lookahead_days=10)
+        benchmark_return = _benchmark_return(config.benchmark_ticker, bear_date, target)
+
+        future_col = f"price_after_{days}d"
+        return_col = f"return_after_{days}d"
+        benchmark_col = f"benchmark_return_after_{days}d"
+        alpha_col = f"alpha_after_{days}d"
+        beat_col = f"beat_benchmark_after_{days}d"
+
+        cohort[future_col] = cohort["ticker"].astype(str).str.upper().map(prices)
+        future_price = pd.to_numeric(cohort[future_col], errors="coerce")
+        returns = future_price / start_price - 1
+        cohort[return_col] = returns
+        cohort[benchmark_col] = benchmark_return
+        cohort[alpha_col] = returns - benchmark_return if benchmark_return is not None else pd.NA
+        cohort[beat_col] = cohort[alpha_col].map(lambda x: bool(pd.notna(x) and float(x) > 0))
+
+    return cohort
+
+
+def _summary_for_date(cohort: pd.DataFrame, config: BearValidationConfig, bear_date: str) -> pd.DataFrame:
+    rows: list[dict] = []
+    for days in config.forward_windows:
+        return_col = f"return_after_{days}d"
+        benchmark_col = f"benchmark_return_after_{days}d"
+        alpha_col = f"alpha_after_{days}d"
+        beat_col = f"beat_benchmark_after_{days}d"
+
+        returns = pd.to_numeric(cohort.get(return_col, pd.Series(dtype=float)), errors="coerce")
+        alphas = pd.to_numeric(cohort.get(alpha_col, pd.Series(dtype=float)), errors="coerce")
+        valid = returns.dropna()
+        benchmark_return = None
+        if benchmark_col in cohort.columns:
+            bench_values = pd.to_numeric(cohort[benchmark_col], errors="coerce").dropna()
+            benchmark_return = safe_float(bench_values.iloc[0]) if not bench_values.empty else None
+
+        beat_rate = None
+        if beat_col in cohort.columns and not alphas.dropna().empty:
+            beat_rate = float(cohort.loc[alphas.notna(), beat_col].mean())
+
+        rows.append(
+            {
+                "market": config.market,
+                "bear_date": bear_date,
+                "benchmark_ticker": config.benchmark_ticker,
+                "forward_days": days,
+                "cohort_ratings": ",".join(sorted(config.cohort_ratings)),
+                "candidate_count": int(len(cohort)),
+                "evaluated_count": int(len(valid)),
+                "average_return": safe_float(valid.mean()) if not valid.empty else None,
+                "median_return": safe_float(valid.median()) if not valid.empty else None,
+                "benchmark_return": benchmark_return,
+                "average_alpha": safe_float(alphas.dropna().mean()) if not alphas.dropna().empty else None,
+                "median_alpha": safe_float(alphas.dropna().median()) if not alphas.dropna().empty else None,
+                "beat_rate": beat_rate,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def run_bear_validation(base_df: pd.DataFrame, config: BearValidationConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
+    candidate_frames: list[pd.DataFrame] = []
+    summary_frames: list[pd.DataFrame] = []
+
+    for bear_date in config.bear_dates:
+        print(f"Bear validation replay date: {bear_date}", flush=True)
+        replay_df = run_historical_replay(base_df, bear_date)
+        cohort = _select_cohort(replay_df, config)
+        cohort["bear_date"] = bear_date
+        cohort["benchmark_ticker"] = config.benchmark_ticker
+        cohort["cohort_ratings"] = ",".join(sorted(config.cohort_ratings))
+
+        if not cohort.empty:
+            cohort = _add_forward_returns(cohort, config, bear_date)
+
+        candidate_frames.append(cohort)
+        summary_frames.append(_summary_for_date(cohort, config, bear_date))
+
+    candidates = pd.concat(candidate_frames, ignore_index=True) if candidate_frames else pd.DataFrame()
+    summary = pd.concat(summary_frames, ignore_index=True) if summary_frames else pd.DataFrame()
+    return candidates, summary
+
+
+def _pct_cell(value) -> str:
+    return pct(value)
+
+
+def _summary_table(summary: pd.DataFrame) -> str:
+    if summary.empty:
+        return '<div class="empty">暂无可统计结果。</div>'
+
+    rows = []
+    for _, row in summary.iterrows():
+        rows.append(
+            f"""
+            <tr>
+                <td>{escape(str(row.get("bear_date", "")))}</td>
+                <td class="num">{int(row.get("forward_days", 0) or 0)}</td>
+                <td>{escape(str(row.get("benchmark_ticker", "")))}</td>
+                <td class="num">{int(row.get("candidate_count", 0) or 0)}</td>
+                <td class="num">{int(row.get("evaluated_count", 0) or 0)}</td>
+                <td class="num">{_pct_cell(row.get("median_return"))}</td>
+                <td class="num">{_pct_cell(row.get("benchmark_return"))}</td>
+                <td class="num">{_pct_cell(row.get("median_alpha"))}</td>
+                <td class="num">{_pct_cell(row.get("beat_rate"))}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <table>
+        <thead>
+            <tr>
+                <th>熊市日期</th>
+                <th>观察天数</th>
+                <th>基准</th>
+                <th>候选数</th>
+                <th>有价格数</th>
+                <th>候选中位收益</th>
+                <th>大盘收益</th>
+                <th>中位超额收益</th>
+                <th>跑赢比例</th>
+            </tr>
+        </thead>
+        <tbody>{''.join(rows)}</tbody>
+    </table>
+    """
+
+
+def _top_alpha_table(candidates: pd.DataFrame, days: int, currency_symbol: str) -> str:
+    alpha_col = f"alpha_after_{days}d"
+    return_col = f"return_after_{days}d"
+    benchmark_col = f"benchmark_return_after_{days}d"
+    if candidates.empty or alpha_col not in candidates.columns:
+        return '<div class="empty">暂无候选明细。</div>'
+
+    sample = candidates.copy()
+    sample[alpha_col] = pd.to_numeric(sample[alpha_col], errors="coerce")
+    sample = sample.dropna(subset=[alpha_col]).sort_values(alpha_col, ascending=False).head(30)
+    if sample.empty:
+        return '<div class="empty">暂无候选明细。</div>'
+
+    rows = []
+    for _, row in sample.iterrows():
+        rows.append(
+            f"""
+            <tr>
+                <td>{escape(str(row.get("bear_date", "")))}</td>
+                <td class="ticker">{escape(str(row.get("ticker", "")))}</td>
+                <td>{escape(str(row.get("company_name", "") or ""))}</td>
+                <td>{rating_badge(str(row.get("rating", "N/A")))}</td>
+                <td class="num">{_pct_cell(row.get("margin_of_safety"))}</td>
+                <td class="num">{money(row.get("price"), currency_symbol)}</td>
+                <td class="num">{_pct_cell(row.get(return_col))}</td>
+                <td class="num">{_pct_cell(row.get(benchmark_col))}</td>
+                <td class="num">{_pct_cell(row.get(alpha_col))}</td>
+                <td class="num">{_pct_cell(row.get("return_since_backtest"))}</td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <table>
+        <thead>
+            <tr>
+                <th>熊市日期</th>
+                <th>代码</th>
+                <th>公司</th>
+                <th>评级</th>
+                <th>当日安全边际</th>
+                <th>当日价格</th>
+                <th>{days}天收益</th>
+                <th>大盘收益</th>
+                <th>超额收益</th>
+                <th>回放日至今</th>
+            </tr>
+        </thead>
+        <tbody>{''.join(rows)}</tbody>
+    </table>
+    """
+
+
+def generate_bear_validation_report(
+    candidates: pd.DataFrame,
+    summary: pd.DataFrame,
+    config: BearValidationConfig,
+) -> str:
+    market_label = "港股" if config.market == "hk" else "美股"
+    currency_symbol = "HK$" if config.market == "hk" else "$"
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    primary_window = max(config.forward_windows) if config.forward_windows else 0
+
+    return f"""<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body {{ margin:0; padding:0; background:#f3f4f6; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"Microsoft YaHei",sans-serif; color:#111827; }}
+    .wrap {{ max-width:1180px; margin:0 auto; padding:22px; }}
+    .card {{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:20px; margin-bottom:18px; }}
+    h1 {{ margin:0 0 8px 0; font-size:24px; }}
+    h2 {{ margin:24px 0 12px 0; font-size:18px; }}
+    .meta {{ color:#6b7280; font-size:13px; margin-bottom:12px; }}
+    .warning {{ margin-top:14px; padding:12px 14px; border:1px solid #fca5a5; background:#fff1f2; color:#991b1b; border-radius:8px; line-height:1.8; font-weight:700; }}
+    .note {{ background:#f9fafb; border-left:4px solid #2563eb; padding:10px 12px; color:#374151; font-size:13px; line-height:1.8; }}
+    .empty {{ background:#f9fafb; border:1px dashed #d1d5db; padding:14px; color:#6b7280; border-radius:10px; }}
+    table {{ border-collapse:collapse; width:100%; background:#fff; font-size:13px; }}
+    th {{ text-align:left; background:#f3f4f6; color:#374151; padding:9px 8px; border:1px solid #e5e7eb; white-space:nowrap; }}
+    td {{ padding:8px; border:1px solid #e5e7eb; vertical-align:top; }}
+    tr:nth-child(even) td {{ background:#fafafa; }}
+    .num {{ text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }}
+    .ticker {{ font-weight:800; white-space:nowrap; }}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <h1>【MOS Radar {escape(market_label)}】熊市候选方向性验证</h1>
+        <div class="meta">生成时间：{escape(ts)} | 模式：bear_validation | 模型：{escape(MODEL_VERSION)} | 基准：{escape(config.benchmark_ticker)}</div>
+        <div class="note">
+            本报告把多个熊市日期作为买点压力测试，先用 MOS Radar 在该日期价格下筛出 {escape(','.join(sorted(config.cohort_ratings)))} 候选，
+            再统计这些候选在后续观察窗口相对大盘的收益、超额收益和跑赢比例。它用于验证方向性，不是自动买卖建议。
+        </div>
+        <div class="warning">
+            警告：本验证仍存在未来函数和幸存者偏差。系统使用当前可获得的财务数据、当前股票池和历史价格进行压力测试，
+            不能等同于严格 point-in-time 回测。结果只能回答“这套筛选逻辑在熊市价格下是否倾向于选出未来相对强势股票”，不能证明历史当时一定可买。
+        </div>
+    </div>
+    <div class="card">
+        <h2>熊市日期汇总</h2>
+        {_summary_table(summary)}
+    </div>
+    <div class="card">
+        <h2>按 {primary_window} 天超额收益排序 Top 30</h2>
+        {_top_alpha_table(candidates, primary_window, currency_symbol) if primary_window else '<div class="empty">未设置观察窗口。</div>'}
+    </div>
+</div>
+</body>
+</html>
+"""
+```
