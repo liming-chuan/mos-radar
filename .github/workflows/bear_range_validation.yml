@@ -1,0 +1,103 @@
+name: MOS Radar - US - Bear Range Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      bear_start:
+        description: "Bear-market range start date"
+        required: true
+        default: "2022-08-15"
+      bear_end:
+        description: "Bear-market range end date"
+        required: true
+        default: "2022-10-14"
+      sample_every_n_days:
+        description: "Sample every N business days"
+        required: true
+        default: "5"
+      max_sample_dates:
+        description: "Maximum sample dates in this run"
+        required: true
+        default: "20"
+      forward_windows:
+        description: "Forward windows in days, comma-separated"
+        required: true
+        default: "365,730,1095"
+      benchmark_ticker:
+        description: "Benchmark ticker"
+        required: true
+        default: "SPY"
+      cohort_ratings:
+        description: "Ratings to validate"
+        required: true
+        default: "S,A,B"
+      backtest_use_latest:
+        description: "Use latest saved scan instead of running a fresh scan first"
+        required: false
+        default: "false"
+      dry_run:
+        description: "Set true to generate artifacts without sending email"
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  bear-range-validation:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: mos-radar-us-bear-range-validation
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run US bear range validation
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          HOLDINGS_TICKERS: ${{ secrets.HOLDINGS_TICKERS }}
+          TOP_MOS_COUNT: ${{ vars.TOP_MOS_COUNT }}
+          TRAP_COUNT: ${{ vars.TRAP_COUNT }}
+          THIN_COUNT: ${{ vars.THIN_COUNT }}
+          MAX_TICKERS: ${{ vars.MAX_TICKERS }}
+          REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
+          PRICE_MATRIX_BATCH_SIZE: ${{ vars.PRICE_MATRIX_BATCH_SIZE }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          RUN_MODE: bear_range_validation
+          BEAR_START: ${{ github.event.inputs.bear_start }}
+          BEAR_END: ${{ github.event.inputs.bear_end }}
+          SAMPLE_EVERY_N_DAYS: ${{ github.event.inputs.sample_every_n_days }}
+          MAX_SAMPLE_DATES: ${{ github.event.inputs.max_sample_dates }}
+          FORWARD_WINDOWS: ${{ github.event.inputs.forward_windows }}
+          BENCHMARK_TICKER: ${{ github.event.inputs.benchmark_ticker }}
+          COHORT_RATINGS: ${{ github.event.inputs.cohort_ratings }}
+          BACKTEST_USE_LATEST: ${{ github.event.inputs.backtest_use_latest }}
+        run: python src/main.py
+
+      - name: Upload bear range validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mos-radar-us-bear-range-validation
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            data/results/*bear_range*.csv
+            reports/*bear_range*.md

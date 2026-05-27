@@ -8,7 +8,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from bear_validation import build_config, generate_bear_validation_report, run_bear_validation
+from bear_validation import (
+    build_config,
+    build_range_config,
+    generate_bear_range_validation_report,
+    generate_bear_validation_report,
+    run_bear_range_validation,
+    run_bear_validation,
+)
 from emailer import send_email
 from historical_replay import run_historical_replay
 from price_update import update_prices_only
@@ -410,6 +417,27 @@ def save_bear_validation_files(candidates: pd.DataFrame, summary: pd.DataFrame, 
     print(f"Saved bear validation summary: {summary_path} rows={len(summary)}", flush=True)
 
 
+def save_bear_range_validation_files(signals: pd.DataFrame, ticker_rank: pd.DataFrame, summary: pd.DataFrame, body: str) -> None:
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    signals_path = RESULTS_PATH.parent / f"{MARKET_PREFIX}bear_range_signals.csv"
+    ticker_rank_path = RESULTS_PATH.parent / f"{MARKET_PREFIX}bear_range_ticker_rank.csv"
+    summary_path = RESULTS_PATH.parent / f"{MARKET_PREFIX}bear_range_summary.csv"
+
+    signals.to_csv(signals_path, index=False)
+    ticker_rank.to_csv(ticker_rank_path, index=False)
+    summary.to_csv(summary_path, index=False)
+
+    (REPORTS_DIR / f"bear_range_validation_{timestamp}.md").write_text(body, encoding="utf-8")
+    (REPORTS_DIR / "latest_bear_range_validation.md").write_text(body, encoding="utf-8")
+
+    print(f"Saved bear range signals: {signals_path} rows={len(signals)}", flush=True)
+    print(f"Saved bear range ticker rank: {ticker_rank_path} rows={len(ticker_rank)}", flush=True)
+    print(f"Saved bear range summary: {summary_path} rows={len(summary)}", flush=True)
+
+
 def subject_for(mode: str) -> str:
     today = datetime.now().strftime("%Y-%m-%d")
     label = MARKET_LABELS.get(MARKET, MARKET.upper())
@@ -423,6 +451,7 @@ def subject_for(mode: str) -> str:
         "manual": f"【MOS Radar {label}】{today} 手动安全边际扫描",
         "historical_replay": f"【MOS Radar {label}】{today} 历史价格压力测试",
         "bear_validation": f"【MOS Radar {label}】{today} 熊市候选方向性验证",
+        "bear_range_validation": f"【MOS Radar {label}】{today} 熊市区间方向性验证",
     }
 
     return mapping.get(mode, f"【MOS Radar {label}】{today} 安全边际报告")
@@ -471,6 +500,34 @@ def main() -> None:
             print("Email sent.", flush=True)
         return
 
+    elif mode == "bear_range_validation":
+        use_latest = env_bool("BACKTEST_USE_LATEST", default=False)
+        base_df = load_latest_state_required() if use_latest else run_full_scan()
+        config = build_range_config(
+            market=MARKET,
+            bear_start=os.getenv("BEAR_START"),
+            bear_end=os.getenv("BEAR_END"),
+            sample_every_n_days=os.getenv("SAMPLE_EVERY_N_DAYS"),
+            max_sample_dates=os.getenv("MAX_SAMPLE_DATES"),
+            forward_windows=os.getenv("FORWARD_WINDOWS"),
+            benchmark_ticker=os.getenv("BENCHMARK_TICKER"),
+            cohort_ratings=os.getenv("COHORT_RATINGS"),
+            include_holdings=env_bool("BEAR_INCLUDE_HOLDINGS", default=False),
+            price_batch_size=os.getenv("PRICE_MATRIX_BATCH_SIZE"),
+        )
+        signals, ticker_rank, summary = run_bear_range_validation(base_df, config)
+        signals = annotate_pools(signals) if not signals.empty else signals
+        report_body = generate_bear_range_validation_report(signals, ticker_rank, summary, config)
+        save_bear_range_validation_files(signals, ticker_rank, summary, report_body)
+
+        dry_run = env_bool("DRY_RUN", default=False)
+        if dry_run:
+            print("DRY_RUN=true, email not sent.", flush=True)
+        else:
+            send_email(subject_for(mode), report_body)
+            print("Email sent.", flush=True)
+        return
+
     elif mode == "morning_email":
         df = load_latest_state_required()
 
@@ -502,7 +559,7 @@ def main() -> None:
     dry_run = env_bool("DRY_RUN", default=False)
 
     should_send = (
-        mode in {"premarket_scan", "morning_email", "noon_update", "afternoon_update", "manual", "historical_replay", "bear_validation"}
+        mode in {"premarket_scan", "morning_email", "noon_update", "afternoon_update", "manual", "historical_replay", "bear_validation", "bear_range_validation"}
         or (mode == "full_after_close" and send_after_close)
     )
 

@@ -2,6 +2,14 @@
 
 这里记录 MOS Radar 每个版本的重要变化。
 
+## v6.6.1 - 2026-05-27
+
+- 新增 `bear_range_validation` 模式，用于验证一整段熊市区间内反复出现的 S/A/B 候选后续是否跑赢大盘。
+- 新增低请求量历史价格矩阵：财务数据只扫描一次，历史价格按批次下载，本地循环重算多个采样日，降低连续多日验证触发 yfinance 风控的概率。
+- 新增 `bear_range_signals.csv`、`bear_range_ticker_rank.csv`、`bear_range_summary.csv` 三类输出，分别用于查看逐日信号、按股票聚合排名和区间总体胜率/Alpha。
+- 新增 `MOS Radar - US - Bear Range Validation` 和 `MOS Radar - HK - Bear Range Validation` 两个 GitHub Actions。
+- 报告新增高频候选 Top 30 和按中位 Alpha 排序 Top 30，强调“反复出现的安全边际”比单日信号更接近真实熊市操作。
+
 ## v6.6.0 - 2026-05-26
 
 - 新增 `bear_validation` 模式，用于一次验证多个熊市日期下筛出的 S/A/B 候选后续是否跑赢大盘。
