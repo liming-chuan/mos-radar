@@ -2,6 +2,12 @@
 
 这里记录 MOS Radar 每个版本的重要变化。
 
+## v6.6.2 - 2026-05-27
+
+- 删除冗余的 `MOS Radar - US - Bear Validation` 和 `MOS Radar - HK - Bear Validation` 单日熊市验证 Actions。
+- 当前公开使用入口统一保留为 `MOS Radar - US - Bear Range Validation` 和 `MOS Radar - HK - Bear Range Validation`，用熊市区间采样替代单日低点验证，更贴近真实操作。
+- 底层 `bear_validation` 代码保留作内部兼容，避免历史脚本或手动环境变量调用失效。
+
 ## v6.6.1 - 2026-05-27
 
 - 新增 `bear_range_validation` 模式，用于验证一整段熊市区间内反复出现的 S/A/B 候选后续是否跑赢大盘。

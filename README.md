@@ -1,4 +1,4 @@
-# MOS Radar：安全边际雷达 V6.6.1
+# MOS Radar：安全边际雷达 V6.6.2
 
 MOS Radar 目前支持美股和港股两套独立扫描通道。V6.5.2 起，自动任务改为每个交易日盘前各完整扫描一次并发送邮件：美股盘前一次，港股盘前一次。港股使用独立 Action、独立股票池、独立结果文件，不影响美股扫描。报告只做候选筛选，不做自动买卖建议。
 
@@ -49,15 +49,6 @@ REIT/地产类公司需要 AFFO/NOI 专门模型，V6 默认跳过。
 - 输出三张 CSV：`bear_range_signals.csv`、`bear_range_ticker_rank.csv`、`bear_range_summary.csv`。
 - 这个功能用于验证“熊市期间反复出现安全边际的股票，后续牛市是否更容易跑赢大盘”，比单个熊市日期更接近真实操作。
 - 建议每次只跑一个熊市区间，`sample_every_n_days=5`，`max_sample_dates=20`，分多次跑不同熊市时期，不要一次把所有时期和每日采样全塞进同一个 Action。
-
-## V6.6.0 熊市候选方向性验证
-
-- 新增美股/港股独立熊市验证 Action：一次输入 3 个或更多熊市日期，系统会在每个熊市价格点重新筛出 S/A/B 候选。
-- 候选会按后续观察窗口计算收益、大盘收益、超额收益和跑赢比例；默认观察 365、730、1095 天。
-- 美股默认基准为 `SPY`，港股默认基准为 `2800.HK`；可以在 Action 表单里手动改成其他指数或 ETF。
-- 输出两张 CSV：`bear_validation_summary.csv` 汇总每个熊市日期/观察窗口的胜率和 alpha，`bear_validation_candidates.csv` 保留候选明细。
-- 本功能用于验证系统方向性：熊市时筛出的安全边际候选，后续是否倾向于跑赢大盘；它不是严格 point-in-time 回测。
-- 报告顶部会明确提示未来函数和幸存者偏差：系统仍使用当前可得财务数据、当前股票池和历史价格。
 
 ## V6.5.9 估值引擎鲁棒性升级
 
@@ -238,8 +229,6 @@ V6.5 新增港股独立运行通道，不影响原来的美股扫描。港股使
 MOS Radar - HK - Update Universe
 MOS Radar - HK - Daily Scanner
 MOS Radar - HK - Historical Replay
-MOS Radar - US - Bear Validation
-MOS Radar - HK - Bear Validation
 MOS Radar - US - Bear Range Validation
 MOS Radar - HK - Bear Range Validation
 ```
@@ -299,33 +288,6 @@ dry_run = false
 
 ```text
 mos-radar-historical-YYYY-MM-DD
-```
-
-### 美股熊市候选方向性验证
-
-GitHub Actions → `MOS Radar - US - Bear Validation` → `Run workflow`：
-
-```text
-bear_dates = 2009-03-09,2020-03-23,2022-10-14
-forward_windows = 365,730,1095
-benchmark_ticker = SPY
-cohort_ratings = S,A,B
-backtest_use_latest = false
-dry_run = true
-```
-
-输出 artifact：
-
-```text
-mos-radar-us-bear-validation
-```
-
-里面包含：
-
-```text
-data/results/bear_validation_summary.csv
-data/results/bear_validation_candidates.csv
-reports/latest_bear_validation.md
 ```
 
 ### 美股熊市区间方向性验证
@@ -444,33 +406,6 @@ mos-radar-hk-historical-YYYY-MM-DD
 
 里面包含港股历史价格压力测试 CSV 和 `reports/hk/*.md` 报告。
 
-### 港股熊市候选方向性验证
-
-GitHub Actions → `MOS Radar - HK - Bear Validation` → `Run workflow`：
-
-```text
-bear_dates = 2016-02-12,2020-03-23,2022-10-31
-forward_windows = 365,730,1095
-benchmark_ticker = 2800.HK
-cohort_ratings = S,A,B
-backtest_use_latest = false
-dry_run = true
-```
-
-输出 artifact：
-
-```text
-mos-radar-hk-bear-validation
-```
-
-里面包含：
-
-```text
-data/results/hk_bear_validation_summary.csv
-data/results/hk_bear_validation_candidates.csv
-reports/hk/latest_bear_validation.md
-```
-
 ### 港股熊市区间方向性验证
 
 GitHub Actions → `MOS Radar - HK - Bear Range Validation` → `Run workflow`：
@@ -520,12 +455,11 @@ reports/hk/latest_bear_range_validation.md
 - `backtest_use_latest=true` 会跳过重新扫描，直接用已有 latest CSV 做价格回放，速度更快但依赖旧结果。
 - 当时尚未上市、改名、分拆或 Yahoo 缺少历史价的股票会显示为 `SKIP`，不会作为模型失败处理。
 - 严格历史回测需要 SEC/港交所公告日期、当时可见财报和当时股本数据，免费 yfinance 不能可靠完成这一层。
-- 熊市候选方向性验证同样不是严格回测；它重点看候选组合相对大盘的后续收益、超额收益和跑赢比例，用来评估模型方向是否有用。
 - 熊市区间方向性验证比单日验证更接近真实操作：它看同一只股票在熊市区间是否反复出现安全边际信号，以及这些高频信号股票后续是否跑赢大盘。
 
 ## 重要提醒
 
-1. V6.6.1 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
+1. V6.6.2 使用 yfinance，适合个人研究原型，不适合机构级数据可靠性。
 2. 价值股、周期股、半导体股必须人工复核最新财报和行业周期。
 3. REIT/地产类公司 V6 默认跳过，因为需要 AFFO/NOI 专门模型。
 4. 本项目不会自动下单，报告不构成投资建议。
