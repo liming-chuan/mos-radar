@@ -3,11 +3,15 @@ from __future__ import annotations
 import contextlib
 import io
 import logging
+import math
 import time
+from dataclasses import fields
 from typing import Optional
 
 import pandas as pd
 import yfinance as yf
+from valuation import AnalysisResult, quality_rating_cap, score_cashflow, score_balance
+from opportunity import annotate_opportunities
 
 
 RATING_ORDER = {"S": 0, "A": 1, "B": 2, "C_THIN": 3, "PASS": 4, "D_TRAP": 5, "NO_DATA": 6, "SKIP": 7, "ERROR": 8}
@@ -16,7 +20,7 @@ RATING_ORDER = {"S": 0, "A": 1, "B": 2, "C_THIN": 3, "PASS": 4, "D_TRAP": 5, "NO
 def _safe_float(x):
     try:
         v = float(x)
-        if v != v:
+        if not math.isfinite(v):
             return None
         return v
     except Exception:
@@ -99,7 +103,7 @@ def _quiet_download(tickers: list[str]) -> pd.DataFrame:
         logger.setLevel(old_level)
 
 
-def batch_current_prices(tickers: list[str]) -> dict[str, float]:
+def batch_current_quotes(tickers: list[str]) -> dict[str, tuple[float, str]]:
     clean = []
     seen = set()
     for ticker in tickers:
@@ -111,14 +115,14 @@ def batch_current_prices(tickers: list[str]) -> dict[str, float]:
         return {}
 
     data = _quiet_download(clean)
-    prices: dict[str, float] = {}
+    prices: dict[str, tuple[float, str]] = {}
     if data is None or data.empty:
         return prices
 
     if isinstance(data.columns, pd.MultiIndex):
         for ticker in clean:
             close = None
-            for field in ["Adj Close", "Close"]:
+            for field in ["Close"]:
                 key = (field, ticker)
                 if key in data.columns:
                     close = pd.to_numeric(data[key], errors="coerce").dropna()
@@ -126,22 +130,26 @@ def batch_current_prices(tickers: list[str]) -> dict[str, float]:
             if close is not None and not close.empty:
                 price = _safe_float(close.iloc[-1])
                 if price is not None and price > 0:
-                    prices[ticker] = price
+                    prices[ticker] = (price, pd.to_datetime(close.index[-1], utc=True).isoformat())
     else:
         close = None
-        for field in ["Adj Close", "Close"]:
+        for field in ["Close"]:
             if field in data.columns:
                 close = pd.to_numeric(data[field], errors="coerce").dropna()
                 break
         if close is not None and not close.empty and len(clean) == 1:
             price = _safe_float(close.iloc[-1])
             if price is not None and price > 0:
-                prices[clean[0]] = price
+                prices[clean[0]] = (price, pd.to_datetime(close.index[-1], utc=True).isoformat())
 
     return prices
 
 
-def rerate_row(row: pd.Series) -> tuple[str, str]:
+def batch_current_prices(tickers: list[str]) -> dict[str, float]:
+    return {ticker: quote[0] for ticker, quote in batch_current_quotes(tickers).items()}
+
+
+def _base_rating(row: pd.Series) -> tuple[str, str]:
     rating = str(row.get("rating", "NO_DATA") or "NO_DATA")
     if rating in {"SKIP", "ERROR"}:
         return rating, str(row.get("reason", ""))
@@ -182,6 +190,28 @@ def rerate_row(row: pd.Series) -> tuple[str, str]:
     return "PASS", "价格更新后：当前价格高于保守内在价值，没有安全边际"
 
 
+def rerate_row(row: pd.Series) -> tuple[str, str]:
+    rating, reason = _base_rating(row)
+    result = AnalysisResult(ticker=str(row.get("ticker", "")))
+    for field in fields(result):
+        value = row.get(field.name)
+        if value is not None and not pd.isna(value):
+            setattr(result, field.name, value)
+    cap, reasons = quality_rating_cap(result)
+    saved_cap = str(row.get("rating_cap", ""))
+    if saved_cap in RATING_ORDER:
+        cap = cap_rating(cap or "S", saved_cap)
+    if row.get("price_data_status") == "FALLBACK_PREVIOUS_PRICE":
+        cap = cap_rating(cap or "S", "C_THIN")
+        reasons.append("旧价格仅供参考")
+    if cap:
+        final = cap_rating(rating, cap)
+        if final != rating:
+            reason += f"；质量/风险封顶：{rating}->{final}({','.join(reasons)})"
+        rating = final
+    return rating, reason
+
+
 def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataFrame:
     df = df.copy()
     if df.empty:
@@ -194,12 +224,16 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
     tickers = df["ticker"].astype(str).str.strip().str.upper().tolist()
     old_price = pd.to_numeric(df["price"], errors="coerce")
     old_market_cap = pd.to_numeric(df.get("market_cap", pd.Series(index=df.index)), errors="coerce")
-    prices = batch_current_prices(tickers)
+    prices = batch_current_quotes(tickers)
 
     current_prices = []
     statuses = []
-    for ticker, fallback in zip(tickers, old_price):
-        p = prices.get(ticker)
+    quote_dates = []
+    previous_dates = df.get("price_asof", pd.Series("", index=df.index)).tolist()
+    previous = df.copy()
+    for ticker, fallback, old_date in zip(tickers, old_price, previous_dates):
+        quote = prices.get(ticker)
+        p, quote_date = quote if quote is not None else (None, "")
         if p is None:
             p = get_current_price(ticker)
             if sleep_seconds:
@@ -207,13 +241,19 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
         if p is None or p <= 0:
             current_prices.append(fallback)
             statuses.append("FALLBACK_PREVIOUS_PRICE")
+            quote_dates.append(old_date)
         else:
             current_prices.append(p)
             statuses.append("OK")
+            # Timestamp unknown on the legacy single-ticker fallback: no fresh-entry claim.
+            quote_dates.append(quote_date)
 
     df["previous_scan_price"] = old_price
     df["price"] = pd.to_numeric(pd.Series(current_prices, index=df.index), errors="coerce").fillna(old_price)
     df["price_data_status"] = statuses
+    df["price_asof"] = quote_dates
+    if "liquidity_volume" in df:
+        df["liquidity_value"] = pd.to_numeric(df["liquidity_volume"], errors="coerce") * df["price"]
 
     share_count = old_market_cap / old_price.replace(0, pd.NA)
     if "market_cap" in df.columns:
@@ -227,7 +267,7 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
     intrinsic = pd.to_numeric(df["intrinsic_value_per_share"], errors="coerce")
     df["margin_of_safety"] = (intrinsic - df["price"]) / df["price"]
     df["price_change_since_scan"] = (df["price"] - df["previous_scan_price"]) / df["previous_scan_price"]
-    df["mos_change_since_scan"] = df["margin_of_safety"] - pd.to_numeric(df.get("margin_of_safety_at_scan", df["margin_of_safety"]), errors="coerce")
+    df["mos_change_since_scan"] = df["margin_of_safety"] - pd.to_numeric(previous.get("margin_of_safety_at_scan", previous.get("margin_of_safety")), errors="coerce")
 
     if "fcf_ttm" in df.columns and "market_cap" in df.columns:
         fcf = pd.to_numeric(df["fcf_ttm"], errors="coerce")
@@ -243,7 +283,17 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
     if "final_score" in df.columns:
         df["final_score"] = pd.to_numeric(df["final_score"], errors="coerce").fillna(0) - old_mos_score + new_mos_score
 
+    # Yield and debt/market-cap scores also move with price.
+    for index, r in df.iterrows():
+        if r.get("model_type") == "financial_pb_roe":
+            continue
+        cashflow = score_cashflow(*[_safe_float(r.get(k)) for k in ("fcf_ttm", "fcf_5y_avg", "fcf_yield", "fcf_conversion")])
+        balance = score_balance(*[_safe_float(r.get(k)) for k in ("cash", "total_debt", "debt_to_ebitda", "net_cash", "market_cap")])
+        df.at[index, "final_score"] = (_safe_float(r.get("final_score")) or 0) - (_safe_float(r.get("cashflow_score")) or 0) - (_safe_float(r.get("balance_sheet_score")) or 0) + cashflow + balance
+        df.at[index, "cashflow_score"] = cashflow
+        df.at[index, "balance_sheet_score"] = balance
+
     rerated = df.apply(rerate_row, axis=1)
     df["rating"] = [x[0] for x in rerated]
     df["reason"] = [x[1] for x in rerated]
-    return df
+    return annotate_opportunities(df, previous=previous)

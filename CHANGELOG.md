@@ -276,3 +276,10 @@
 - Major model upgrades use a new major version.
 - Small fixes use patch versions, for example `v5.0.1`.
 - Before pushing a new version, run local validation with a small ticker sample.
+# V6.7.0 — 严格安全边际与入场观察区
+
+- 增加独立入场规则、保守/压力折价、触发价、接近区间、估值下修暂停及跨扫描状态变化。
+- 修复价格更新丢失质量封顶、非正估值被删除、缺债务按零、CapEx/SBC、报告期与年度稀释、换汇股数和摘要金额等问题。
+- 分开旧 MoS 上涨空间与相对价值折价；主观反馈不再自动抬价加分；版本切换淘汰缓存，失败结果不缓存。
+- 增加公开信号历史，保护持仓信息；历史压力测试禁止生成实时入场信号。
+- 新增离线回归测试与独立 CI；规则及验证边界见 `docs/ENTRY_POLICY.md`。初始参数未验证策略收益。
