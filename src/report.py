@@ -396,14 +396,14 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
                 <th>评级</th>
                 <th>财报口径</th>
                 <th>估值法</th>
-                <th>安全边际</th>
+                <th>潜在上涨空间（旧MoS）</th>
                 {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
                 <th>现价</th>
                 <th>保守价值/股</th>
-                <th>20%观察价</th>
-                <th>35%观察价</th>
-                <th>50%强关注价</th>
+                <th>上涨20%观察价</th>
+                <th>上涨35%观察价</th>
+                <th>上涨50%观察价</th>
                 <th>自由现金流收益率</th>
                 <th>债务/经营利润</th>
                 <th>理由</th>
@@ -465,7 +465,7 @@ def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, cur
                 <th>评级</th>
                 <th>财报口径</th>
                 <th>估值法</th>
-                <th>安全边际</th>
+                <th>潜在上涨空间（旧MoS）</th>
                 {('<th>回放日至今</th>' if show_backtest_return else '')}
                 <th>分数</th>
                 <th>现价</th>
@@ -690,6 +690,51 @@ def near_miss_html(df: pd.DataFrame, title: str, limit: int = 30, currency_symbo
     return compact_table(near, title, limit=limit, currency_symbol=currency_symbol)
 
 
+def opportunity_html(df, currency_symbol="$", limit=20):
+    from opportunity import STATUS_ZH, EVENT_ZH, ENTRY_STATES
+
+    if "entry_status" not in df:
+        return '<h2>严格入场观察区</h2><div class="empty">旧结果没有压力情景和数据日期，请重新完整扫描。</div>'
+    parts = ['<h2>严格入场观察区</h2><div class="note">折价率=(价值−价格)/价值；潜在上涨空间=(价值−价格)/价格。'
+             '触发上限同时受保守折价、压力折价和Owner FCF收益率约束。压力估值是敏感性情景，不是价格底部。'
+             '“入场复核”表示价格与质量条件达标，仍需核对最新公告及价值实现条件。</div>']
+    if "scan_status" in df and df["scan_status"].eq("PARTIAL_SOURCE_FAILURE").any():
+        parts.append('<p><b>本次扫描因数据源连续限流提前停止，下方只包含已尝试的股票；已保留此前公开状态。</b></p>')
+    counts = df["entry_status"].value_counts()
+    parts.append('<p>'+" · ".join(f'{escape(STATUS_ZH.get(k, k))}：{v}' for k, v in counts.items())+'</p>')
+    groups = [("价格已达标：优先复核", ENTRY_STATES),
+              ("质量通过：等待更好的价格", {"NEAR_ENTRY", "WAIT_PRICE"}),
+              ("已退出或估值明显下修", {"REVIEW_REQUIRED"})]
+    for title, statuses in groups:
+        subset = df[df["entry_status"].isin(statuses)].copy()
+        if title == "已退出或估值明显下修" and "entry_event" in df:
+            subset = df[df["entry_status"].isin(statuses) | df["entry_event"].eq("EXITED")].copy()
+        if subset.empty:
+            if statuses == ENTRY_STATES:
+                parts.append('<p><b>目前没有通过严格门槛的入场候选，可以继续等待。</b></p>')
+            continue
+        subset = subset.sort_values("distance_to_entry", ascending=False, na_position="last").head(limit)
+        lines = []
+        for _, row in subset.iterrows():
+            lines.append('<tr>'+''.join(f'<td>{v}</td>' for v in [
+                escape(str(row.get("ticker", ""))),
+                escape(STATUS_ZH.get(row.get("entry_status"), ""))+"<br>"+escape(EVENT_ZH.get(row.get("entry_event"), "")),
+                money(row.get("price"), currency_symbol),
+                pct(row.get("discount_to_value"))+" / "+pct(row.get("stress_discount")),
+                money(row.get("entry_price"), currency_symbol)+" / "+money(row.get("deep_entry_price"), currency_symbol),
+                pct(row.get("distance_to_entry")),
+                escape(str(row.get("entry_reason", ""))),
+            ])+'</tr>')
+        parts.append(f'<h3>{escape(title)}</h3><table><thead><tr><th>代码</th><th>状态 / 变化</th><th>现价</th>'
+                     '<th>保守 / 压力折价</th><th>触发上限 / 深折价价</th><th>距触发上限</th><th>依据</th>'
+                     '</tr></thead><tbody>'+''.join(lines)+'</tbody></table>')
+    blocked = df[df["entry_status"].isin({"RISK_BLOCKED", "DATA_REQUIRED"})]
+    if not blocked.empty:
+        reasons = blocked["entry_reason"].str.split("；").explode().value_counts().head(8)
+        parts.append('<h3>主要未通过原因</h3><p>'+"；".join(f'{escape(str(k))}：{v}只' for k, v in reasons.items())+'</p>')
+    return ''.join(parts)
+
+
 def generate_report(
     df: pd.DataFrame,
     mode: str,
@@ -734,6 +779,7 @@ def generate_report(
         market_df = df.copy()
 
     operating_market_df, financial_market_df = split_financials(market_df)
+    entry_html = opportunity_html(operating_market_df, currency_symbol, top_mos_count) if mode != "historical_replay" else ""
 
     market_high = high_margin_candidates(operating_market_df)
     financial_high = high_margin_candidates(financial_market_df)
@@ -985,11 +1031,13 @@ def generate_report(
 
         <div class="note">
             持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用市净率/净资产收益率口径，不能和普通自由现金流公司混排。
-            20%/35%/50%观察价按保守价值倒推，仅用于提醒人工复核，不是自动买卖建议。S/A/B 只代表值得研究，不代表买入。
+            旧版20%/35%/50%观察价按上涨空间倒推，不等于折价率；严格入场条件见下方入场观察区。S/A/B 是兼容旧版的研究评级。
             {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP，财务与历史价格严重错配会标记为 DATA_MISMATCH。' if mode == 'historical_replay' and backtest_date else ''}
         </div>
         {f'<div class="warning">⚠️ 警告：本回放测试存在未来函数（Lookahead Bias）。系统使用当前的财务数据匹配历史股价。回放算出的高安全边际可能是由于公司近年利润大幅增长导致，不代表历史真实的投资机会。本结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
     </div>
+
+    {f'<div class="card">{entry_html}</div>' if entry_html else ''}
 
     <div class="card">
         {holdings_html}

@@ -257,13 +257,14 @@ def _reprice_result(result: AnalysisResult, historical_price: float, backtest_da
 
 
 def apply_historical_replay(df: pd.DataFrame, prices: dict[str, float], backtest_date: str) -> pd.DataFrame:
+    from opportunity import annotate_opportunities
     rows = []
     for _, row in df.iterrows():
         result = _result_from_row(row)
         ticker = _clean_ticker(result.ticker)
         historical_price = prices.get(ticker)
         rows.append(asdict(_reprice_result(result, historical_price, backtest_date)))
-    return pd.DataFrame(rows)
+    return annotate_opportunities(pd.DataFrame(rows))
 
 
 def run_historical_replay(df: pd.DataFrame, backtest_date: str) -> pd.DataFrame:

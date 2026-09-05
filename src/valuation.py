@@ -8,6 +8,7 @@ import os
 import re
 import time
 from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.6.2"
+MODEL_VERSION = "MOS_Radar_V6.7.0"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -120,6 +121,17 @@ class AnalysisResult:
     price_data_status: str = ""
     cache_status: str = ""
     cache_age_days: float | None = None
+    fundamentals_asof: str = ""
+    financial_asof: str = ""
+    balance_asof: str = ""
+    price_asof: str = ""
+    fcf_history_years: int = 0
+    fcf_positive_years: int = 0
+    sbc_history_complete: bool = False
+    financial_period_aligned: bool = False
+    shares_outstanding: float | None = None
+    share_count_mismatch: bool = False
+    stress_value_per_share: float | None = None
     reason: str = ""
 
 
@@ -162,9 +174,17 @@ def series_latest(s: pd.Series | None) -> float | None:
 def series_sum_latest(s: pd.Series | None, n: int = 4, min_periods: int = 4) -> float | None:
     if s is None or len(s) == 0:
         return None
-    vals = pd.to_numeric(s, errors="coerce").dropna().head(n)
-    if len(vals) < min_periods:
+    # Never bridge a missing recent quarter by pulling in an older quarter.
+    vals = pd.to_numeric(s, errors="coerce").sort_index(ascending=False).head(n)
+    if vals.notna().sum() < min_periods:
         return None
+    if min_periods == n:
+        dates = pd.to_datetime(vals.index, errors="coerce")
+        if dates.isna().any() or dates.has_duplicates:
+            return None
+        gaps = -pd.Series(dates).diff().dropna().dt.days
+        if ((gaps < 60) | (gaps > 120)).any():
+            return None
     return safe_float(vals.sum())
 
 
@@ -176,12 +196,16 @@ def build_owner_fcf_series(ocf_s: pd.Series | None, capex_s: pd.Series | None, s
     common_cols = ocf_vals.index.intersection(capex_vals.index)
     if len(common_cols) == 0:
         return None, None
-    reported_fcf_s = ocf_vals.loc[common_cols] + capex_vals.loc[common_cols]
+    common_cols = common_cols.sort_values(ascending=False)
+    reported_fcf_s = ocf_vals.loc[common_cols] - capex_vals.loc[common_cols].abs()
     owner_fcf_s = reported_fcf_s.copy()
     if sbc_s is not None:
         sbc_vals = pd.to_numeric(sbc_s, errors="coerce")
         sbc_cols = common_cols.intersection(sbc_vals.index)
-        owner_fcf_s.loc[sbc_cols] = owner_fcf_s.loc[sbc_cols] - sbc_vals.loc[sbc_cols].abs()
+        owner_fcf_s = owner_fcf_s - sbc_vals.reindex(common_cols).abs()
+    else:
+        # Unknown SBC is not evidence of zero dilution expense.
+        owner_fcf_s[:] = np.nan
     return reported_fcf_s, owner_fcf_s
 
 
@@ -208,7 +232,7 @@ def industry_model_status(sector: str, industry: str, model_type: str) -> str:
 
 
 def compact_candidates(candidates: list[tuple[str, float]]) -> str:
-    clean = [(name, value) for name, value in candidates if value is not None and value > 0]
+    clean = [(name, value) for name, value in candidates if safe_float(value) is not None and value >= 0]
     clean = sorted(clean, key=lambda x: x[1])[:8]
     return "; ".join(f"{name}={value:.0f}" for name, value in clean)
 
@@ -274,7 +298,7 @@ def row(df: pd.DataFrame | None, names: list[str]) -> pd.Series | None:
     for name in names:
         key = name.lower()
         if key in idx_lower:
-            return pd.to_numeric(df.loc[idx_lower[key]], errors="coerce")
+            return pd.to_numeric(df.loc[idx_lower[key]], errors="coerce").sort_index(ascending=False)
     return None
 
 
@@ -398,7 +422,15 @@ def scale_financial_df(df: pd.DataFrame | None, factor: float | None) -> pd.Data
     if df is None or df.empty or factor is None or factor == 1:
         return df
     out = df.copy()
-    return out.apply(pd.to_numeric, errors="coerce") * factor
+    for label in out.index:
+        # Share counts and ratios are dimensionless, including diluted averages.
+        name = str(label).lower()
+        if ("shares" in name or "share issued" in name) and "per share" not in name:
+            continue
+        if "rate" in name or "ratio" in name:
+            continue
+        out.loc[label] = pd.to_numeric(out.loc[label], errors="coerce") * factor
+    return out
 
 
 def get_risk_free_rate(default: float = 0.045) -> float:
@@ -439,7 +471,7 @@ def latest_download_price(symbol: str) -> float | None:
             return None
         series = None
         if isinstance(data.columns, pd.MultiIndex):
-            for field in ["Adj Close", "Close"]:
+            for field in ["Close"]:
                 if field in data.columns.get_level_values(0):
                     frame = data[field]
                     if symbol in frame.columns:
@@ -448,7 +480,7 @@ def latest_download_price(symbol: str) -> float | None:
                         series = frame.iloc[:, 0]
                     break
         else:
-            for field in ["Adj Close", "Close"]:
+            for field in ["Close"]:
                 if field in data.columns:
                     series = data[field]
                     break
@@ -471,7 +503,7 @@ def latest_download_price_volume(symbol: str, period: str = "10d") -> tuple[floa
         close_series = None
         volume_series = None
         if isinstance(data.columns, pd.MultiIndex):
-            for field in ["Adj Close", "Close"]:
+            for field in ["Close"]:
                 if field in data.columns.get_level_values(0):
                     frame = data[field]
                     close_series = frame[symbol] if symbol in frame.columns else frame.iloc[:, 0]
@@ -480,7 +512,7 @@ def latest_download_price_volume(symbol: str, period: str = "10d") -> tuple[floa
                 frame = data["Volume"]
                 volume_series = frame[symbol] if symbol in frame.columns else frame.iloc[:, 0]
         else:
-            for field in ["Adj Close", "Close"]:
+            for field in ["Close"]:
                 if field in data.columns:
                     close_series = data[field]
                     break
@@ -521,7 +553,8 @@ def get_price_and_cap(t: yf.Ticker, info: dict, fallback_price: float | None = N
     except Exception:
         pass
 
-    price = coalesce_none(safe_float(price), safe_float(info.get("currentPrice")), safe_float(info.get("regularMarketPrice")), safe_float(fallback_price))
+    # Prefer the summary quote paired with regularMarketTime for provenance.
+    price = coalesce_none(safe_float(info.get("regularMarketPrice")), safe_float(info.get("currentPrice")), safe_float(price), safe_float(fallback_price))
     if price is None:
         symbol = str(getattr(t, "ticker", "") or info.get("symbol") or "").upper()
         if symbol:
@@ -844,7 +877,7 @@ def dcf_value(
     value += terminal_value / ((1 + discount_rate) ** 5)
 
     equity_value = value + cash - debt
-    return equity_value if equity_value > 0 else None
+    return max(0.0, equity_value)
 
 
 def financial_pb_value(
@@ -892,8 +925,6 @@ def estimate_intrinsic_value(
     tangible_equity: float | None,
     risk_free_rate: float | None,
 ) -> tuple[float | None, str, str]:
-    cash = 0.0 if cash is None else cash
-    debt = 0.0 if debt is None else debt
     model = str(cfg.get("model", "normal_fcf"))
 
     if model == "reit_needs_affo":
@@ -903,8 +934,11 @@ def estimate_intrinsic_value(
         value, method = financial_pb_value(equity, roe, market_cap, tangible_equity)
         return value, method, compact_candidates([(method, value or 0)])
 
-    fcf_candidates = [x for x in [latest_fcf, fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
-    ni_candidates = [x for x in [latest_net_income, net_income_5y_avg] if x is not None and x > 0]
+    if safe_float(cash) is None or safe_float(debt) is None or cash < 0 or debt < 0:
+        return None, "MISSING_CASH_OR_DEBT", ""
+
+    fcf_candidates = [max(0.0, x) for x in [latest_fcf, fcf_3y_avg, fcf_5y_avg] if safe_float(x) is not None]
+    ni_candidates = [max(0.0, x) for x in [latest_net_income, net_income_5y_avg] if safe_float(x) is not None]
 
     valuations: list[tuple[str, float]] = []
 
@@ -917,11 +951,11 @@ def estimate_intrinsic_value(
     if fcf_candidates:
         cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}
         if model in cyclical_models:
-            cycle_candidates = [x for x in [fcf_3y_avg, fcf_5y_avg] if x is not None and x > 0]
+            cycle_candidates = [max(0.0, x) for x in [fcf_3y_avg, fcf_5y_avg] if safe_float(x) is not None]
             if fcf_5y_avg is not None and fcf_5y_avg > 0:
                 cycle_candidates.append(fcf_5y_avg * 0.85)
-            if latest_fcf is not None and latest_fcf > 0:
-                cycle_candidates.append(latest_fcf * 0.40)
+            if latest_fcf is not None:
+                cycle_candidates.append(max(0.0, latest_fcf * 0.40))
             fcf_base = min(cycle_candidates) if cycle_candidates else min(fcf_candidates)
         else:
             # 保守 owner FCF 基数：取最近、3年、5年中较低的正值，防止高点误判
@@ -936,7 +970,7 @@ def estimate_intrinsic_value(
             valuations.append(("latest_fcf_capped_10x", latest_fcf * min(10.0, fcf_multiple) + cash - debt))
 
         if model not in cyclical_models:
-            growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.02)
+            growth = clamp(revenue_cagr, -0.05, growth_cap, default=0.0)
             dcf = dcf_value(
                 fcf_base=fcf_base,
                 growth=growth,
@@ -952,7 +986,8 @@ def estimate_intrinsic_value(
 
     if ni_candidates and model not in {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}:
         ni_base = min(ni_candidates)
-        valuations.append(("normalized_net_income_pe", ni_base * pe_multiple + cash - debt))
+        # Net income is already attributable to equity; PE is an equity multiple.
+        valuations.append(("normalized_net_income_pe", ni_base * pe_multiple))
 
     asset_heavy_models = {"energy_cyclical", "materials_cyclical", "industrial_normalized", "precious_metals_miner", "consumer_cyclical", "agri_cyclical"}
     if ncav is not None and ncav > 0:
@@ -962,7 +997,8 @@ def estimate_intrinsic_value(
     if tangible_equity is not None and tangible_equity > 0 and model in asset_heavy_models:
         valuations.append(("tangible_book_0_8x", tangible_equity * 0.80))
 
-    clean = [(name, v) for name, v in valuations if v is not None and v > 0]
+    # A computed non-positive equity value is an adverse outcome, not missing data.
+    clean = [(name, max(0.0, v)) for name, v in valuations if safe_float(v) is not None]
 
     if not clean:
         return None, "NO_VALID_VALUATION", compact_candidates(valuations)
@@ -1248,6 +1284,10 @@ def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
     reasons = []
     cap = None
 
+    hard_flags = {"manual_value_trap", "latest_fcf_negative", "financial_equity_not_positive"}
+    if hard_flags.intersection(str(result.trap_flags).split(",")):
+        return "D_TRAP", ["hard_risk_veto"]
+
     if result.trap_count >= 3:
         return "D_TRAP", ["trap_count_ge_3"]
 
@@ -1307,6 +1347,48 @@ def quality_rating_cap(result: AnalysisResult) -> tuple[str | None, list[str]]:
     return cap, reasons
 
 
+def latest_period(s: pd.Series | None) -> str:
+    if s is None:
+        return ""
+    values = pd.to_numeric(s, errors="coerce").dropna()
+    dates = pd.to_datetime(values.index, errors="coerce")
+    return dates.max().date().isoformat() if len(dates) and not dates.isna().all() else ""
+
+
+def stamp_fundamental_evidence(result, annual_fcf, recent_fcf, balance_cash, annual_sbc, annual_shares):
+    result.fundamentals_asof = datetime.now(timezone.utc).isoformat()
+    result.financial_asof = latest_period(recent_fcf)
+    result.balance_asof = latest_period(balance_cash)
+    values = pd.to_numeric(annual_fcf, errors="coerce").head(5) if annual_fcf is not None else pd.Series(dtype=float)
+    result.fcf_history_years = int(values.notna().sum())
+    result.fcf_positive_years = int((values > 0).sum())
+    result.sbc_history_complete = bool(len(values) >= 3 and values.notna().all() and annual_sbc is not None)
+    if annual_shares is not None:
+        shares = pd.to_numeric(annual_shares, errors="coerce").head(4)
+        dates = pd.to_datetime(shares.index, errors="coerce")
+        if len(shares) == 4 and shares.notna().all() and shares.iloc[-1] > 0 and not dates.isna().any():
+            span = (dates[0] - dates[-1]).days
+            if 1000 <= span <= 1200:
+                result.share_dilution_3y = shares.iloc[0] / shares.iloc[-1] - 1
+
+
+def estimate_stress_value(cfg, **inputs):
+    """Sensitivity scenario, not a liquidation floor or a forecast."""
+    stressed = dict(inputs)
+    for key in ("latest_fcf", "fcf_3y_avg", "fcf_5y_avg", "latest_net_income", "net_income_5y_avg"):
+        if stressed.get(key) is not None:
+            stressed[key] = min(stressed[key], stressed[key] * 0.70)
+    for key in ("ncav", "tangible_equity", "equity"):
+        if stressed.get(key) is not None:
+            stressed[key] = min(stressed[key], stressed[key] * 0.80)
+    if stressed.get("cash") is not None:
+        stressed["cash"] *= 0.80
+    stressed["revenue_cagr"] = min(stressed.get("revenue_cagr") or 0, 0)
+    stressed_cfg = dict(cfg)
+    stressed_cfg["discount_rate"] = effective_discount_rate(cfg, inputs.get("risk_free_rate")) + 0.02
+    return estimate_intrinsic_value(stressed_cfg, **stressed)[0]
+
+
 def apply_feedback(ticker: str, intrinsic_value: float | None, final_score: float, flags: list[str]) -> tuple[float | None, float, str, list[str]]:
     feedback = get_feedback_map().get(ticker.upper(), {})
     label = feedback.get("label", "").strip().lower()
@@ -1314,14 +1396,9 @@ def apply_feedback(ticker: str, intrinsic_value: float | None, final_score: floa
     if not label:
         return intrinsic_value, final_score, "", flags
 
-    if label == "true_opportunity":
-        final_score += 5
-    elif label == "value_trap":
+    if label == "value_trap":
         flags.append("manual_value_trap")
         final_score -= 10
-    elif label == "too_strict":
-        if intrinsic_value is not None:
-            intrinsic_value *= 1.10
     elif label == "too_loose":
         if intrinsic_value is not None:
             intrinsic_value *= 0.90
@@ -1373,6 +1450,10 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         price, market_cap = get_price_and_cap(t, info, fallback_price=prechecked_price)
 
         result.price = price
+        quote_epoch = safe_float(info.get("regularMarketTime"))
+        if quote_epoch is not None:
+            result.price_asof = datetime.fromtimestamp(quote_epoch, timezone.utc).isoformat()
+        result.price_data_status = "OK" if price is not None else "NO_PRICE"
         result.market_cap = market_cap
         result.company_name = info.get("longName") or info.get("shortName") or ""
         result.sector = info.get("sector") or ""
@@ -1380,9 +1461,9 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.quote_currency = str(info.get("currency") or "").upper()
         result.financial_currency = str(info.get("financialCurrency") or "").upper()
         result.quote_type = str(info.get("quoteType") or "").upper()
-        result.liquidity_volume = prechecked_avg_volume
-        if price is not None and prechecked_avg_volume is not None:
-            result.liquidity_value = price * prechecked_avg_volume
+        result.liquidity_volume = coalesce_none(prechecked_avg_volume, safe_float(info.get("averageVolume10days")), safe_float(info.get("averageVolume")))
+        if price is not None and result.liquidity_volume is not None:
+            result.liquidity_value = price * result.liquidity_volume
 
         if result.quote_type and result.quote_type != "EQUITY":
             result.rating = "SKIP"
@@ -1465,6 +1546,12 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         annual_cashflow = scale_financial_df(annual_cashflow, fx_factor)
         quarterly_financials = scale_financial_df(quarterly_financials, fx_factor)
         quarterly_balance = scale_financial_df(quarterly_balance, fx_factor)
+
+        # Yahoo summary financial amounts use financialCurrency as well.
+        info = dict(info)
+        for key in ("totalRevenue", "netIncomeToCommon", "totalCash", "totalDebt", "ebitda"):
+            if safe_float(info.get(key)) is not None:
+                info[key] = float(info[key]) * fx_factor
         quarterly_cashflow = scale_financial_df(quarterly_cashflow, fx_factor)
 
         financials = annual_financials
@@ -1495,7 +1582,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         shares_s = row(balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
         cash_s = row(balance, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"])
-        debt_s = row(balance, ["Total Debt", "Long Term Debt And Capital Lease Obligation"])
+        debt_s = row(balance, ["Total Debt"])
         equity_s = row(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest", "Total Stockholder Equity"])
         current_assets_s = row(balance, ["Current Assets", "Total Current Assets"])
         total_liabilities_s = row(balance, ["Total Liabilities Net Minority Interest", "Total Liabilities"])
@@ -1516,7 +1603,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         q_reported_fcf_s, q_owner_fcf_s = build_owner_fcf_series(q_ocf_s, q_capex_s, q_sbc_s)
         q_reported_fcf = series_sum_latest(q_reported_fcf_s, 4, 4)
         q_owner_fcf = series_sum_latest(q_owner_fcf_s, 4, 4)
-        q_sbc = series_sum_latest(q_sbc_s, 4, 1)
+        q_sbc = series_sum_latest(q_sbc_s, 4, 4)
 
         annual_reported_fcf = series_latest(reported_fcf_s)
         annual_sbc = series_latest(sbc_s)
@@ -1528,6 +1615,16 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         operating_income_ttm = series_sum_latest(q_operating_income_s, 4, 4)
         ebitda_ttm = series_sum_latest(q_ebitda_s, 4, 4)
         interest_expense_ttm = series_sum_latest(q_interest_expense_s, 4, 4)
+
+        q_dates = [latest_period(s) for s in (q_owner_fcf_s, q_revenue_s, q_net_income_s)]
+        use_ttm = (all(x is not None for x in (q_owner_fcf, q_reported_fcf, revenue_ttm, net_income_ttm))
+                   and bool(q_dates[0]) and len(set(q_dates)) == 1)
+        if not use_ttm:
+            q_owner_fcf = q_reported_fcf = q_sbc = None
+            revenue_ttm = net_income_ttm = gross_profit_ttm = None
+            operating_income_ttm = ebitda_ttm = interest_expense_ttm = None
+        selected_dates = q_dates if use_ttm else [latest_period(s) for s in (owner_fcf_s, revenue_s, net_income_s)]
+        result.financial_period_aligned = bool(selected_dates[0]) and len(set(selected_dates)) == 1
 
         revenue_annual_latest = series_latest(revenue_s)
         latest_net_income_annual = series_latest(net_income_s)
@@ -1581,7 +1678,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.fcf_volatility = fcf_volatility
         result.cash = cash
         result.total_debt = debt
-        result.net_cash = (0 if cash is None else cash) - (0 if debt is None else debt)
+        result.net_cash = cash - debt if cash is not None and debt is not None else None
         result.total_assets = total_assets
         result.total_liabilities = total_liabilities
         result.ncav = current_assets - total_liabilities if current_assets is not None and total_liabilities is not None else None
@@ -1629,10 +1726,13 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         if operating_income is not None and interest_expense is not None and interest_expense != 0:
             result.interest_coverage = operating_income / abs(interest_expense)
 
-        if shares_s is not None:
-            vals = pd.to_numeric(shares_s, errors="coerce").dropna().head(4)
-            if len(vals) >= 2 and vals.iloc[-1] > 0:
-                result.share_dilution_3y = vals.iloc[0] / vals.iloc[-1] - 1
+        annual_shares = row(annual_balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
+        stamp_fundamental_evidence(result, owner_fcf_s,
+                                  q_owner_fcf_s if q_owner_fcf is not None else owner_fcf_s,
+                                  cash_s, sbc_s, annual_shares)
+        result.shares_outstanding = coalesce_none(safe_float(info.get("sharesOutstanding")), series_latest(shares_s))
+        if result.shares_outstanding and market_cap:
+            result.share_count_mismatch = abs(price * result.shares_outstanding / market_cap - 1) > 0.20
 
         intrinsic, method, valuation_candidates = estimate_intrinsic_value(
             cfg=cfg,
@@ -1652,9 +1752,19 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             risk_free_rate=result.risk_free_rate,
         )
 
+        stress_intrinsic = estimate_stress_value(
+            cfg, latest_fcf=latest_fcf, fcf_3y_avg=fcf_3y_avg, fcf_5y_avg=fcf_5y_avg,
+            latest_net_income=latest_net_income, net_income_5y_avg=net_income_5y_avg,
+            revenue_cagr=revenue_cagr, cash=cash, debt=debt, equity=equity,
+            roe=result.roe, market_cap=market_cap, ncav=result.ncav,
+            tangible_equity=result.tangible_equity, risk_free_rate=result.risk_free_rate,
+        ) if result.model_type != "financial_pb_roe" else None
+
         if intrinsic is not None and is_holding_company(result.company_name, sector, industry, result.investment_assets_ratio):
             discount = holding_company_discount(result.investment_assets_ratio)
             intrinsic *= discount
+            if stress_intrinsic is not None:
+                stress_intrinsic *= discount
             method = f"{method}_holding_{discount:.2f}x"
             note = f"holding_company_discount_{discount:.2f}x"
             if result.investment_assets_ratio is not None:
@@ -1703,6 +1813,8 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
                 result.intrinsic_value_per_share = price * intrinsic / market_cap
                 result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
                 update_buy_prices(result)
+                if stress_intrinsic is not None:
+                    result.stress_value_per_share = price * min(stress_intrinsic, intrinsic) / market_cap
 
         result.mos_score = score_margin_of_safety(result.margin_of_safety)
 
@@ -1755,14 +1867,17 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             flags=flags,
         )
 
+        old_mos_score = result.mos_score
         if intrinsic_adjusted != result.intrinsic_value_total and intrinsic_adjusted is not None and market_cap:
+            if result.stress_value_per_share is not None and result.intrinsic_value_total:
+                result.stress_value_per_share *= min(1.0, intrinsic_adjusted / result.intrinsic_value_total)
             result.intrinsic_value_total = intrinsic_adjusted
             result.intrinsic_value_per_share = price * intrinsic_adjusted / market_cap
             result.margin_of_safety = (result.intrinsic_value_per_share - price) / price
             update_buy_prices(result)
             result.mos_score = score_margin_of_safety(result.margin_of_safety)
 
-        result.final_score = final_adjusted
+        result.final_score = final_adjusted - old_mos_score + result.mos_score
         result.feedback_label = feedback_label
 
         result.trap_count = len(flags)
@@ -1817,6 +1932,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         cap, cap_reasons = quality_rating_cap(result)
         if cap is not None:
+            result.rating_cap = cap
             original_rating = result.rating
             result.rating = cap_rating(result.rating, cap)
             if result.rating != original_rating:

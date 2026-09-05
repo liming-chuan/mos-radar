@@ -21,6 +21,7 @@ from historical_replay import run_historical_replay
 from price_update import update_prices_only
 from report import generate_report
 from valuation import MODEL_VERSION, analyze_ticker, results_to_dataframe
+from opportunity import annotate_opportunities
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -255,11 +256,15 @@ def load_cached_analysis(ticker: str) -> dict | None:
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("model_version") != MODEL_VERSION:
+            return None
         saved_at = datetime.fromisoformat(str(payload.get("saved_at", "")))
         age_days = (datetime.now(timezone.utc) - saved_at).total_seconds() / 86400
-        if age_days > cache_ttl_days():
+        if age_days < 0 or age_days > cache_ttl_days():
             return None
         row = dict(payload.get("result") or {})
+        if row.get("model_version") != MODEL_VERSION or row.get("rating") in {"ERROR", "NO_DATA"}:
+            return None
         row["cache_status"] = "HIT"
         row["cache_age_days"] = round(age_days, 2)
         return row
@@ -273,6 +278,8 @@ def save_cached_analysis(ticker: str, result) -> None:
     try:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         row = asdict(result) if hasattr(result, "__dataclass_fields__") else dict(result)
+        if row.get("rating") in {"ERROR", "NO_DATA"}:
+            return
         payload = {
             "saved_at": datetime.now(timezone.utc).isoformat(),
             "model_version": MODEL_VERSION,
@@ -319,19 +326,49 @@ def save_outputs(df: pd.DataFrame, write_state: bool = True) -> None:
         diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
     if write_state:
         save_public_market_state(df)
+        save_entry_history(df)
+
+
+def save_entry_history(df: pd.DataFrame) -> None:
+    """Append only public observations; holdings never enter the repository journal."""
+    public = public_market_state(df)
+    if public.empty or "entry_status" not in public:
+        return
+    keep = public["entry_status"].isin({"ENTRY_REVIEW", "DEEP_VALUE_REVIEW", "NEAR_ENTRY", "REVIEW_REQUIRED"})
+    keep |= public["entry_event"].eq("EXITED")
+    columns = ["ticker", "model_version", "entry_policy_version", "signal_observed_at", "entry_status", "entry_event",
+               "price", "price_asof", "intrinsic_value_per_share", "stress_value_per_share", "discount_to_value",
+               "stress_discount", "entry_price", "deep_entry_price", "fundamentals_asof", "financial_asof", "entry_reason"]
+    signals = public.loc[keep].reindex(columns=columns)
+    if signals.empty:
+        return
+    path = STATE_DIR / f"{MARKET_PREFIX}mos_entry_history.csv"
+    previous = pd.read_csv(path) if path.exists() else pd.DataFrame(columns=columns)
+    history = pd.concat([previous, signals], ignore_index=True)
+    history = history.drop_duplicates(["ticker", "signal_observed_at"], keep="first")
+    history.to_csv(path, index=False)
 
 
 def run_full_scan() -> pd.DataFrame:
+    previous = pd.read_csv(STATE_MARKET_PATH) if STATE_MARKET_PATH.exists() else pd.DataFrame()
     tickers = load_scan_tickers()
     sleep_seconds = getenv_float("REQUEST_SLEEP_SECONDS", 0.2)
     price_sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.02)
 
     rows = []
     total = len(tickers)
+    consecutive_rate_limits = 0
+    source_interrupted = False
 
     for i, ticker in enumerate(tickers, start=1):
         print(f"[{i}/{total}] analyzing {ticker}", flush=True)
-        rows.append(analyze_one(ticker, sleep_seconds=sleep_seconds))
+        analyzed = analyze_one(ticker, sleep_seconds=sleep_seconds)
+        rows.append(analyzed)
+        consecutive_rate_limits = consecutive_rate_limits + 1 if analyzed.get("price_data_status") == "YAHOO_RATE_LIMIT" else 0
+        if consecutive_rate_limits >= 5:
+            source_interrupted = True
+            print("Yahoo repeatedly rate limited; stop requests and preserve previous public state.", flush=True)
+            break
 
     df = pd.DataFrame(rows)
     df = annotate_pools(df)
@@ -341,9 +378,10 @@ def run_full_scan() -> pd.DataFrame:
     if "margin_of_safety" in df.columns:
         df["margin_of_safety_at_scan"] = df["margin_of_safety"]
 
-    df["scan_time"] = datetime.now().isoformat(timespec="seconds")
-    df["model_version"] = MODEL_VERSION
-    save_outputs(df, write_state=True)
+    df["scan_time"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    df["scan_status"] = "PARTIAL_SOURCE_FAILURE" if source_interrupted else "COMPLETE"
+    df = annotate_opportunities(df, previous=previous)
+    save_outputs(df, write_state=not source_interrupted)
     return df
 
 
@@ -530,6 +568,7 @@ def main() -> None:
 
     elif mode == "morning_email":
         df = load_latest_state_required()
+        df = annotate_opportunities(df, previous=df)
 
     elif mode in {"noon_update", "afternoon_update"}:
         df = load_latest_state_required()

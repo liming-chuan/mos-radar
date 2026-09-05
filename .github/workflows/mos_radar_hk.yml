@@ -68,22 +68,25 @@ jobs:
         with:
           name: mos-radar-hk-current-results
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 90
           path: |
             data/results/hk_*.csv
             reports/hk/*.md
             state/hk_*.csv
 
       - name: Commit HK public market state
-        if: always()
+        if: success()
         run: |
           if [ -f state/hk_mos_market_latest.csv ]; then
             git config user.name "mos-radar-bot"
             git config user.email "bot@example.com"
-            git pull --rebase origin main || true
             git add state/hk_mos_market_latest.csv
+            if [ -f state/hk_mos_entry_history.csv ]; then
+              git add state/hk_mos_entry_history.csv
+            fi
             git commit -m "update hk mos radar public state" || echo "No HK state changes"
-            git push
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           else
             echo "No HK public market state file to commit"
           fi
