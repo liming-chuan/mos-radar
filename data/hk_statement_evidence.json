@@ -1,0 +1,48 @@
+[
+  {
+    "ticker": "0151.HK",
+    "currency": "CNY",
+    "period_start": "2024-04-01",
+    "period_end": "2025-03-31",
+    "published_at": "2025-07-17",
+    "reviewed_at": "2026-09-06",
+    "reviewed_by": "Codex: extracted and visually checked PDF tables",
+    "source_url": "https://www.hkexnews.hk/listedco/listconews/sehk/2025/0717/2025071700258_c.pdf",
+    "source_pages": "Printed 107 and 111; PDF 109 and 113",
+    "verified": true,
+    "scope": "consolidated",
+    "unit": 1,
+    "notes": "RMB thousands multiplied by 1000. Net income is consolidated profit for the year, not attributable profit. OCF is net after operating interest and tax. CapEx sums PPE 633455 + land rights 3213 + intangibles 3905 (RMB thousands); financing lease payments not included. SBC not verified and deliberately omitted. Historical supplement, not latest annual report.",
+    "values": {
+      "revenue": 23510737000,
+      "net_income": 4328415000,
+      "operating_income": 5837435000,
+      "gross_profit": 11189198000,
+      "operating_cash_flow": 4161620000,
+      "capital_expenditure": 640573000
+    }
+  },
+  {
+    "ticker": "0151.HK",
+    "currency": "CNY",
+    "period_start": "2023-04-01",
+    "period_end": "2024-03-31",
+    "published_at": "2025-07-17",
+    "reviewed_at": "2026-09-06",
+    "reviewed_by": "Codex: extracted and visually checked PDF tables",
+    "source_url": "https://www.hkexnews.hk/listedco/listconews/sehk/2025/0717/2025071700258_c.pdf",
+    "source_pages": "Printed 107 and 111; PDF 109 and 113, comparative column",
+    "verified": true,
+    "scope": "consolidated",
+    "unit": 1,
+    "notes": "Comparative figures in 2024/25 report; RMB thousands multiplied by 1000. Net income is consolidated profit. CapEx sums PPE 437233 + intangibles 3086 (RMB thousands); land purchase shown as dash. SBC not verified and omitted. Historical supplement only.",
+    "values": {
+      "revenue": 23586327000,
+      "net_income": 3983179000,
+      "operating_income": 5609825000,
+      "gross_profit": 10990921000,
+      "operating_cash_flow": 5151440000,
+      "capital_expenditure": 440319000
+    }
+  }
+]

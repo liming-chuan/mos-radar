@@ -106,6 +106,12 @@ def evaluate_entry(row, now=None, policy=POLICY):
         return finish("DATA_REQUIRED", ["本次估值未完成", str(row.get("reason") or "请重试数据抓取")])
 
     missing, risks = [], []
+    if str(row.get('ticker', '')).endswith('.HK'):
+        from statement_evidence import evidence_fingerprint
+        if row.get('statement_evidence_fingerprint') != evidence_fingerprint():
+            missing.append("公告补录版本变化或未核验，需完整重扫")
+    if row.get("statement_evidence_status") == "REJECTED":
+        missing.append("公告补录校验失败或与数据源冲突，须复核诊断CSV")
     if row.get("model_version") != MODEL_VERSION:
         missing.append("旧模型结果需要重新扫描")
     if row.get("rating") in {"ERROR", "NO_DATA"}:

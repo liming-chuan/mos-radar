@@ -259,6 +259,10 @@ def load_cached_analysis(ticker: str) -> dict | None:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if payload.get("model_version") != MODEL_VERSION:
             return None
+        if str(ticker).endswith('.HK'):
+            from statement_evidence import evidence_fingerprint
+            if payload.get('evidence_fingerprint') != evidence_fingerprint():
+                return None
         saved_at = datetime.fromisoformat(str(payload.get("saved_at", "")))
         age_days = (datetime.now(timezone.utc) - saved_at).total_seconds() / 86400
         if age_days < 0 or age_days > cache_ttl_days():
@@ -287,6 +291,9 @@ def save_cached_analysis(ticker: str, result) -> None:
             "ticker": ticker,
             "result": row,
         }
+        if str(ticker).endswith('.HK'):
+            from statement_evidence import evidence_fingerprint
+            payload['evidence_fingerprint'] = evidence_fingerprint()
         cache_path(ticker).write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     except Exception as e:
         print(f"Cache write skipped for {ticker}: {type(e).__name__}: {e}", flush=True)
@@ -313,6 +320,10 @@ def build_data_quality_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
         "data_quality_score", "confidence_score", "trap_flags", "rating_cap",
         "valuation_method", "valuation_candidates", "price_data_status", "cache_status",
         "historical_price_status",
+        "annual_cashflow_status", "annual_cashflow_missing", "financial_asof", "balance_asof",
+        "financial_period_source", "financial_period_note", "trailing_fetch_status",
+        "statement_evidence_status", "statement_evidence_audit", "sbc_history_complete",
+        "fcf_history_years", "fcf_volatility_status", "entry_status", "entry_data_issues", "entry_risk_issues",
     ]
     cols = [c for c in wanted if c in df.columns]
     return df[cols].copy() if cols else pd.DataFrame()

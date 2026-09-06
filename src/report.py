@@ -741,6 +741,10 @@ def generate_report(
     missing_fcf = int(pd.to_numeric(audit_pool.get("fcf_ttm", pd.Series(index=audit_pool.index, dtype=float)), errors="coerce").isna().sum())
     annual_count = int(audit_pool.get("financial_period_type", pd.Series(dtype=str)).eq("ANNUAL_FALLBACK").sum())
     coverage_text += f" 非金融且未跳过的 {len(audit_pool)} 只中，Owner FCF 缺失 {missing_fcf} 只，年报回退 {annual_count} 只；这些数量与风险分类可能重叠。"
+    if 'annual_cashflow_status' in audit_pool:
+        unavailable = int(audit_pool['annual_cashflow_status'].eq('UNAVAILABLE').sum())
+        supplemented = int(audit_pool.get('statement_evidence_status', pd.Series(dtype=str)).eq('SUPPLEMENTED').sum())
+        coverage_text += f" 数据源年度现金流未返回 {unavailable} 只，已采用公告补录 {supplemented} 只；具体缺失项目、期间和出处见数据质量诊断CSV。"
     if "scan_time" in df and not df["scan_time"].dropna().empty:
         coverage_text += " 扫描时间：" + str(df["scan_time"].dropna().iloc[0])
     if "scan_attempted_count" in df and "scan_expected_count" in df and not df.empty:

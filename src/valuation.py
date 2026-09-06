@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import logging
 import math
 import os
@@ -20,7 +21,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.7.2"
+MODEL_VERSION = "MOS_Radar_V6.7.3"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -50,6 +51,11 @@ class AnalysisResult:
     financial_period_source: str = ""
     financial_period_note: str = ""
     trailing_fetch_status: str = "NOT_NEEDED"
+    annual_cashflow_status: str = "NOT_FETCHED"
+    annual_cashflow_missing: str = ""
+    statement_evidence_status: str = "NONE"
+    statement_evidence_audit: str = ""
+    statement_evidence_fingerprint: str = ""
     data_quality_notes: str = ""
     revenue_5y_cagr: float | None = None
     gross_margin: float | None = None
@@ -1561,6 +1567,15 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.reason = f"Yahoo 数据源触发 401/429 限流，终止该 ticker 后续财报请求：{e}"
             return result
 
+        result.annual_cashflow_status = "UNAVAILABLE" if annual_cashflow is None or annual_cashflow.empty else "AVAILABLE"
+        if current_market() == "hk":
+            from statement_evidence import supplement_annual, evidence_fingerprint
+            result.statement_evidence_fingerprint = evidence_fingerprint()
+            annual_financials, annual_cashflow, evidence = supplement_annual(
+                ticker, result.financial_currency, annual_financials, annual_cashflow)
+            result.statement_evidence_status = evidence['status']
+            result.statement_evidence_audit = json.dumps(evidence, ensure_ascii=False)
+
         annual_financials = scale_financial_df(annual_financials, fx_factor)
         annual_balance = scale_financial_df(annual_balance, fx_factor)
         annual_cashflow = scale_financial_df(annual_cashflow, fx_factor)
@@ -1595,6 +1610,17 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         ocf_s = row(cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
         capex_s = row(cashflow, ["Capital Expenditure", "Capital Expenditures"])
         sbc_s = row(cashflow, ["Stock Based Compensation"])
+        # Describe field/period gaps instead of treating every missing Owner FCF as a loss.
+        missing_items = []
+        for label, series in (("经营现金流", ocf_s), ("资本开支", capex_s), ("SBC", sbc_s)):
+            if series is None or not pd.to_numeric(series, errors='coerce').notna().any():
+                missing_items.append(label + "整项缺失")
+            elif cashflow is not None:
+                active_dates = cashflow.dropna(axis=1, how='all').columns.sort_values(ascending=False)[:5]
+                for date in active_dates:
+                    if safe_float(series.get(date)) is None:
+                        missing_items.append(label + "缺失@" + str(pd.Timestamp(date).date()))
+        result.annual_cashflow_missing = "；".join(missing_items)
 
         q_ocf_s = row(quarterly_cashflow, ["Operating Cash Flow", "Total Cash From Operating Activities"])
         q_capex_s = row(quarterly_cashflow, ["Capital Expenditure", "Capital Expenditures"])
@@ -1689,6 +1715,8 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             revenue_ttm = net_income_ttm = gross_profit_ttm = None
             operating_income_ttm = ebitda_ttm = interest_expense_ttm = None
         selected_dates = q_dates if use_ttm else [latest_period(s) for s in (owner_fcf_s, revenue_s, net_income_s)]
+        if result.statement_evidence_status == 'SUPPLEMENTED':
+            result.financial_period_note += "；年度数据含经逐项核实的公告补录，来源、页码和补录项目见诊断CSV"
         result.financial_period_aligned = bool(selected_dates[0]) and len(set(selected_dates)) == 1
 
         revenue_annual_latest = series_latest(revenue_s)
