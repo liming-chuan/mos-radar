@@ -20,7 +20,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.7.1"
+MODEL_VERSION = "MOS_Radar_V6.7.2"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -47,6 +47,9 @@ class AnalysisResult:
 
     revenue_ttm: float | None = None
     financial_period_type: str = ""
+    financial_period_source: str = ""
+    financial_period_note: str = ""
+    trailing_fetch_status: str = "NOT_NEEDED"
     data_quality_notes: str = ""
     revenue_5y_cagr: float | None = None
     gross_margin: float | None = None
@@ -60,6 +63,7 @@ class AnalysisResult:
     fcf_3y_avg: float | None = None
     fcf_5y_avg: float | None = None
     fcf_volatility: float | None = None
+    fcf_volatility_status: str = ""
     fcf_yield: float | None = None
     fcf_conversion: float | None = None
 
@@ -256,6 +260,13 @@ def series_volatility_ratio(s: pd.Series | None, n: int = 5) -> float | None:
     if avg <= 0:
         return None
     return safe_float(vals.std(ddof=0) / avg)
+
+
+def volatility_evidence_status(s: pd.Series | None) -> str:
+    vals = pd.to_numeric(s, errors="coerce").dropna().head(5) if s is not None else pd.Series(dtype=float)
+    if len(vals) < 3:
+        return "INSUFFICIENT_HISTORY"
+    return "NONPOSITIVE_MEAN" if vals.mean() <= 0 else "OK"
 
 
 def has_consecutive_decline(s: pd.Series | None, periods: int = 3) -> bool:
@@ -950,19 +961,13 @@ def estimate_intrinsic_value(
 
     if fcf_candidates:
         cyclical_models = {"energy_cyclical", "materials_cyclical", "cyclical_semiconductor", "industrial_normalized", "precious_metals_miner", "agri_cyclical"}
-        if model in cyclical_models:
-            cycle_candidates = [max(0.0, x) for x in [fcf_3y_avg, fcf_5y_avg] if safe_float(x) is not None]
-            if fcf_5y_avg is not None and fcf_5y_avg > 0:
-                cycle_candidates.append(fcf_5y_avg * 0.85)
-            if latest_fcf is not None:
-                cycle_candidates.append(max(0.0, latest_fcf * 0.40))
-            fcf_base = min(cycle_candidates) if cycle_candidates else min(fcf_candidates)
-        else:
-            # 保守 owner FCF 基数：取最近、3年、5年中较低的正值，防止高点误判
-            fcf_base = min(fcf_candidates)
+        # Normalize with observed lower earnings; recession cuts belong in stress.
+        # Known losses remain zero, rather than being dropped from the minimum.
+        fcf_base = min(fcf_candidates)
 
         if model in cyclical_models:
-            valuations.append(("cycle_asset_plus_fcf_4x", cash - debt + fcf_base * 4.0))
+            multiple = min(fcf_multiple, 8.0)
+            valuations.append((f"cycle_normalized_fcf_{multiple:g}x", cash - debt + fcf_base * multiple))
         else:
             valuations.append(("normalized_fcf_multiple", fcf_base * fcf_multiple + cash - debt))
 
@@ -1634,6 +1639,51 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         q_dates = [latest_period(s) for s in (q_owner_fcf_s, q_revenue_s, q_net_income_s)]
         use_ttm = (all(x is not None for x in (q_owner_fcf, q_reported_fcf, revenue_ttm, net_income_ttm))
                    and bool(q_dates[0]) and len(set(q_dates)) == 1)
+        provider_trailing = None
+        result.financial_period_source = "QUARTER_SUM" if use_ttm else "ANNUAL"
+        result.financial_period_note = "" if use_ttm else "季度项目不足、季度不连续或报告期不一致，使用年报"
+        # HK providers frequently cannot supply four separate quarters. Only use
+        # explicitly labelled trailing data; never sum half-year cumulative rows.
+        if not use_ttm and current_market() == "hk" and result.model_type != "financial_pb_roe":
+            from statement_periods import aligned_trailing_values
+            try:
+                if hasattr(t, "get_cash_flow") and hasattr(t, "get_income_stmt"):
+                    trailing_cf = fetch_yfinance_object(f"{ticker}.trailing_cashflow", lambda: quiet_yfinance_call(
+                        lambda: t.get_cash_flow(freq="trailing", pretty=True)), attempts=1)
+                    trailing_income = fetch_yfinance_object(f"{ticker}.trailing_income", lambda: quiet_yfinance_call(
+                        lambda: t.get_income_stmt(freq="trailing", pretty=True)), attempts=1)
+                    provider_trailing, result.trailing_fetch_status = aligned_trailing_values(
+                        scale_financial_df(trailing_income, fx_factor), scale_financial_df(trailing_cf, fx_factor),
+                        not_before=latest_period(reported_fcf_s))
+                else:
+                    result.trailing_fetch_status = "TRAILING_API_UNAVAILABLE"
+            except YahooRateLimitError:
+                result.rating = "NO_DATA"
+                result.price_data_status = "YAHOO_RATE_LIMIT"
+                result.reason = "Yahoo 最近十二个月财报请求限流，停止该股票后续请求"
+                return result
+            except Exception:
+                result.trailing_fetch_status = "TRAILING_FETCH_FAILED"
+            if provider_trailing is not None:
+                q_owner_fcf, q_reported_fcf, q_sbc = (provider_trailing[k] for k in ("owner_fcf", "reported_fcf", "sbc"))
+                revenue_ttm, net_income_ttm, gross_profit_ttm = (provider_trailing[k] for k in ("revenue", "net_income", "gross_profit"))
+                operating_income_ttm, ebitda_ttm, interest_expense_ttm = (provider_trailing[k] for k in ("operating_income", "ebitda", "interest_expense"))
+                q_dates = [provider_trailing["asof"]]*3
+                use_ttm = True
+                result.financial_period_source = "PROVIDER_TRAILING"
+                result.financial_period_note = "采用数据源明确标注的最近十二个月合计；现金流与利润表日期一致"
+            else:
+                trailing_notes = {
+                    "TRAILING_UNAVAILABLE": "十二个月财报未返回数据",
+                    "TRAILING_PERIOD_MISMATCH": "十二个月现金流与利润表日期不一致",
+                    "TRAILING_REQUIRED_ITEMS_MISSING": "十二个月现金流、SBC或利润项目不完整",
+                    "TRAILING_STALE_OR_FUTURE": "十二个月财报日期过期或异常",
+                    "TRAILING_NOT_NEWER_THAN_ANNUAL": "十二个月财报未比年报更新",
+                    "TRAILING_INVALID_DATES": "十二个月财报日期重复或无效",
+                    "TRAILING_API_UNAVAILABLE": "当前数据接口不支持十二个月财报",
+                    "TRAILING_FETCH_FAILED": "十二个月财报请求失败",
+                }
+                result.financial_period_note += "；" + trailing_notes.get(result.trailing_fetch_status, "十二个月财报未通过核验")
         if not use_ttm:
             q_owner_fcf = q_reported_fcf = q_sbc = None
             revenue_ttm = net_income_ttm = gross_profit_ttm = None
@@ -1658,7 +1708,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
 
         revenue_cagr = calc_cagr(revenue_annual_latest, revenue_oldest, max(1, min(4, len(pd.to_numeric(revenue_s, errors="coerce").dropna()) - 1)) if revenue_s is not None else 4)
 
-        gross_profit = coalesce_none(gross_profit_ttm, series_latest(gross_profit_s))
+        gross_profit = gross_profit_ttm if provider_trailing is not None else coalesce_none(gross_profit_ttm, series_latest(gross_profit_s))
         operating_income = coalesce_none(operating_income_ttm, series_latest(operating_income_s))
         net_income_5y_avg = series_avg(net_income_s, 5)
 
@@ -1680,7 +1730,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             intangible_components = [v for v in [goodwill, other_intangible] if v is not None]
             goodwill_and_intangibles = sum(intangible_components) if intangible_components else None
 
-        ebitda = coalesce_none(ebitda_ttm, series_latest(ebitda_s), safe_float(info.get("ebitda")))
+        ebitda = ebitda_ttm if provider_trailing is not None else coalesce_none(ebitda_ttm, series_latest(ebitda_s), safe_float(info.get("ebitda")))
 
         result.revenue_ttm = revenue_latest
         result.revenue_5y_cagr = revenue_cagr
@@ -1691,6 +1741,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         result.fcf_3y_avg = fcf_3y_avg
         result.fcf_5y_avg = fcf_5y_avg
         result.fcf_volatility = fcf_volatility
+        result.fcf_volatility_status = volatility_evidence_status(owner_fcf_s)
         result.cash = cash
         result.total_debt = debt
         result.net_cash = cash - debt if cash is not None and debt is not None else None
@@ -1721,7 +1772,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
             result.fcf_conversion = latest_fcf / latest_net_income
 
         if revenue_latest is not None and revenue_latest > 0:
-            result.gross_margin = gross_profit / revenue_latest if gross_profit is not None else safe_float(info.get("grossMargins"))
+            result.gross_margin = gross_profit / revenue_latest if gross_profit is not None else (None if provider_trailing is not None else safe_float(info.get("grossMargins")))
             result.operating_margin = operating_income / revenue_latest if operating_income is not None else safe_float(info.get("operatingMargins"))
             result.net_margin = latest_net_income / revenue_latest if latest_net_income is not None else safe_float(info.get("profitMargins"))
         else:
@@ -1737,7 +1788,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         if debt is not None and ebitda is not None and ebitda > 0:
             result.debt_to_ebitda = debt / ebitda
 
-        interest_expense = coalesce_none(interest_expense_ttm, series_latest(interest_expense_s))
+        interest_expense = interest_expense_ttm if provider_trailing is not None else coalesce_none(interest_expense_ttm, series_latest(interest_expense_s))
         if operating_income is not None and interest_expense is not None and interest_expense != 0:
             result.interest_coverage = operating_income / abs(interest_expense)
 
@@ -1745,6 +1796,8 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         stamp_fundamental_evidence(result, owner_fcf_s,
                                   q_owner_fcf_s if q_owner_fcf is not None else owner_fcf_s,
                                   cash_s, sbc_s, annual_shares, reported_fcf_s)
+        if provider_trailing is not None:
+            result.financial_asof = provider_trailing["asof"]
         result.shares_outstanding = coalesce_none(safe_float(info.get("sharesOutstanding")), series_latest(shares_s))
         if result.shares_outstanding and market_cap:
             result.share_count_mismatch = abs(price * result.shares_outstanding / market_cap - 1) > 0.20

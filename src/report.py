@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from html import escape
@@ -71,7 +71,7 @@ METHOD_ZH = {
 }
 
 PERIOD_ZH = {
-    "TTM": "最近四季滚动",
+    "TTM": "最近十二个月",
     "ANNUAL_FALLBACK": "年报口径",
     "MISSING": "缺失",
     "N/A": "N/A",
@@ -120,15 +120,19 @@ def display_model_status(value: str) -> str:
 
 def display_method(value: str) -> str:
     s = str(value or "")
+    if "_holding_" in s and s.endswith("x"):
+        base, discount = s.rsplit("_holding_", 1)
+        return display_method(base) + "，控股/投资资产折价 " + discount.replace("x", "倍")
+    if s.startswith("cycle_normalized_fcf_"):
+        return "周期正常化现金流 " + s.rsplit("_", 1)[-1].replace("x", "倍")
+    if s == "cycle_asset_plus_fcf_4x":
+        return "旧周期现金流折减后4倍"
     if s in METHOD_ZH:
         return METHOD_ZH[s]
     if s.startswith("financial_pb_roe_tangible_book_"):
         return "金融股市净率/净资产收益率：有形账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
     if s.startswith("financial_pb_roe_book_"):
         return "金融股市净率/净资产收益率：账面价值 " + s.rsplit("_", 1)[-1].replace("x", "倍")
-    if "_holding_" in s and s.endswith("x"):
-        base, discount = s.rsplit("_holding_", 1)
-        return display_method(base) + "，控股/投资资产折价 " + discount.replace("x", "倍")
     return s
 
 
@@ -387,6 +391,9 @@ def stock_cards(df, title, limit=None, currency_symbol="$", entry=False):
                         ("压力折价", discount_label(r.get("stress_discount"))),
                         ("深折价观察价", money(r.get("deep_entry_price"), currency_symbol)),
                         ("状态变化", EVENT_ZH.get(r.get("entry_event"), "首次记录"))]
+            if text_value(r.get("entry_binding_constraint")):
+                metrics += [("当前限制", text_value(r.get("entry_binding_constraint"))),
+                            ("现金流报告截止日", text_value(r.get("financial_asof")) or "未知")]
         else:
             metrics += [("潜在上涨空间（旧MoS）", pct(r.get("margin_of_safety"))),
                         ("Owner FCF收益率", pct(r.get("fcf_yield")))]
@@ -403,6 +410,13 @@ def stock_cards(df, title, limit=None, currency_symbol="$", entry=False):
                      f'<div class="sub">{escape(display_sector(text_value(r.get("sector"))))} · '
                      f'{escape(display_period(text_value(r.get("financial_period_type"))))} · '
                      f'{escape(display_method(text_value(r.get("valuation_method"))))}</div>')
+        if entry and text_value(r.get("entry_binding_constraint")):
+            parts.append(f'<p class="sub">三个上限取最低：价值折价 '
+                         f'{money(r.get("entry_value_ceiling"), currency_symbol)} / 压力折价 '
+                         f'{money(r.get("entry_stress_ceiling"), currency_symbol)} / 现金流收益率 '
+                         f'{money(r.get("entry_yield_ceiling"), currency_symbol)}。</p>')
+        if entry and text_value(r.get("financial_period_note")):
+            parts.append(f'<p class="sub">{escape(text_value(r.get("financial_period_note")))}</p>')
         if not entry:
             parts.append(f'<p class="sub">旧研究评级：{escape(text_value(r.get("rating")))}；'
                          f'{short_reason(r.get("reason"), limit=240)}</p>')
@@ -418,6 +432,23 @@ def html_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, show_p
 
 def compact_table(df: pd.DataFrame, title: str, limit: Optional[int] = None, currency_symbol: str = "$") -> str:
     return stock_cards(df, title, limit, currency_symbol)
+
+
+def research_summary(df, title, currency_symbol="$", limit=5):
+    """Keep legacy research rows separate from the actionable price watchlist."""
+    from opportunity import STATUS_ZH
+    if df.empty:
+        return ""
+    rows = []
+    for _, r in df.head(limit).iterrows():
+        reason = text_value(r.get("entry_reason")) or text_value(r.get("reason"))
+        if len(reason) > 110:
+            reason = reason[:110]+"…（完整原因见 CSV）"
+        rows.append(f'<tr><td>{escape(text_value(r.get("ticker")))}</td>'
+                    f'<td>{escape(STATUS_ZH.get(r.get("entry_status"), "待复核"))}<br>'
+                    f'旧评级 {escape(text_value(r.get("rating")))}</td><td>{escape(reason)}</td></tr>')
+    return f'<h2>{escape(title)}</h2><p class="sub">显示 {min(len(df),limit)} / {len(df)} 只；完整清单、估值与依据见 CSV。</p>' + \
+        '<table class="research"><thead><tr><th>代码</th><th>状态</th><th>待核实事项</th></tr></thead><tbody>'+''.join(rows)+'</tbody></table>'
 
 
 def count_rating(df: pd.DataFrame, rating: str) -> int:
@@ -615,7 +646,7 @@ def opportunity_html(df, currency_symbol="$", limit=20):
     counts = df["entry_status"].value_counts()
     parts.append('<p>'+" · ".join(f'{escape(STATUS_ZH.get(k, k))}：{v}' for k, v in counts.items())+'</p>')
     groups = [("价格已达标：优先复核", ENTRY_STATES),
-              ("质量通过：等待更好的价格", {"NEAR_ENTRY", "WAIT_PRICE"}),
+              ("质量通过：优先跟踪的价格距离", {"NEAR_ENTRY", "WAIT_PRICE"}),
               ("已退出或估值明显下修", {"REVIEW_REQUIRED"})]
     for title, statuses in groups:
         subset = df[df["entry_status"].isin(statuses)].copy()
@@ -626,7 +657,22 @@ def opportunity_html(df, currency_symbol="$", limit=20):
                 parts.append('<p><b>目前没有通过严格门槛的入场候选，可以继续等待。</b></p>')
             continue
         subset = subset.sort_values("distance_to_entry", ascending=False, na_position="last")
-        parts.append(stock_cards(subset, title, limit, currency_symbol, entry=True))
+        if statuses == {"NEAR_ENTRY", "WAIT_PRICE"}:
+            # Do not fill an email with companies requiring 80-90% further falls.
+            close = subset[pd.to_numeric(subset["distance_to_entry"], errors="coerce") >= -0.30]
+            sample = close.head(min(limit, 3))
+            if sample.empty:
+                parts.append('<p><b>没有处于触发价上方、还需下跌不超过30%的候选；远距离名单仅作储备研究。</b></p>')
+            else:
+                parts.append(stock_cards(close, title, min(limit, 3), currency_symbol, entry=True))
+            remaining = subset.drop(sample.index)
+            if not remaining.empty:
+                rows = ''.join(f'<tr><td>{escape(text_value(r.get("ticker")))}</td><td>{money(r.get("entry_price"), currency_symbol)}</td>'
+                               f'<td>{escape(distance_label(r.get("distance_to_entry")))}</td></tr>' for _, r in remaining.head(10).iterrows())
+                parts.append('<h3>其余等待名单</h3><table><thead><tr><th>代码</th><th>模型触发上限</th><th>距离</th></tr></thead><tbody>'+rows+'</tbody></table>'
+                             f'<p class="sub">显示 {min(len(remaining),10)} / {len(remaining)} 只；完整名单见 CSV。</p>')
+        else:
+            parts.append(stock_cards(subset, title, limit, currency_symbol, entry=True))
     blocked = df[df["entry_status"].isin({"RISK_BLOCKED", "DATA_REQUIRED"})]
     if not blocked.empty:
         columns = [("entry_data_issues", "需补齐的证据"), ("entry_risk_issues", "已识别的风险")]
@@ -665,7 +711,7 @@ def generate_report(
     title = title_map.get(mode, "安全边际报告")
     market_label = {"us": "美股", "hk": "港股"}.get(str(market).lower(), str(market).upper())
     currency_symbol = "HK$" if str(market).lower() == "hk" else "$"
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     backtest_date = ""
     if "backtest_date" in df.columns:
         values = df["backtest_date"].dropna().astype(str)
@@ -691,6 +737,10 @@ def generate_report(
     risk_count = int(statuses.eq("RISK_BLOCKED").sum())
     special_count = int(statuses.eq("SPECIAL_REVIEW").sum())
     coverage_text = f"本报告包含 {len(df)} 条结果；金融股另列。"
+    audit_pool = operating_market_df[~operating_market_df.get("rating", pd.Series(index=operating_market_df.index, dtype=str)).eq("SKIP")]
+    missing_fcf = int(pd.to_numeric(audit_pool.get("fcf_ttm", pd.Series(index=audit_pool.index, dtype=float)), errors="coerce").isna().sum())
+    annual_count = int(audit_pool.get("financial_period_type", pd.Series(dtype=str)).eq("ANNUAL_FALLBACK").sum())
+    coverage_text += f" 非金融且未跳过的 {len(audit_pool)} 只中，Owner FCF 缺失 {missing_fcf} 只，年报回退 {annual_count} 只；这些数量与风险分类可能重叠。"
     if "scan_time" in df and not df["scan_time"].dropna().empty:
         coverage_text += " 扫描时间：" + str(df["scan_time"].dropna().iloc[0])
     if "scan_attempted_count" in df and "scan_expected_count" in df and not df.empty:
@@ -704,12 +754,8 @@ def generate_report(
     rating_diag_html = rating_distribution_html(df)
     sector_diag_html = sector_distribution_html(market_df)
     historical_status_html = historical_price_status_html(df) if mode == "historical_replay" else ""
-    diagnostic_html = diagnostic_sample_html(
-        operating_market_df,
-        "扫描诊断样本（最多5只，完整结果见 CSV）",
-        currency_symbol=currency_symbol,
-    )
-    valuation_detail = valuation_detail_html(market_high if not market_high.empty else operating_market_df, currency_symbol=currency_symbol)
+    diagnostic_html = ""
+    valuation_detail = ""
     holdings_risk = holdings_risk_html(holdings_df, currency_symbol=currency_symbol)
 
     holdings_html = html_table(
@@ -719,19 +765,24 @@ def generate_report(
         currency_symbol=currency_symbol,
     )
 
-    market_html = html_table(
-        market_high,
-        f"旧研究评级 S/A/B：须以严格入场状态为准 Top {top_mos_count}",
-        limit=top_mos_count,
+    research = market_high[~market_high.get("entry_status", pd.Series(index=market_high.index, dtype=str)).isin(
+        {"ENTRY_REVIEW", "DEEP_VALUE_REVIEW", "NEAR_ENTRY", "WAIT_PRICE"})]
+    market_html = research_summary(
+        research,
+        "旧评级中的未通过项目：仅供核查",
+        limit=5,
         currency_symbol=currency_symbol,
     )
 
-    financial_html = compact_table(
+    financial_html = research_summary(
         sort_for_report(financial_high),
         "金融股观察池：S/A/B 候选",
-        limit=20,
+        limit=5,
         currency_symbol=currency_symbol,
     )
+    if mode == "historical_replay":
+        market_html = html_table(market_high, "历史压力测试候选", limit=top_mos_count, currency_symbol=currency_symbol)
+        financial_html = compact_table(financial_high, "金融股历史压力测试", limit=20, currency_symbol=currency_symbol)
 
     thicker_html = ""
     if "price_change_since_scan" in market_high.columns:
@@ -903,6 +954,10 @@ def generate_report(
     .metrics {{ table-layout: fixed; }}
     .metrics td {{ width: 50%; line-height: 1.6; }}
     .metrics b {{ font-variant-numeric: tabular-nums; }}
+    .research {{ table-layout: fixed; }}
+    .research th:first-child {{ width: 20%; }}
+    .research th:nth-child(2) {{ width: 22%; }}
+    .research td {{ overflow-wrap: anywhere; }}
     @media (max-width: 600px) {{
         .wrap {{ padding: 8px; }} .card {{ padding: 12px; }}
         .box {{ width: 48%; padding: 10px; }}
@@ -927,7 +982,7 @@ def generate_report(
             <div class="box"><div class="label">经营型扫描股票</div><div class="value">{len(operating_market_df)}</div></div>
             <div class="box"><div class="label">严格入场复核</div><div class="value">{strict_count}</div></div>
             <div class="box"><div class="label">仅等待价格</div><div class="value">{wait_count}</div></div>
-            <div class="box"><div class="label">数据待补齐</div><div class="value">{data_count}</div></div>
+            <div class="box"><div class="label">仅因数据待补齐</div><div class="value">{data_count}</div></div>
             <div class="box"><div class="label">风险未通过</div><div class="value">{risk_count}</div></div>
             <div class="box"><div class="label">行业专门复核</div><div class="value">{special_count}</div></div>
         </div>
@@ -978,7 +1033,7 @@ def generate_report(
             <b>PASS</b>：当前价格高于保守价值。<br>
             <b>D_TRAP</b>：疑似价值陷阱，必须人工排雷。<br>
             <b>NO_DATA</b>：数据不足，不能判断。<br>
-            <b>财报口径</b>：最近四季滚动表示最近四个季度合计；年报口径表示季度数据不足，退回最新年报。
+            <b>财报口径</b>：最近十二个月来自四个连续季度合计或数据源明确标注的十二个月财报；年报口径表示更近的期间数据未通过核验，退回年报。具体截止日期与回退原因见候选卡片。
         </div>
     </div>
 </div>

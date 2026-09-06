@@ -343,7 +343,8 @@ def save_entry_history(df: pd.DataFrame) -> None:
     keep |= public["entry_event"].eq("EXITED")
     columns = ["ticker", "model_version", "entry_policy_version", "signal_observed_at", "entry_status", "entry_event",
                "price", "price_asof", "intrinsic_value_per_share", "stress_value_per_share", "discount_to_value",
-               "stress_discount", "entry_price", "deep_entry_price", "fundamentals_asof", "financial_asof", "entry_reason"]
+               "stress_discount", "entry_price", "deep_entry_price", "fundamentals_asof", "financial_asof", "entry_reason",
+               "financial_period_source", "entry_binding_constraint", "entry_value_ceiling", "entry_stress_ceiling", "entry_yield_ceiling"]
     signals = public.loc[keep].reindex(columns=columns)
     if signals.empty:
         return

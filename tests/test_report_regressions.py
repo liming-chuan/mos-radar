@@ -75,7 +75,7 @@ class EvidenceRegressions(unittest.TestCase):
 
     def test_policy_version_survives_csv_float_inference(self):
         old = o.annotate_opportunities(pd.DataFrame([good_row(price=80, market_cap=1600)]), now=NOW)
-        old["entry_policy_version"] = 2.0
+        old["entry_policy_version"] = float(old.iloc[0].entry_policy_version)
         new = o.annotate_opportunities(pd.DataFrame([good_row()]), previous=old, now=NOW)
         self.assertEqual(new.iloc[0].entry_event, "PRICE_ENTERED")
 

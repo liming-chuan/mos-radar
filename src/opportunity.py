@@ -68,15 +68,21 @@ def evaluate_entry(row, now=None, policy=POLICY):
     result = {"discount_to_value": None, "upside_to_value": None, "stress_discount": None,
               "required_discount": required, "entry_price": None, "deep_entry_price": None,
               "distance_to_entry": None, "entry_status": "DATA_REQUIRED", "entry_reason": "",
-              "entry_policy_version": "2", "entry_data_issues": "", "entry_risk_issues": ""}
+              "entry_policy_version": "3", "entry_data_issues": "", "entry_risk_issues": "",
+              "entry_value_ceiling": None, "entry_stress_ceiling": None, "entry_yield_ceiling": None,
+              "entry_binding_constraint": ""}
     if price and price > 0 and value and value > 0:
         result.update(discount_to_value=1-price/value, upside_to_value=value/price-1)
     if price and price > 0 and stress and stress > 0:
         result["stress_discount"] = 1-price/stress
     fcf, cap = get("fcf_ttm"), get("market_cap")
     if all(x is not None and x > 0 for x in (price, value, stress, fcf, cap)):
-        ceiling = min(value*(1-required), stress*(1-policy.min_stress_discount),
-                      price*fcf/cap/policy.min_owner_yield)
+        ceilings = {"保守价值折价": value*(1-required), "压力情景折价": stress*(1-policy.min_stress_discount),
+                    "现金流收益率": price*fcf/cap/policy.min_owner_yield}
+        ceiling = min(ceilings.values())
+        result.update(entry_value_ceiling=ceilings["保守价值折价"], entry_stress_ceiling=ceilings["压力情景折价"],
+                      entry_yield_ceiling=ceilings["现金流收益率"], entry_binding_constraint="、".join(
+                          k for k, v in ceilings.items() if math.isclose(v, ceiling, rel_tol=1e-9)))
         result.update(entry_price=ceiling, deep_entry_price=min(ceiling, value*0.50, stress*0.75),
                       distance_to_entry=ceiling/price-1)
 
@@ -85,6 +91,8 @@ def evaluate_entry(row, now=None, policy=POLICY):
         # An unauditable or vetoed price must not be presented as an actionable trigger.
         if status in {"DATA_REQUIRED", "RISK_BLOCKED", "SPECIAL_REVIEW", "HISTORICAL_ONLY"}:
             result.update(entry_price=None, deep_entry_price=None, distance_to_entry=None)
+            result.update(entry_value_ceiling=None, entry_stress_ceiling=None, entry_yield_ceiling=None,
+                          entry_binding_constraint="")
         return result
 
     if truth(row.get("is_historical_replay")):
@@ -103,9 +111,8 @@ def evaluate_entry(row, now=None, policy=POLICY):
     if row.get("rating") in {"ERROR", "NO_DATA"}:
         missing.append("本次估值未完成")
     for key, label in (("price", "股价"), ("intrinsic_value_per_share", "保守价值"),
-                       ("stress_value_per_share", "压力估值"), ("fcf_ttm", "Owner FCF"),
+                       ("stress_value_per_share", "压力估值"),
                        ("market_cap", "市值"), ("cash", "现金"), ("total_debt", "总债务"),
-                       ("fcf_conversion", "现金转换率"), ("share_dilution_3y", "三年股本变化"),
                        ("shares_outstanding", "股本")):
         if get(key) is None:
             missing.append(label+"缺失")
@@ -153,14 +160,20 @@ def evaluate_entry(row, now=None, policy=POLICY):
     for key, threshold, label, higher_bad in (
         ("fcf_conversion", policy.min_cash_conversion, "现金转换率不足70%", False),
         ("share_dilution_3y", policy.max_dilution, "三年稀释超过5%", True),
-        ("fcf_volatility", 0.60, "现金流波动过高", True),
         ("quality_score", 6, "经营质量评分不足", False),
     ):
         n = get(key)
         if n is None:
-            missing.append(label+"所需数据缺失")
+            missing.append({"fcf_conversion": "现金转换率缺失", "share_dilution_3y": "三年股本变化缺失",
+                            "quality_score": "经营质量评分缺失"}[key])
         elif (n > threshold if higher_bad else n < threshold):
             risks.append(label)
+    if row.get("fcf_volatility_status") == "NONPOSITIVE_MEAN":
+        risks.append("历史平均现金流非正，波动率不适用")
+    elif get("fcf_volatility") is None:
+        missing.append("现金流波动所需历史数据不足")
+    elif get("fcf_volatility") > 0.60:
+        risks.append("现金流波动过高")
     cash, debt = get("cash"), get("total_debt")
     if cash is not None and debt is not None and debt > cash:
         ebitda, coverage = get("ebitda"), get("interest_coverage")
@@ -188,7 +201,7 @@ def evaluate_entry(row, now=None, policy=POLICY):
         status = "DEEP_VALUE_REVIEW" if price <= result["deep_entry_price"] else "ENTRY_REVIEW"
         return finish(status, ["保守折价、压力折价及现金流门槛同时达标", "复核最新公告、价值实现条件后再决定"])
     status = "NEAR_ENTRY" if price <= result["entry_price"]*(1+policy.near_entry_distance) else "WAIT_PRICE"
-    return finish(status, ["质量门槛通过，等待价格降至触发上限"])
+    return finish(status, ["质量门槛通过，等待价格降至触发上限", "当前限制："+result["entry_binding_constraint"]])
 
 
 def annotate_opportunities(df, previous=None, now=None, policy=POLICY):
@@ -215,7 +228,9 @@ def annotate_opportunities(df, previous=None, now=None, policy=POLICY):
                     review_anchor = None
                 if review_anchor and result["entry_status"] in ENTRY_STATES | {"WAIT_PRICE", "NEAR_ENTRY"}:
                     result.update(entry_status="REVIEW_REQUIRED", entry_reason="保守价值较上次下修超过15%，先重做投资论点",
-                                  entry_price=None, deep_entry_price=None, distance_to_entry=None)
+                                  entry_price=None, deep_entry_price=None, distance_to_entry=None,
+                                  entry_value_ceiling=None, entry_stress_ceiling=None, entry_yield_ceiling=None,
+                                  entry_binding_constraint="")
             current_in = result["entry_status"] in ENTRY_STATES
             old_in = old.get("entry_status") in ENTRY_STATES
             event = "UNCHANGED" if old.get("entry_status") == result["entry_status"] else "STATE_CHANGED"
