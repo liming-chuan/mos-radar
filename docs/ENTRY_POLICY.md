@@ -47,6 +47,8 @@ distance_to_entry = entry_price / 当前价格 − 1
 
 ## 压力情景与估值修复
 
+V6.7.1 将持续经营估值与 NCAV/有形账面折价参考分组：经营价值只在经营方法中取最低；纯资产模型进入专门复核，不输出经营型触发价。年度 SBC 覆盖只剔除现金流覆盖区间末尾的空列，真实年份的缺失仍拦截。报告与验证细节见 [扫描报告修复](SCAN_REPORT_FIXES.md)。
+
 压力估值将正的 FCF/净利润降低 30%，现金、NCAV、有形权益降低 20%，不使用正增长，折现率提高 2 个百分点；债务保持不变。重新运行相同估值方法并应用相同控股公司折价。这个压力情景不是清算价值，不是最坏情形或股价下限，真实损失可能更大。
 
 PE 直接估算股权价值，不再额外加现金减债务。Owner FCF 引擎仍然是保守筛选近似：经营现金流减资本开支、SBC，再保留净债务储备折扣；它不是严格按 FCFF/WACC 或 FCFE 构建的企业估值模型。现金是否受限、少数股东权益、维护性资本开支、营运资金和再融资等仍需逐项复核。严格估值需要区分企业与股权现金流及其匹配的折现率。[CFA：Free Cash Flow Valuation](https://www.cfainstitute.org/insights/professional-learning/refresher-readings/2026/free-cash-flow-valuation)

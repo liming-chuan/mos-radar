@@ -221,8 +221,9 @@ def save_public_market_state(df: pd.DataFrame) -> None:
 def load_public_market_state() -> pd.DataFrame:
     if RESULTS_PATH.exists():
         df = pd.read_csv(RESULTS_PATH)
-        print(f"Loaded latest local result: {RESULTS_PATH} rows={len(df)}", flush=True)
-        return annotate_pools(df)
+        if scan_is_complete(df):
+            print(f"Loaded latest local result: {RESULTS_PATH} rows={len(df)}", flush=True)
+            return annotate_pools(df)
 
     if STATE_MARKET_PATH.exists():
         df = pd.read_csv(STATE_MARKET_PATH)
@@ -317,6 +318,10 @@ def build_data_quality_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
     return df[cols].copy() if cols else pd.DataFrame()
 
 
+def scan_is_complete(df: pd.DataFrame) -> bool:
+    return not df.empty and ("scan_status" not in df or df["scan_status"].eq("COMPLETE").all())
+
+
 def save_outputs(df: pd.DataFrame, write_state: bool = True) -> None:
     RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(RESULTS_PATH, index=False)
@@ -324,7 +329,7 @@ def save_outputs(df: pd.DataFrame, write_state: bool = True) -> None:
     diagnostics = build_data_quality_diagnostics(df)
     if not diagnostics.empty:
         diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
-    if write_state:
+    if write_state and scan_is_complete(df):
         save_public_market_state(df)
         save_entry_history(df)
 
@@ -380,6 +385,8 @@ def run_full_scan() -> pd.DataFrame:
 
     df["scan_time"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     df["scan_status"] = "PARTIAL_SOURCE_FAILURE" if source_interrupted else "COMPLETE"
+    df["scan_expected_count"] = total
+    df["scan_attempted_count"] = len(rows)
     df = annotate_opportunities(df, previous=previous)
     save_outputs(df, write_state=not source_interrupted)
     return df
@@ -433,7 +440,7 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
         diagnostics = build_data_quality_diagnostics(df)
         if not diagnostics.empty:
             diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
-        if mode in {"full_after_close", "manual", "premarket_scan", "noon_update", "afternoon_update"}:
+        if mode in {"full_after_close", "manual", "premarket_scan", "noon_update", "afternoon_update"} and scan_is_complete(df):
             save_public_market_state(df)
 
 

@@ -20,7 +20,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.7.0"
+MODEL_VERSION = "MOS_Radar_V6.7.1"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -1003,8 +1003,10 @@ def estimate_intrinsic_value(
     if not clean:
         return None, "NO_VALID_VALUATION", compact_candidates(valuations)
 
-    # 保守原则：取最低的有效估值
-    method, value = min(clean, key=lambda x: x[1])
+    # Asset-only references are not ceilings on a going concern's earning power.
+    # Keep them in the breakdown, including when lower; do not discard losses.
+    operating = [(name, v) for name, v in clean if name not in {"ncav_2_3", "tangible_book_0_8x"}]
+    method, value = min(operating or clean, key=lambda x: x[1])
 
     return value, method, compact_candidates(clean)
 
@@ -1355,14 +1357,27 @@ def latest_period(s: pd.Series | None) -> str:
     return dates.max().date().isoformat() if len(dates) and not dates.isna().all() else ""
 
 
-def stamp_fundamental_evidence(result, annual_fcf, recent_fcf, balance_cash, annual_sbc, annual_shares):
+def stamp_fundamental_evidence(result, annual_fcf, recent_fcf, balance_cash, annual_sbc, annual_shares, annual_reported=None):
     result.fundamentals_asof = datetime.now(timezone.utc).isoformat()
     result.financial_asof = latest_period(recent_fcf)
     result.balance_asof = latest_period(balance_cash)
-    values = pd.to_numeric(annual_fcf, errors="coerce").head(5) if annual_fcf is not None else pd.Series(dtype=float)
+    values = pd.to_numeric(annual_fcf, errors="coerce").sort_index(ascending=False) if annual_fcf is not None else pd.Series(dtype=float)
+    # Use actual reported cash-flow coverage to remove provider padding only.
+    # A year with reported FCF but missing SBC remains an explicit gap.
+    coverage = pd.to_numeric(annual_reported, errors="coerce").sort_index(ascending=False) if annual_reported is not None else values
+    valid = coverage.notna().to_numpy().nonzero()[0]
+    if len(valid):
+        coverage = coverage.iloc[:valid[-1]+1].head(5)
+        values = values.reindex(coverage.index)
+    else:
+        values = values.iloc[:0]
     result.fcf_history_years = int(values.notna().sum())
     result.fcf_positive_years = int((values > 0).sum())
-    result.sbc_history_complete = bool(len(values) >= 3 and values.notna().all() and annual_sbc is not None)
+    dates = pd.to_datetime(values.index, errors="coerce")
+    gaps = -pd.Series(dates).diff().dropna().dt.days
+    consecutive = not dates.isna().any() and not dates.has_duplicates and gaps.between(300, 430).all()
+    sbc = pd.to_numeric(annual_sbc, errors="coerce").reindex(values.index) if annual_sbc is not None else pd.Series(dtype=float)
+    result.sbc_history_complete = bool(len(values) >= 3 and values.notna().all() and consecutive and len(sbc) == len(values) and sbc.notna().all())
     if annual_shares is not None:
         shares = pd.to_numeric(annual_shares, errors="coerce").head(4)
         dates = pd.to_datetime(shares.index, errors="coerce")
@@ -1729,7 +1744,7 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         annual_shares = row(annual_balance, ["Ordinary Shares Number", "Share Issued", "Common Stock Shares Outstanding"])
         stamp_fundamental_evidence(result, owner_fcf_s,
                                   q_owner_fcf_s if q_owner_fcf is not None else owner_fcf_s,
-                                  cash_s, sbc_s, annual_shares)
+                                  cash_s, sbc_s, annual_shares, reported_fcf_s)
         result.shares_outstanding = coalesce_none(safe_float(info.get("sharesOutstanding")), series_latest(shares_s))
         if result.shares_outstanding and market_cap:
             result.share_count_mismatch = abs(price * result.shares_outstanding / market_cap - 1) > 0.20

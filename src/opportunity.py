@@ -68,7 +68,7 @@ def evaluate_entry(row, now=None, policy=POLICY):
     result = {"discount_to_value": None, "upside_to_value": None, "stress_discount": None,
               "required_discount": required, "entry_price": None, "deep_entry_price": None,
               "distance_to_entry": None, "entry_status": "DATA_REQUIRED", "entry_reason": "",
-              "entry_policy_version": "1"}
+              "entry_policy_version": "2", "entry_data_issues": "", "entry_risk_issues": ""}
     if price and price > 0 and value and value > 0:
         result.update(discount_to_value=1-price/value, upside_to_value=value/price-1)
     if price and price > 0 and stress and stress > 0:
@@ -91,7 +91,10 @@ def evaluate_entry(row, now=None, policy=POLICY):
         return finish("HISTORICAL_ONLY", ["当前财报配历史价，禁止生成实时入场信号"])
     if row.get("model_type") in {"financial_pb_roe", "reit_needs_affo"} or row.get("rating") == "SKIP":
         return finish("SPECIAL_REVIEW", ["需要行业资产质量或专门模型"])
+    if str(row.get("valuation_method", "")).split("|")[0].split("_holding_")[0] in {"ncav_2_3", "tangible_book_0_8x"}:
+        return finish("SPECIAL_REVIEW", ["仅资产折价参考，需核实资产可变现性，不能直接生成经营型入场价"])
     if row.get("rating") in {"ERROR", "NO_DATA"}:
+        result["entry_data_issues"] = "本次估值未完成"
         return finish("DATA_REQUIRED", ["本次估值未完成", str(row.get("reason") or "请重试数据抓取")])
 
     missing, risks = [], []
@@ -103,7 +106,7 @@ def evaluate_entry(row, now=None, policy=POLICY):
                        ("stress_value_per_share", "压力估值"), ("fcf_ttm", "Owner FCF"),
                        ("market_cap", "市值"), ("cash", "现金"), ("total_debt", "总债务"),
                        ("fcf_conversion", "现金转换率"), ("share_dilution_3y", "三年股本变化"),
-                       ("shares_outstanding", "股本"), ("fcf_volatility", "现金流波动")):
+                       ("shares_outstanding", "股本")):
         if get(key) is None:
             missing.append(label+"缺失")
     if not row.get("quote_currency") or not row.get("financial_currency"):
@@ -176,6 +179,7 @@ def evaluate_entry(row, now=None, policy=POLICY):
         risks.append("成交金额不足")
     if price is not None and price < 1:
         risks.append("低价股需专门复核")
+    result.update(entry_data_issues="；".join(dict.fromkeys(missing)), entry_risk_issues="；".join(dict.fromkeys(risks)))
     if risks:
         return finish("RISK_BLOCKED", risks+missing)
     if missing or result["entry_price"] is None:
@@ -200,7 +204,7 @@ def annotate_opportunities(df, previous=None, now=None, policy=POLICY):
         old = prior.get(str(row.get("ticker")))
         event, decline = "FIRST_OBSERVATION", None
         review_anchor = None
-        if old is not None and str(old.get("entry_policy_version")) == result["entry_policy_version"] and old.get("model_version") == row.get("model_version"):
+        if old is not None and number(old.get("entry_policy_version")) == number(result["entry_policy_version"]) and old.get("model_version") == row.get("model_version"):
             old_iv, iv = number(old.get("intrinsic_value_per_share")), number(row.get("intrinsic_value_per_share"))
             if old_iv and iv is not None:
                 decline = iv/old_iv-1
