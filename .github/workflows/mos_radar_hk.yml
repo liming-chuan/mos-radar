@@ -82,6 +82,9 @@ jobs:
             git config user.name "mos-radar-bot"
             git config user.email "bot@example.com"
             git add state/hk_mos_market_latest.csv
+            if [ -f state/hk_mos_watch_history.csv ]; then
+              git add state/hk_mos_watch_history.csv
+            fi
             if [ -f state/hk_mos_entry_history.csv ]; then
               git add state/hk_mos_entry_history.csv
             fi

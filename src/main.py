@@ -22,6 +22,7 @@ from price_update import update_prices_only
 from report import generate_report
 from valuation import MODEL_VERSION, analyze_ticker, results_to_dataframe
 from opportunity import annotate_opportunities
+from quality_watch import enrich_watchlists, save_watch_history
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -325,6 +326,7 @@ def build_data_quality_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
         "sbc_coverage_status", "sbc_missing_periods", "scan_started_at", "scan_time", "scan_duration_seconds",
         "financial_period_source", "financial_period_note", "trailing_fetch_status",
         "statement_evidence_status", "statement_evidence_audit", "sbc_history_complete",
+        "qv_status", "qv_reason", "trend_status", "trend_reason", "trend_asof",
         "fcf_history_years", "fcf_volatility_status", "entry_status", "entry_data_issues", "entry_risk_issues",
     ]
     cols = [c for c in wanted if c in df.columns]
@@ -345,6 +347,7 @@ def save_outputs(df: pd.DataFrame, write_state: bool = True) -> None:
     if write_state and scan_is_complete(df):
         save_public_market_state(df)
         save_entry_history(df)
+        save_watch_history(public_market_state(df), STATE_DIR / f"{MARKET_PREFIX}mos_watch_history.csv")
 
 
 def save_entry_history(df: pd.DataFrame) -> None:
@@ -398,6 +401,8 @@ def run_full_scan() -> pd.DataFrame:
     if "margin_of_safety" in df.columns:
         df["margin_of_safety_at_scan"] = df["margin_of_safety"]
 
+    df = annotate_opportunities(df, previous=previous)
+    df = enrich_watchlists(df, previous=previous, market=MARKET, fetch_history=not source_interrupted)
     finished_at = datetime.now(timezone.utc)
     df["scan_started_at"] = started_at.isoformat(timespec="seconds")
     df["scan_time"] = finished_at.isoformat(timespec="seconds")
@@ -405,7 +410,6 @@ def run_full_scan() -> pd.DataFrame:
     df["scan_status"] = "PARTIAL_SOURCE_FAILURE" if source_interrupted else "COMPLETE"
     df["scan_expected_count"] = total
     df["scan_attempted_count"] = len(rows)
-    df = annotate_opportunities(df, previous=previous)
     save_outputs(df, write_state=not source_interrupted)
     return df
 
@@ -460,6 +464,7 @@ def save_report_files(df: pd.DataFrame, mode: str, body: str) -> None:
             diagnostics.to_csv(DIAGNOSTICS_PATH, index=False)
         if mode in {"full_after_close", "manual", "premarket_scan", "noon_update", "afternoon_update"} and scan_is_complete(df):
             save_public_market_state(df)
+            save_watch_history(public_market_state(df), STATE_DIR / f"{MARKET_PREFIX}mos_watch_history.csv")
 
 
 def save_bear_validation_files(candidates: pd.DataFrame, summary: pd.DataFrame, body: str) -> None:
@@ -598,13 +603,17 @@ def main() -> None:
 
     elif mode == "morning_email":
         df = load_latest_state_required()
+        previous_watch = df.copy()
         df = annotate_opportunities(df, previous=df)
+        df = enrich_watchlists(df, previous=previous_watch, market=MARKET)
 
     elif mode in {"noon_update", "afternoon_update"}:
         df = load_latest_state_required()
+        previous_watch = df.copy()
         sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.02)
         df = update_prices_only(df, sleep_seconds=sleep_seconds)
         df = annotate_pools(df)
+        df = enrich_watchlists(df, previous=previous_watch, market=MARKET)
 
     elif mode in STATE_REQUIRED_MODES:
         df = load_latest_state_required()

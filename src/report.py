@@ -6,6 +6,7 @@ from typing import Optional
 from html import escape
 
 import pandas as pd
+from quality_watch import watch_html
 
 
 def pct(x) -> str:
@@ -762,6 +763,7 @@ def generate_report(
         coverage_text += f"；已尝试 {df.iloc[0]['scan_attempted_count']} / 计划 {df.iloc[0]['scan_expected_count']}。"
     if "report_context" in df and not df["report_context"].dropna().empty:
         coverage_text += " " + str(df["report_context"].dropna().iloc[0])
+    watch_section = watch_html(operating_market_df, currency_symbol) if mode != "historical_replay" else ""
     entry_html = opportunity_html(operating_market_df, currency_symbol, top_mos_count) if mode != "historical_replay" else ""
 
     market_high = high_margin_candidates(operating_market_df)
@@ -1011,6 +1013,7 @@ def generate_report(
     </div>
 
     {f'<div class="card">{entry_html}</div>' if entry_html else ''}
+    {f'<div class="card">{watch_section}</div>' if watch_section else ''}
 
     {f'<div class="card">{holdings_html}</div>' if not holdings_df.empty else ''}
 

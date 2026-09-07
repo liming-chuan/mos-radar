@@ -12,6 +12,7 @@ import pandas as pd
 import yfinance as yf
 from valuation import AnalysisResult, quality_rating_cap, score_cashflow, score_balance
 from opportunity import annotate_opportunities
+from quality_watch import annotate_watchlists
 
 
 RATING_ORDER = {"S": 0, "A": 1, "B": 2, "C_THIN": 3, "PASS": 4, "D_TRAP": 5, "NO_DATA": 6, "SKIP": 7, "ERROR": 8}
@@ -296,4 +297,4 @@ def update_prices_only(df: pd.DataFrame, sleep_seconds: float = 0.0) -> pd.DataF
     rerated = df.apply(rerate_row, axis=1)
     df["rating"] = [x[0] for x in rerated]
     df["reason"] = [x[1] for x in rerated]
-    return annotate_opportunities(df, previous=previous)
+    return annotate_watchlists(annotate_opportunities(df, previous=previous), previous=previous)
