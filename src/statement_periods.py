@@ -45,7 +45,7 @@ def aligned_trailing_values(income, cashflow, not_before=None, now=None):
 
     result = {key: value(income, names) for key, names in {
         "revenue": ["Total Revenue", "Operating Revenue"],
-        "net_income": ["Net Income", "Net Income Common Stockholders"],
+        "net_income": ["Net Income Common Stockholders", "Net Income"],
         "gross_profit": ["Gross Profit"],
         "operating_income": ["Operating Income", "Operating Income or Loss"],
         "ebitda": ["EBITDA"],

@@ -11,6 +11,8 @@ PATH = Path(__file__).resolve().parents[1] / 'data/hk_statement_evidence.json'
 FIELDS = {
     'revenue': ('income', 'Total Revenue'),
     'net_income': ('income', 'Net Income'),
+    'net_income_attributable': ('income', 'Net Income Common Stockholders'),
+    'net_income_consolidated': ('income', 'Net Income Including Noncontrolling Interests'),
     'operating_income': ('income', 'Operating Income'),
     'gross_profit': ('income', 'Gross Profit'),
     'ebitda': ('income', 'EBITDA'),
@@ -19,10 +21,11 @@ FIELDS = {
     'capital_expenditure': ('cashflow', 'Capital Expenditure'),
     'sbc': ('cashflow', 'Stock Based Compensation'),
 }
-REQUIRED = {'revenue', 'net_income', 'operating_income', 'operating_cash_flow', 'capital_expenditure'}
+REQUIRED = {'revenue', 'operating_income', 'operating_cash_flow', 'capital_expenditure'}
 ALIASES = {'Total Revenue': ['Operating Revenue'], 'Net Income': ['Net Income Common Stockholders'],
            'Operating Income': ['Operating Income or Loss'], 'Operating Cash Flow': ['Total Cash From Operating Activities'],
            'Capital Expenditure': ['Capital Expenditures'], 'Interest Expense': ['Interest Expense Non Operating']}
+ALIASES['Net Income Common Stockholders'] = ['Net Income']
 
 
 def evidence_fingerprint():
@@ -36,7 +39,7 @@ def supplement_annual(ticker, currency, income, cashflow, now=None, records=None
     One rejected record rejects the ticker's entire supplement, including conflicts.
     """
     original = (income, cashflow)
-    audit = {'status': 'NONE', 'sources': [], 'filled': [], 'errors': []}
+    audit = {'status': 'NONE', 'sources': [], 'filled': [], 'errors': [], 'conflicts': []}
     try:
         if records is None:
             records = json.loads(PATH.read_text(encoding='utf-8')) if PATH.exists() else []
@@ -75,8 +78,10 @@ def supplement_annual(ticker, currency, income, cashflow, now=None, records=None
             if r.get('scope') != 'consolidated' or type(r.get('unit')) is not int or r.get('unit') != 1:
                 raise ValueError('require consolidated statements in currency units')
             values = r.get('values', {})
-            if not isinstance(values, dict) or not REQUIRED.issubset(values) or set(values)-set(FIELDS):
+            if not isinstance(values, dict) or not REQUIRED.issubset(values) or set(values)-set(FIELDS) or not {'net_income', 'net_income_attributable'}.intersection(values):
                 raise ValueError('missing required fields or unknown fields')
+            if 'net_income' in values and 'net_income_attributable' in values:
+                raise ValueError('ambiguous duplicate net income basis')
             date = end.tz_localize(None)
             for key, value in values.items():
                 if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
@@ -91,6 +96,7 @@ def supplement_annual(ticker, currency, income, cashflow, now=None, records=None
                 if old is not None and pd.notna(old):
                     old = abs(float(old)) if key in {'capital_expenditure', 'sbc'} else float(old)
                     if not math.isclose(old, value, rel_tol=1e-6, abs_tol=1):
+                        audit['conflicts'].append(dict(field=key, period=str(date.date()), provider=old, filing=value))
                         raise ValueError(f'provider conflict: {key} {date.date()}')
                 else:
                     frame.at[field, date] = value

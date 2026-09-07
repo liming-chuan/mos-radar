@@ -21,7 +21,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 FEEDBACK_PATH = ROOT / "data" / "feedback.csv"
 
-MODEL_VERSION = "MOS_Radar_V6.7.3"
+MODEL_VERSION = "MOS_Radar_V6.7.4"
 RISK_FREE_RATE_CACHE: float | None = None
 FX_RATE_CACHE: dict[tuple[str, str], float] = {}
 
@@ -53,6 +53,8 @@ class AnalysisResult:
     trailing_fetch_status: str = "NOT_NEEDED"
     annual_cashflow_status: str = "NOT_FETCHED"
     annual_cashflow_missing: str = ""
+    sbc_coverage_status: str = "NOT_FETCHED"
+    sbc_missing_periods: str = ""
     statement_evidence_status: str = "NONE"
     statement_evidence_audit: str = ""
     statement_evidence_fingerprint: str = ""
@@ -1592,18 +1594,20 @@ def analyze_ticker(ticker: str, sleep_seconds: float = 0.2) -> AnalysisResult:
         financials = annual_financials
         balance = quarterly_balance if quarterly_balance is not None and not quarterly_balance.empty else annual_balance
         cashflow = annual_cashflow
+        from cashflow_diagnostics import sbc_coverage
+        result.sbc_coverage_status, result.sbc_missing_periods = sbc_coverage(cashflow)
 
         revenue_s = row(financials, ["Total Revenue", "Operating Revenue"])
         gross_profit_s = row(financials, ["Gross Profit"])
         operating_income_s = row(financials, ["Operating Income", "Operating Income or Loss"])
-        net_income_s = row(financials, ["Net Income", "Net Income Common Stockholders"])
+        net_income_s = row(financials, ["Net Income Common Stockholders", "Net Income"])
         ebitda_s = row(financials, ["EBITDA"])
         interest_expense_s = row(financials, ["Interest Expense", "Interest Expense Non Operating"])
 
         q_revenue_s = row(quarterly_financials, ["Total Revenue", "Operating Revenue"])
         q_gross_profit_s = row(quarterly_financials, ["Gross Profit"])
         q_operating_income_s = row(quarterly_financials, ["Operating Income", "Operating Income or Loss"])
-        q_net_income_s = row(quarterly_financials, ["Net Income", "Net Income Common Stockholders"])
+        q_net_income_s = row(quarterly_financials, ["Net Income Common Stockholders", "Net Income"])
         q_ebitda_s = row(quarterly_financials, ["EBITDA"])
         q_interest_expense_s = row(quarterly_financials, ["Interest Expense", "Interest Expense Non Operating"])
 

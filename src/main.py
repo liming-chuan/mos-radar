@@ -46,6 +46,7 @@ CACHE_DIR = ROOT / "cache" / "fundamentals" / MARKET
 SCHEDULE_MODE_MAP = {
     "31 12 * * 1-5": "premarket_scan",
     "0 1 * * 1-5": "premarket_scan",
+    "7 0 * * 1-5": "premarket_scan",
 }
 STATE_REQUIRED_MODES = {"morning_email", "noon_update", "afternoon_update"}
 
@@ -321,6 +322,7 @@ def build_data_quality_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
         "valuation_method", "valuation_candidates", "price_data_status", "cache_status",
         "historical_price_status",
         "annual_cashflow_status", "annual_cashflow_missing", "financial_asof", "balance_asof",
+        "sbc_coverage_status", "sbc_missing_periods", "scan_started_at", "scan_time", "scan_duration_seconds",
         "financial_period_source", "financial_period_note", "trailing_fetch_status",
         "statement_evidence_status", "statement_evidence_audit", "sbc_history_complete",
         "fcf_history_years", "fcf_volatility_status", "entry_status", "entry_data_issues", "entry_risk_issues",
@@ -367,6 +369,7 @@ def save_entry_history(df: pd.DataFrame) -> None:
 
 
 def run_full_scan() -> pd.DataFrame:
+    started_at = datetime.now(timezone.utc)
     previous = pd.read_csv(STATE_MARKET_PATH) if STATE_MARKET_PATH.exists() else pd.DataFrame()
     tickers = load_scan_tickers()
     sleep_seconds = getenv_float("REQUEST_SLEEP_SECONDS", 0.2)
@@ -395,7 +398,10 @@ def run_full_scan() -> pd.DataFrame:
     if "margin_of_safety" in df.columns:
         df["margin_of_safety_at_scan"] = df["margin_of_safety"]
 
-    df["scan_time"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    finished_at = datetime.now(timezone.utc)
+    df["scan_started_at"] = started_at.isoformat(timespec="seconds")
+    df["scan_time"] = finished_at.isoformat(timespec="seconds")
+    df["scan_duration_seconds"] = (finished_at-started_at).total_seconds()
     df["scan_status"] = "PARTIAL_SOURCE_FAILURE" if source_interrupted else "COMPLETE"
     df["scan_expected_count"] = total
     df["scan_attempted_count"] = len(rows)
@@ -495,9 +501,14 @@ def save_bear_range_validation_files(signals: pd.DataFrame, ticker_rank: pd.Data
     print(f"Saved bear range summary: {summary_path} rows={len(summary)}", flush=True)
 
 
-def subject_for(mode: str) -> str:
-    today = datetime.now().strftime("%Y-%m-%d")
+def subject_for(mode: str, now=None) -> str:
+    from report_timing import premarket_title, hk_time
+    now = now or datetime.now(timezone.utc)
+    today = (hk_time(now) if MARKET == 'hk' else now).strftime("%Y-%m-%d")
     label = MARKET_LABELS.get(MARKET, MARKET.upper())
+    delayed_title = premarket_title(mode, MARKET, now)
+    if delayed_title:
+        return f"【MOS Radar {label}】{today} {delayed_title}"
 
     mapping = {
         "full_after_close": f"【MOS Radar {label}】{today} 盘后安全边际报告",

@@ -709,6 +709,8 @@ def generate_report(
     }
 
     title = title_map.get(mode, "安全边际报告")
+    from report_timing import premarket_title
+    title = premarket_title(mode, market) or title
     market_label = {"us": "美股", "hk": "港股"}.get(str(market).lower(), str(market).upper())
     currency_symbol = "HK$" if str(market).lower() == "hk" else "$"
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -747,6 +749,15 @@ def generate_report(
         coverage_text += f" 数据源年度现金流未返回 {unavailable} 只，已采用公告补录 {supplemented} 只；具体缺失项目、期间和出处见数据质量诊断CSV。"
     if "scan_time" in df and not df["scan_time"].dropna().empty:
         coverage_text += " 扫描时间：" + str(df["scan_time"].dropna().iloc[0])
+    if "scan_started_at" in df and not df["scan_started_at"].dropna().empty:
+        coverage_text += " 扫描开始：" + str(df["scan_started_at"].dropna().iloc[0])
+        elapsed = pd.to_numeric(df.get('scan_duration_seconds', pd.Series(dtype=float)), errors='coerce').dropna()
+        if not elapsed.empty:
+            coverage_text += f"；扫描耗时 {elapsed.iloc[0]/60:.1f} 分钟。"
+    if 'sbc_coverage_status' in audit_pool:
+        from cashflow_diagnostics import SBC_LABELS
+        coverage_text += " SBC证据分类：" + "；".join(
+            f"{SBC_LABELS.get(str(k), str(k))} {n}只" for k, n in audit_pool['sbc_coverage_status'].fillna('NOT_FETCHED').value_counts().items()) + "。有值不等于已通过连续年份及质量核验。"
     if "scan_attempted_count" in df and "scan_expected_count" in df and not df.empty:
         coverage_text += f"；已尝试 {df.iloc[0]['scan_attempted_count']} / 计划 {df.iloc[0]['scan_expected_count']}。"
     if "report_context" in df and not df["report_context"].dropna().empty:

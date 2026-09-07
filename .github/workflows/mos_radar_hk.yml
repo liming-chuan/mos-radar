@@ -3,8 +3,9 @@ name: MOS Radar - HK - Daily Scanner
 on:
   schedule:
     # Hong Kong market weekdays only. One pre-market full scan and email per day.
-    # 01:00 UTC = 09:00 Hong Kong time, before the 09:30 market open.
-    - cron: "0 1 * * 1-5"
+    # 00:07 UTC = 08:07 Hong Kong time; allow time for a cold full scan.
+    # GitHub schedules may be delayed; late reports are explicitly labelled.
+    - cron: "7 0 * * 1-5"
   workflow_dispatch:
 
 permissions:
