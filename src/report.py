@@ -7,6 +7,7 @@ from html import escape
 
 import pandas as pd
 from quality_watch import watch_html
+from report_readability import overview_html, diagnostics_html, local_time, brief_reason
 
 
 def pct(x) -> str:
@@ -386,15 +387,12 @@ def stock_cards(df, title, limit=None, currency_symbol="$", entry=False):
         metrics = [("现价", money(r.get("price"), currency_symbol)),
                    ("保守价值/股", money(r.get("intrinsic_value_per_share"), currency_symbol))]
         if entry:
-            metrics += [("触发上限", money(r.get("entry_price"), currency_symbol)),
-                        ("距触发上限", distance_label(r.get("distance_to_entry"))),
-                        ("保守折价", discount_label(r.get("discount_to_value"))),
-                        ("压力折价", discount_label(r.get("stress_discount"))),
-                        ("深折价观察价", money(r.get("deep_entry_price"), currency_symbol)),
-                        ("状态变化", EVENT_ZH.get(r.get("entry_event"), "首次记录"))]
-            if text_value(r.get("entry_binding_constraint")):
-                metrics += [("当前限制", text_value(r.get("entry_binding_constraint"))),
-                            ("现金流报告截止日", text_value(r.get("financial_asof")) or "未知")]
+            metrics = [("现价", money(r.get("price"), currency_symbol)),
+                       ("严格触发上限", money(r.get("entry_price"), currency_symbol)),
+                       ("距触发上限", distance_label(r.get("distance_to_entry"))),
+                       ("保守价值/股", money(r.get("intrinsic_value_per_share"), currency_symbol)),
+                       ("保守折价", discount_label(r.get("discount_to_value"))),
+                       ("压力折价", discount_label(r.get("stress_discount")))]
         else:
             metrics += [("潜在上涨空间（旧MoS）", pct(r.get("margin_of_safety"))),
                         ("Owner FCF收益率", pct(r.get("fcf_yield")))]
@@ -412,6 +410,9 @@ def stock_cards(df, title, limit=None, currency_symbol="$", entry=False):
                      f'{escape(display_period(text_value(r.get("financial_period_type"))))} · '
                      f'{escape(display_method(text_value(r.get("valuation_method"))))}</div>')
         if entry and text_value(r.get("entry_binding_constraint")):
+            parts.append(f'<p class="sub">当前限制：{escape(text_value(r.get("entry_binding_constraint")))}；'
+                         f'现金流报告截止日：{escape(text_value(r.get("financial_asof")) or "未知")}；'
+                         f'{escape(EVENT_ZH.get(r.get("entry_event"), "首次记录"))}。</p>')
             parts.append(f'<p class="sub">三个上限取最低：价值折价 '
                          f'{money(r.get("entry_value_ceiling"), currency_symbol)} / 压力折价 '
                          f'{money(r.get("entry_stress_ceiling"), currency_symbol)} / 现金流收益率 '
@@ -443,8 +444,7 @@ def research_summary(df, title, currency_symbol="$", limit=5):
     rows = []
     for _, r in df.head(limit).iterrows():
         reason = text_value(r.get("entry_reason")) or text_value(r.get("reason"))
-        if len(reason) > 110:
-            reason = reason[:110]+"…（完整原因见 CSV）"
+        reason = brief_reason(reason)
         rows.append(f'<tr><td>{escape(text_value(r.get("ticker")))}</td>'
                     f'<td>{escape(STATUS_ZH.get(r.get("entry_status"), "待复核"))}<br>'
                     f'旧评级 {escape(text_value(r.get("rating")))}</td><td>{escape(reason)}</td></tr>')
@@ -639,13 +639,9 @@ def opportunity_html(df, currency_symbol="$", limit=20):
 
     if "entry_status" not in df:
         return '<h2>严格入场观察区</h2><div class="empty">旧结果没有压力情景和数据日期，请重新完整扫描。</div>'
-    parts = ['<h2>严格入场观察区</h2><div class="note">折价率=(价值−价格)/价值；潜在上涨空间=(价值−价格)/价格。'
-             '触发上限同时受保守折价、压力折价和Owner FCF收益率约束。压力估值是敏感性情景，不是价格底部。'
-             '“入场复核”表示价格与质量条件达标，仍需核对最新公告及价值实现条件。</div>']
+    parts = ['<h2>01 · 严格入场观察区</h2><p class="sub">先看现价距离严格触发上限还有多远；达标后仍需人工复核最新公告。</p>']
     if "scan_status" in df and df["scan_status"].eq("PARTIAL_SOURCE_FAILURE").any():
         parts.append('<p><b>本次扫描因数据源连续限流提前停止，下方只包含已尝试的股票；已保留此前公开状态。</b></p>')
-    counts = df["entry_status"].value_counts()
-    parts.append('<p>'+" · ".join(f'{escape(STATUS_ZH.get(k, k))}：{v}' for k, v in counts.items())+'</p>')
     groups = [("价格已达标：优先复核", ENTRY_STATES),
               ("质量通过：优先跟踪的价格距离", {"NEAR_ENTRY", "WAIT_PRICE"}),
               ("已退出或估值明显下修", {"REVIEW_REQUIRED"})]
@@ -670,20 +666,10 @@ def opportunity_html(df, currency_symbol="$", limit=20):
             if not remaining.empty:
                 rows = ''.join(f'<tr><td>{escape(text_value(r.get("ticker")))}</td><td>{money(r.get("entry_price"), currency_symbol)}</td>'
                                f'<td>{escape(distance_label(r.get("distance_to_entry")))}</td></tr>' for _, r in remaining.head(10).iterrows())
-                parts.append('<h3>其余等待名单</h3><table><thead><tr><th>代码</th><th>模型触发上限</th><th>距离</th></tr></thead><tbody>'+rows+'</tbody></table>'
+                parts.append('<h3>其余等待名单</h3><table class="waiting-table"><thead><tr><th>代码</th><th>模型触发上限</th><th>距离</th></tr></thead><tbody>'+rows+'</tbody></table>'
                              f'<p class="sub">显示 {min(len(remaining),10)} / {len(remaining)} 只；完整名单见 CSV。</p>')
         else:
             parts.append(stock_cards(subset, title, limit, currency_symbol, entry=True))
-    blocked = df[df["entry_status"].isin({"RISK_BLOCKED", "DATA_REQUIRED"})]
-    if not blocked.empty:
-        columns = [("entry_data_issues", "需补齐的证据"), ("entry_risk_issues", "已识别的风险")]
-        if not all(key in blocked for key, _ in columns):
-            columns = [("entry_reason", "主要未通过原因（旧扫描合并记录）")]
-        for key, label in columns:
-            reasons = blocked[key].fillna("").str.split("；").explode()
-            reasons = reasons[reasons.ne("")].value_counts().head(8)
-            if not reasons.empty:
-                parts.append(f'<h3>{escape(label)}</h3><p>'+"；".join(f'{escape(str(k))}：{v}只' for k, v in reasons.items())+'</p>')
     return ''.join(parts)
 
 
@@ -733,46 +719,26 @@ def generate_report(
         market_df = df.copy()
 
     operating_market_df, financial_market_df = split_financials(market_df)
-    statuses = operating_market_df.get("entry_status", pd.Series(dtype=str))
-    strict_count = int(statuses.isin({"ENTRY_REVIEW", "DEEP_VALUE_REVIEW"}).sum())
-    wait_count = int(statuses.isin({"WAIT_PRICE", "NEAR_ENTRY"}).sum())
-    data_count = int(statuses.eq("DATA_REQUIRED").sum())
-    risk_count = int(statuses.eq("RISK_BLOCKED").sum())
-    special_count = int(statuses.eq("SPECIAL_REVIEW").sum())
-    coverage_text = f"本报告包含 {len(df)} 条结果；金融股另列。"
-    audit_pool = operating_market_df[~operating_market_df.get("rating", pd.Series(index=operating_market_df.index, dtype=str)).eq("SKIP")]
-    missing_fcf = int(pd.to_numeric(audit_pool.get("fcf_ttm", pd.Series(index=audit_pool.index, dtype=float)), errors="coerce").isna().sum())
-    annual_count = int(audit_pool.get("financial_period_type", pd.Series(dtype=str)).eq("ANNUAL_FALLBACK").sum())
-    coverage_text += f" 非金融且未跳过的 {len(audit_pool)} 只中，Owner FCF 缺失 {missing_fcf} 只，年报回退 {annual_count} 只；这些数量与风险分类可能重叠。"
-    if 'annual_cashflow_status' in audit_pool:
-        unavailable = int(audit_pool['annual_cashflow_status'].eq('UNAVAILABLE').sum())
-        supplemented = int(audit_pool.get('statement_evidence_status', pd.Series(dtype=str)).eq('SUPPLEMENTED').sum())
-        coverage_text += f" 数据源年度现金流未返回 {unavailable} 只，已采用公告补录 {supplemented} 只；具体缺失项目、期间和出处见数据质量诊断CSV。"
-    if "scan_time" in df and not df["scan_time"].dropna().empty:
-        coverage_text += " 扫描时间：" + str(df["scan_time"].dropna().iloc[0])
-    if "scan_started_at" in df and not df["scan_started_at"].dropna().empty:
-        coverage_text += " 扫描开始：" + str(df["scan_started_at"].dropna().iloc[0])
-        elapsed = pd.to_numeric(df.get('scan_duration_seconds', pd.Series(dtype=float)), errors='coerce').dropna()
-        if not elapsed.empty:
-            coverage_text += f"；扫描耗时 {elapsed.iloc[0]/60:.1f} 分钟。"
-    if 'sbc_coverage_status' in audit_pool:
-        from cashflow_diagnostics import SBC_LABELS
-        coverage_text += " SBC证据分类：" + "；".join(
-            f"{SBC_LABELS.get(str(k), str(k))} {n}只" for k, n in audit_pool['sbc_coverage_status'].fillna('NOT_FETCHED').value_counts().items()) + "。有值不等于已通过连续年份及质量核验。"
-    if "scan_attempted_count" in df and "scan_expected_count" in df and not df.empty:
-        coverage_text += f"；已尝试 {df.iloc[0]['scan_attempted_count']} / 计划 {df.iloc[0]['scan_expected_count']}。"
-    if "report_context" in df and not df["report_context"].dropna().empty:
-        coverage_text += " " + str(df["report_context"].dropna().iloc[0])
+    def first_value(key):
+        values = df.get(key, pd.Series(dtype=object)).dropna()
+        return values.iloc[0] if not values.empty else None
+    zone_label = '香港时间' if market == 'hk' else '纽约时间'
+    timing_text = f'扫描完成 {local_time(first_value("scan_time"), market)} · {zone_label} · {len(market_df)} 只市场股票'
+    elapsed = pd.to_numeric(first_value('scan_duration_seconds'), errors='coerce')
+    if pd.notna(elapsed):
+        timing_text += f' · 耗时 {elapsed/60:.1f} 分钟'
+    provenance_text = f'扫描开始 {local_time(first_value("scan_started_at"), market)}；报告生成 {local_time(ts, market)}（{zone_label}）。'
+    if first_value('scan_expected_count') is not None:
+        provenance_text += f' 已尝试 {first_value("scan_attempted_count")} / 计划 {first_value("scan_expected_count")}。'
+    context_text = text_value(first_value('report_context'))
+    overview = overview_html(operating_market_df, currency_symbol, mode == 'historical_replay')
     watch_section = watch_html(operating_market_df, currency_symbol) if mode != "historical_replay" else ""
     entry_html = opportunity_html(operating_market_df, currency_symbol, top_mos_count) if mode != "historical_replay" else ""
 
     market_high = high_margin_candidates(operating_market_df)
     financial_high = high_margin_candidates(financial_market_df)
-    rating_diag_html = rating_distribution_html(df)
-    sector_diag_html = sector_distribution_html(market_df)
     historical_status_html = historical_price_status_html(df) if mode == "historical_replay" else ""
-    diagnostic_html = ""
-    valuation_detail = ""
+    diagnostic_html = diagnostics_html(market_df, market)
     holdings_risk = holdings_risk_html(holdings_df, currency_symbol=currency_symbol)
 
     holdings_html = html_table(
@@ -784,37 +750,23 @@ def generate_report(
 
     research = market_high[~market_high.get("entry_status", pd.Series(index=market_high.index, dtype=str)).isin(
         {"ENTRY_REVIEW", "DEEP_VALUE_REVIEW", "NEAR_ENTRY", "WAIT_PRICE"})]
-    market_html = research_summary(
-        research,
-        "旧评级中的未通过项目：仅供核查",
-        limit=5,
-        currency_symbol=currency_symbol,
-    )
+    market_html = ''
+    if not research.empty:
+        market_html = f'<h3>旧评级仅作核查</h3><p class="sub">有 {len(research)} 只旧评级 S/A/B 股票未通过严格入场评估。这些不是入场候选；逐股风险与缺失证据见完整扫描 CSV。</p>'
 
-    financial_html = research_summary(
-        sort_for_report(financial_high),
-        "金融股观察池：S/A/B 候选",
-        limit=5,
-        currency_symbol=currency_symbol,
-    )
+    financial_html = ''
+    if not financial_high.empty:
+        codes = '、'.join(escape(text_value(t)) for t in sort_for_report(financial_high).head(5)['ticker'])
+        financial_html = f'<h3>金融股：另用专门模型</h3><p class="sub">旧评级 S/A/B 共 {len(financial_high)} 只，展示 {min(5,len(financial_high))} 只：{codes}。须复核资产质量，不能与经营型公司混排；完整清单见 CSV。</p>'
     if mode == "historical_replay":
         market_html = html_table(market_high, "历史压力测试候选", limit=top_mos_count, currency_symbol=currency_symbol)
         financial_html = compact_table(financial_high, "金融股历史压力测试", limit=20, currency_symbol=currency_symbol)
-
-    thicker_html = ""
-    if "price_change_since_scan" in market_high.columns:
-        thicker = market_high[
-            pd.to_numeric(market_high["price_change_since_scan"], errors="coerce") < -0.01
-        ].copy()
-
-        if not thicker.empty:
-            thicker = thicker.sort_values(["price_change_since_scan", "margin_of_safety"], ascending=[True, False])
-            thicker_html = html_table(thicker, "盘中下跌后安全边际继续变厚的市场候选", limit=20, currency_symbol=currency_symbol)
 
     html = f"""<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
     body {{
         margin: 0;
@@ -987,73 +939,109 @@ def generate_report(
         .card {{ padding: 12px; border-radius: 0; }}
         h2, h3 {{ break-after: avoid; }}
     }}
+    body {{ font-size: 15px; line-height: 1.65; color: #172b3a; }}
+    .wrap {{ max-width: 820px; padding: 20px; }}
+    .card {{ padding: 22px; margin-bottom: 18px; border-radius: 10px; }}
+    h1 {{ font-size: 23px; line-height: 1.4; }}
+    h2 {{ margin: 0 0 12px; font-size: 19px; line-height: 1.5; }}
+    h3 {{ font-size: 16px; margin: 16px 0 8px; }}
+    p {{ margin: 9px 0; }}
+    .sub, .meta {{ color: #526271; font-size: 13px; line-height: 1.6; }}
+    .eyebrow {{ font-size: 13px; color: #25636a; margin: 20px 0 5px; }}
+    .conclusion {{ font-size: 22px; margin-bottom: 15px; }}
+    .headline-metrics {{ table-layout: fixed; border-collapse: separate; border-spacing: 4px 0; margin: 10px 0; }}
+    .headline-metrics td {{ width: 33.33%; background: #eef5f5; border: 0; border-radius: 6px; padding: 12px; }}
+    .headline-metrics strong {{ display: block; font-size: 28px; line-height: 1.3; color: #124c52; }}
+    .headline-metrics span, .headline-metrics small {{ font-size: 12px; display: block; }}
+    .focus-item {{ border-left: 3px solid #387b82; background: #f6f9fa; padding: 10px 14px; margin: 12px 0; break-inside: avoid; page-break-inside: avoid; }}
+    .focus-label {{ font-size: 13px; color: #24646b; margin-bottom: 3px; }}
+    .focus-item p {{ margin: 5px 0 0; font-size: 14px; }}
+    .company-line {{ display: block; font-size: 12px; color: #526271; line-height: 1.45; overflow-wrap: anywhere; }}
+    table {{ font-size: 14px; line-height: 1.55; }}
+    th, td {{ padding: 9px 10px; }}
+    thead {{ display: table-header-group; }}
+    tr {{ break-inside: avoid; page-break-inside: avoid; }}
+    .watch-table {{ table-layout: fixed; }}
+    .watch-table th:first-child {{ width: 30%; }}
+    .watch-table th:nth-child(2) {{ width: 24%; }}
+    .watch-table td {{ overflow-wrap: anywhere; }}
+    .highlight-row td {{ background: #eaf5f0 !important; }}
+    .block {{ display: block; margin-top: 3px; }}
+    .audit-table th:first-child {{ width: 18%; }}
+    .note {{ font-size: 13px; line-height: 1.65; font-weight: 400; }}
+    .section-intro {{ margin-bottom: 12px; }}
+    .footer {{ font-size: 12px; color: #526271; padding: 0 4px; }}
+    @media (max-width: 600px) {{
+        .wrap {{ padding: 8px; }} .card {{ padding: 14px; }}
+        .headline-metrics td {{ padding: 8px 5px; }}
+        .headline-metrics strong {{ font-size: 25px; }}
+        .watch-table {{ font-size: 13px; }}
+        .watch-table th, .watch-table td {{ padding: 8px 5px; }}
+        .watch-table thead {{ display: none; }}
+        .watch-table tr {{ display: block; border: 1px solid #dbe3ec; margin: 10px 0; border-radius: 6px; }}
+        .watch-table td {{ display: inline-block; border: 0; vertical-align: top; }}
+        .watch-table td:first-child {{ display: block; width: 100%; padding: 10px 10px 4px; }}
+        .watch-table td:nth-child(2) {{ width: 40%; padding: 6px 10px 10px; }}
+        .watch-table td:nth-child(2)::before {{ content: '现价'; display: block; color: #526271; }}
+        .watch-table td:last-child {{ width: 60%; padding: 6px 10px 10px; }}
+        .watch-table .company-line {{ font-size: 12px; }}
+        .company-line {{ font-size: 11px; }}
+        .conclusion {{ font-size: 20px; }}
+    }}
+    @media print {{
+        @page {{ size: A4; margin: 13mm 12mm 15mm; }}
+        body {{ font-size: 11pt; background: white; }}
+        .wrap {{ max-width: none; padding: 0; }}
+        .card {{ border: 0; padding: 0; margin: 0 0 18px; }}
+        .overview {{ break-after: page; page-break-after: always; }}
+        .watch-section, .appendix {{ break-before: page; page-break-before: always; }}
+        .sub, .meta {{ font-size: 9.5pt; }}
+        table {{ font-size: 10pt; }}
+        .watch-table {{ font-size: 10pt; }}
+        .watch-table td {{ padding: 8px; }}
+        .waiting-table th, .waiting-table td {{ padding: 5px 9px; line-height: 1.4; }}
+        .stock {{ padding: 12px; }}
+        .research {{ font-size: 9.5pt; }}
+        .legend {{ font-size: 10pt; }}
+        .section-intro {{ break-inside: avoid; break-after: avoid; }}
+        h2, h3, thead {{ break-after: avoid; }}
+    }}
 </style>
 </head>
 <body>
 <div class="wrap">
-    <div class="card">
-        <h1>【MOS Radar {escape(market_label)}】{escape(title)}</h1>
-        <div class="meta">生成时间：{escape(ts)} | 市场：{escape(market_label)} | 模式：{escape(mode)} | 模型：{escape(model_version or "N/A")}</div>
-
-        <div class="summary">
-            <div class="box"><div class="label">经营型扫描股票</div><div class="value">{len(operating_market_df)}</div></div>
-            <div class="box"><div class="label">严格入场复核</div><div class="value">{strict_count}</div></div>
-            <div class="box"><div class="label">仅等待价格</div><div class="value">{wait_count}</div></div>
-            <div class="box"><div class="label">仅因数据待补齐</div><div class="value">{data_count}</div></div>
-            <div class="box"><div class="label">风险未通过</div><div class="value">{risk_count}</div></div>
-            <div class="box"><div class="label">行业专门复核</div><div class="value">{special_count}</div></div>
-        </div>
-        <p class="meta">{escape(coverage_text)}</p>
-        <div class="note">
-            持仓池会显示所有持仓的安全边际；非金融经营型公司和金融股分开显示，因为金融股使用市净率/净资产收益率口径，不能和普通自由现金流公司混排。
-            旧版20%/35%/50%观察价按上涨空间倒推，不等于折价率；严格入场条件见下方入场观察区。S/A/B 是兼容旧版的研究评级。
-            {f'<br><b>历史回放日期：</b>{escape(backtest_date)}。本模式使用当前 {escape(model_version or "模型")} 保守估值和历史价格重算安全边际，属于历史价格压力测试，不是严格 point-in-time 财报回测；当时未上市或无历史价格的股票会标记为 SKIP，财务与历史价格严重错配会标记为 DATA_MISMATCH。' if mode == 'historical_replay' and backtest_date else ''}
-        </div>
+    <div class="card overview">
+        <h1>MOS Radar · {escape(market_label)}</h1>
+        <p>{escape(title)}</p>
+        <div class="meta">{escape(timing_text)}</div>
+        {f'<p class="note">{escape(context_text)}</p>' if context_text else ''}
         {f'<div class="warning">⚠️ 警告：本回放测试存在未来函数（Lookahead Bias）。系统使用当前的财务数据匹配历史股价。回放算出的高安全边际可能是由于公司近年利润大幅增长导致，不代表历史真实的投资机会。本结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
+        {f'<p>历史回放日期：{escape(backtest_date)}；这是历史价格压力测试，不是使用当时财报的回测。</p>' if mode == 'historical_replay' else ''}
+        {overview}
+        <p class="sub">阅读顺序：严格入场条件 → 合理估值观察 → 数据与风险附录。所有价格均为扫描快照。</p>
     </div>
 
     {f'<div class="card">{entry_html}</div>' if entry_html else ''}
-    {f'<div class="card">{watch_section}</div>' if watch_section else ''}
+    {f'<div class="card watch-section">{watch_section}</div>' if watch_section else ''}
 
     {f'<div class="card">{holdings_html}</div>' if not holdings_df.empty else ''}
 
     {f'<div class="card">{holdings_risk}</div>' if holdings_risk else ''}
 
-    <div class="card">
-        {market_html}
-    </div>
-
-    {f'<div class="card">{valuation_detail}</div>' if valuation_detail else ''}
-
-    <div class="card">
-        {financial_html}
-    </div>
-
-    <div class="card">
-        {rating_diag_html}
-    </div>
-
-    {f'<div class="card">{sector_diag_html}</div>' if sector_diag_html else ''}
-
-    {f'<div class="card">{historical_status_html}</div>' if historical_status_html else ''}
-
-    {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
-
-    {f'<div class="card">{thicker_html}</div>' if thicker_html else ''}
-
-    <div class="card">
-        <h2>评级说明</h2>
-        <div class="legend">
-            <b>S</b>：安全边际很厚，优先人工研究。<br>
-            <b>A</b>：安全边际较厚，强候选。<br>
-            <b>B</b>：有一定安全边际，观察候选。<br>
-            <b>C_THIN</b>：折价不足或质量门槛未通过，不代表价格接近入场。<br>
-            <b>PASS</b>：当前价格高于保守价值。<br>
-            <b>D_TRAP</b>：疑似价值陷阱，必须人工排雷。<br>
-            <b>NO_DATA</b>：数据不足，不能判断。<br>
-            <b>财报口径</b>：最近十二个月来自四个连续季度合计或数据源明确标注的十二个月财报；年报口径表示更近的期间数据未通过核验，退回年报。具体截止日期与回退原因见候选卡片。
+    <div class="appendix">
+        {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
+        {f'<div class="card">{market_html}</div>' if market_html else ''}
+        {f'<div class="card">{financial_html}</div>' if financial_html else ''}
+        {f'<div class="card">{historical_status_html}</div>' if historical_status_html else ''}
+        <div class="card">
+            <h2>阅读口径</h2>
+            <p class="legend"><b>严格触发上限：</b>保守折价、压力折价、现金流收益率三个条件共同限定；压力估值不是价格底部。折价率以价值为分母，上涨空间以价格为分母。</p>
+            <p class="legend"><b>独立观察池：</b>初始规则为 ROE≥12%、PE≤20、正常化所有者自由现金流收益率≥5%。趋势要求复权收盘价及50日均线高于200日均线，跳过最近21交易日的6个月涨幅为正且超过市场基准。</p>
+            <p class="legend"><b>财报与风险：</b>年报口径表示更近期间未通过核验；所有者自由现金流已扣除股权激励（SBC）。旧评级 S/A/B 仅供研究，不能替代严格入场状态。质量失效、价格超限或趋势转弱需复核，缺数据先补证据。</p>
+            <p class="legend">观察池收益尚未验证；约20%是回撤容忍偏好，不是系统保证。未提供持仓金额时无法评估账户回撤。</p>
         </div>
     </div>
+    <p class="footer">{escape(provenance_text)}<br>模型 {escape(model_version or '未提供')} · 报告版式 V6.8.1</p>
 </div>
 </body>
 </html>

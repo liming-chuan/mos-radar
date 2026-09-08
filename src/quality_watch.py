@@ -146,22 +146,5 @@ def save_watch_history(public, path):
 
 
 def watch_html(df, symbol='$'):
-    from html import escape
-    if df.empty or 'qv_status' not in df:
-        return ''
-    quality = df[df.qv_status.eq('QUALITY_WATCH')]
-    trend = df[df.trend_status.eq('TREND_WATCH')]
-    body = '<h2>独立研究观察池（试运行）</h2>'
-    body += f'<p>合理估值候选 {len(quality)} 只，其中趋势同时通过 {len(trend)} 只；两者重叠，不重复计算机会。</p>'
-    body += '<p>保留原厚安全边际门槛。此池采用 ROE≥12%、PE≤20、正常化 Owner FCF 收益率≥5%的初始规则，尚未验证收益。约20%是你的回撤容忍偏好，并非系统保证；缺少持仓金额时无法评估账户回撤。</p>'
-    chosen = df[df.qv_status.isin(['QUALITY_WATCH', 'QUALITY_PRICE_WAIT']) | df.trend_event.isin(['EXIT_REVIEW', 'DATA_REVIEW']) | df.qv_event.isin(['EXIT_REVIEW', 'DATA_REVIEW'])]
-    chosen = chosen.sort_values('qv_distance', ascending=False, na_position='last').head(10)
-    for _, row in chosen.iterrows():
-        limit = number(row.get('qv_price_limit'))
-        limit_text = f'{symbol}{limit:.2f}' if limit is not None else '不可用'
-        body += '<p><b>'+escape(str(row['ticker']))+'</b> — '+escape(QUALITY_LABELS.get(row.qv_status, row.qv_status))
-        body += '；研究估值上限 '+limit_text+'（不是厚安全边际买入价）<br>'
-        body += escape(str(row.qv_reason))+'<br>'+escape(TREND_LABELS.get(row.trend_status, row.trend_status))+'：'+escape(str(row.trend_reason))
-        body += '<br>趋势截至 '+escape(str(row.get('trend_asof') or '暂无'))+'；'+escape(EVENT_LABELS.get(row.trend_event, row.trend_event))+'</p>'
-    body += '<p>趋势要求：复权收盘价与50日均线高于200日均线，跳过最近21个交易日的6个月涨幅为正且高于市场基准。质量失效、价格超限或趋势转弱时复核；数据失效先补证据。这里只提供研究线索，不自动交易。</p>'
-    return body
+    from report_readability import quality_watch_html
+    return quality_watch_html(df, symbol)
