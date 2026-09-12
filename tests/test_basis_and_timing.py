@@ -66,7 +66,7 @@ class BasisAndTimingTests(unittest.TestCase):
         self.assertIsNone(premarket_title('premarket_scan','hk',before))
         self.assertIn('延迟',premarket_title('premarket_scan','hk',after))
         self.assertIsNone(premarket_title('manual','hk',after))
-        self.assertIsNone(premarket_title('premarket_scan','us',after))
+        self.assertIn('休市日',premarket_title('premarket_scan','us',after))
 
     def test_subject_uses_hk_date_and_late_label(self):
         with patch.object(main,'MARKET','hk'):

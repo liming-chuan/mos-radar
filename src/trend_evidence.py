@@ -2,17 +2,18 @@
 import pandas as pd
 import numpy as np
 import yfinance as yf
+from market_sessions import latest_completed
 
 
 def compute_trend(stock, benchmark, market='us', now=None):
     now = pd.Timestamp.now(tz='UTC') if now is None else pd.to_datetime(now, utc=True)
-    today = now.tz_convert('Asia/Hong_Kong' if market == 'hk' else 'America/New_York').date()
+    last = latest_completed(market, now).date()
     def clean(series):
         s = pd.to_numeric(series, errors='coerce').copy()
         s.index = pd.to_datetime([pd.Timestamp(x).date() for x in s.index])
         if s.index.has_duplicates:
             raise ValueError('价格历史包含重复日期')
-        s = s[s.index.date < today].sort_index()
+        s = s[s.index.date <= last].sort_index()
         return s.where(np.isfinite(s) & (s > 0)).dropna()
     try:
         stock, benchmark = clean(stock), clean(benchmark)
@@ -47,7 +48,7 @@ def close_series(frame, ticker):
 def fetch_trend_evidence(tickers, market='us', now=None):
     from valuation import quiet_yfinance_call
     now = pd.Timestamp.now(tz='UTC') if now is None else pd.to_datetime(now, utc=True)
-    today = now.tz_convert('Asia/Hong_Kong' if market == 'hk' else 'America/New_York').date()
+    today = latest_completed(market, now).date()+pd.Timedelta(days=1)
     benchmark = '^HSI' if market == 'hk' else '^GSPC'
     tickers = list(dict.fromkeys(tickers))
     result = {t: dict(status='LIMIT', reason='本次趋势抓取达到100只上限') for t in tickers[100:]}

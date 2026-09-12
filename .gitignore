@@ -12,3 +12,8 @@ cache/
 state/*.private.csv
 data/hk_holdings.csv
 state/hk_*.private.csv
+
+# Short-term CSV/HTML are workflow artifacts; only the atomic JSON ledger is versioned.
+state/*mos_short_*.csv
+state/*mos_short_*.html
+state/*mos_short_term.json.tmp

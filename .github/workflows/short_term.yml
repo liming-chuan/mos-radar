@@ -1,0 +1,54 @@
+name: MOS Radar - Short-term research
+
+on:
+  schedule:
+    # After HK close / after US close including winter. No emails or broker access.
+    - cron: '23 9 * * 1-5'
+    - cron: '37 21 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      market:
+        type: choice
+        options: [hk, us]
+        default: hk
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      MARKET: ${{ inputs.market || (github.event.schedule == '23 9 * * 1-5' && 'hk' || 'us') }}
+    concurrency:
+      group: mos-short-${{ inputs.market || (github.event.schedule == '23 9 * * 1-5' && 'hk' || 'us') }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Generate public short-term plans and advance forward ledger
+        run: python src/short_term_scan.py --market "$MARKET"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: short-term-${{ env.MARKET }}
+          path: |
+            state/*mos_short_*.csv
+            state/*mos_short_*.html
+            state/*mos_short_term.json
+      - name: Save forward research state
+        run: |
+          prefix=""
+          if [ "$MARKET" = hk ]; then prefix="hk_"; fi
+          git config user.name mos-radar-bot
+          git config user.email bot@example.com
+          git add "state/${prefix}mos_short_term.json"
+          if ! git diff --cached --quiet; then
+            git commit -m "update $MARKET short-term research state"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi

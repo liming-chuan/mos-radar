@@ -723,7 +723,7 @@ def generate_report(
         values = df.get(key, pd.Series(dtype=object)).dropna()
         return values.iloc[0] if not values.empty else None
     zone_label = '香港时间' if market == 'hk' else '纽约时间'
-    timing_text = f'扫描完成 {local_time(first_value("scan_time"), market)} · {zone_label} · {len(market_df)} 只市场股票'
+    timing_text = f'价值扫描完成 {local_time(first_value("scan_time"), market)} · {zone_label} · {len(market_df)} 只市场股票'
     elapsed = pd.to_numeric(first_value('scan_duration_seconds'), errors='coerce')
     if pd.notna(elapsed):
         timing_text += f' · 耗时 {elapsed/60:.1f} 分钟'
@@ -732,6 +732,8 @@ def generate_report(
         provenance_text += f' 已尝试 {first_value("scan_attempted_count")} / 计划 {first_value("scan_expected_count")}。'
     context_text = text_value(first_value('report_context'))
     overview = overview_html(operating_market_df, currency_symbol, mode == 'historical_replay')
+    from short_term import report_html as short_report_html
+    short_section = short_report_html(market) if mode != 'historical_replay' else ''
     watch_section = watch_html(operating_market_df, currency_symbol) if mode != "historical_replay" else ""
     entry_html = opportunity_html(operating_market_df, currency_symbol, top_mos_count) if mode != "historical_replay" else ""
 
@@ -739,7 +741,6 @@ def generate_report(
     financial_high = high_margin_candidates(financial_market_df)
     historical_status_html = historical_price_status_html(df) if mode == "historical_replay" else ""
     diagnostic_html = diagnostics_html(market_df, market)
-    holdings_risk = holdings_risk_html(holdings_df, currency_symbol=currency_symbol)
 
     holdings_html = html_table(
         holdings_df,
@@ -927,7 +928,7 @@ def generate_report(
     .research th:first-child {{ width: 20%; }}
     .research th:nth-child(2) {{ width: 22%; }}
     .research td {{ overflow-wrap: anywhere; }}
-    @media (max-width: 600px) {{
+    @media screen and (max-width: 600px) {{
         .wrap {{ padding: 8px; }} .card {{ padding: 12px; }}
         .box {{ width: 48%; padding: 10px; }}
         h1 {{ font-size: 21px; }} .stock {{ padding: 10px; }}
@@ -971,7 +972,7 @@ def generate_report(
     .note {{ font-size: 13px; line-height: 1.65; font-weight: 400; }}
     .section-intro {{ margin-bottom: 12px; }}
     .footer {{ font-size: 12px; color: #526271; padding: 0 4px; }}
-    @media (max-width: 600px) {{
+    @media screen and (max-width: 600px) {{
         .wrap {{ padding: 8px; }} .card {{ padding: 14px; }}
         .headline-metrics td {{ padding: 8px 5px; }}
         .headline-metrics strong {{ font-size: 25px; }}
@@ -993,7 +994,7 @@ def generate_report(
         body {{ font-size: 11pt; background: white; }}
         .wrap {{ max-width: none; padding: 0; }}
         .card {{ border: 0; padding: 0; margin: 0 0 18px; }}
-        .overview {{ break-after: page; page-break-after: always; }}
+        .overview {{ break-after: auto; page-break-after: auto; }}
         .watch-section, .appendix {{ break-before: page; page-break-before: always; }}
         .sub, .meta {{ font-size: 9.5pt; }}
         table {{ font-size: 10pt; }}
@@ -1017,8 +1018,10 @@ def generate_report(
         {f'<p class="note">{escape(context_text)}</p>' if context_text else ''}
         {f'<div class="warning">⚠️ 警告：本回放测试存在未来函数（Lookahead Bias）。系统使用当前的财务数据匹配历史股价。回放算出的高安全边际可能是由于公司近年利润大幅增长导致，不代表历史真实的投资机会。本结果只能用于观察价格压力，不可视为严格回测或买入依据。</div>' if mode == 'historical_replay' and backtest_date else ''}
         {f'<p>历史回放日期：{escape(backtest_date)}；这是历史价格压力测试，不是使用当时财报的回测。</p>' if mode == 'historical_replay' else ''}
+        {short_section}
+        {('<h2>长期价值 · 厚安全边际概览</h2>' if short_section else '')}
         {overview}
-        <p class="sub">阅读顺序：严格入场条件 → 合理估值观察 → 数据与风险附录。所有价格均为扫描快照。</p>
+        <p class="sub">阅读顺序：短线实验计划 → 厚安全边际研究 → 数据与风险附录。所有价格均为快照。</p>
     </div>
 
     {f'<div class="card">{entry_html}</div>' if entry_html else ''}
@@ -1026,7 +1029,6 @@ def generate_report(
 
     {f'<div class="card">{holdings_html}</div>' if not holdings_df.empty else ''}
 
-    {f'<div class="card">{holdings_risk}</div>' if holdings_risk else ''}
 
     <div class="appendix">
         {f'<div class="card">{diagnostic_html}</div>' if diagnostic_html else ''}
@@ -1041,7 +1043,7 @@ def generate_report(
             <p class="legend">观察池收益尚未验证；约20%是回撤容忍偏好，不是系统保证。未提供持仓金额时无法评估账户回撤。</p>
         </div>
     </div>
-    <p class="footer">{escape(provenance_text)}<br>模型 {escape(model_version or '未提供')} · 报告版式 V6.8.1</p>
+    <p class="footer">{escape(provenance_text)}<br>模型 {escape(model_version or '未提供')} · 报告版式 V6.9.0</p>
 </div>
 </body>
 </html>

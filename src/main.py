@@ -507,9 +507,9 @@ def save_bear_range_validation_files(signals: pd.DataFrame, ticker_rank: pd.Data
 
 
 def subject_for(mode: str, now=None) -> str:
-    from report_timing import premarket_title, hk_time
+    from report_timing import premarket_title, market_time
     now = now or datetime.now(timezone.utc)
-    today = (hk_time(now) if MARKET == 'hk' else now).strftime("%Y-%m-%d")
+    today = market_time(MARKET, now).strftime("%Y-%m-%d")
     label = MARKET_LABELS.get(MARKET, MARKET.upper())
     delayed_title = premarket_title(mode, MARKET, now)
     if delayed_title:
