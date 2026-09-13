@@ -534,6 +534,19 @@ def main() -> None:
     mode = detect_mode()
     print(f"Run mode: {mode}", flush=True)
 
+    # Keep the existing daily recipient/frequency, but deliver before the slow scan.
+    brief_sent = False
+    if mode == 'premarket_scan':
+        from short_brief import prepare_brief
+        brief_subject, brief_body = prepare_brief(MARKET, STATE_DIR)
+        brief_dir = ROOT / 'reports' / MARKET
+        brief_dir.mkdir(parents=True, exist_ok=True)
+        (brief_dir / 'short_brief.html').write_text(brief_body, encoding='utf-8')
+        if not env_bool('DRY_RUN', default=False):
+            send_email(brief_subject, brief_body)
+            brief_sent = True
+            print(f'Short brief sent at {datetime.now(timezone.utc).isoformat()}', flush=True)
+
     top_mos_count = getenv_int("TOP_MOS_COUNT", 50)
     trap_count = getenv_int("TRAP_COUNT", 30)
     thin_count = getenv_int("THIN_COUNT", 30)
@@ -643,9 +656,11 @@ def main() -> None:
 
     if dry_run:
         print("DRY_RUN=true, email not sent.", flush=True)
-    elif should_send:
+    elif should_send and not brief_sent:
         send_email(subject_for(mode), report_body)
         print("Email sent.", flush=True)
+    elif brief_sent:
+        print("Daily brief already sent; full report saved without a second email.", flush=True)
     else:
         print("Email not sent for this mode.", flush=True)
 

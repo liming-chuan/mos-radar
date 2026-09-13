@@ -1,6 +1,7 @@
 """Bounded public-universe price scan. Does not import email or private holdings."""
 import argparse
 import json
+import time
 from pathlib import Path
 import pandas as pd
 import yfinance as yf
@@ -22,14 +23,40 @@ def select_universe(frame, now):
     if 'is_historical_replay' in frame:
         keep &= ~frame.is_historical_replay.astype(str).str.lower().isin(['true', '1', '1.0'])
     frame = frame.loc[keep].assign(turnover=pd.to_numeric(frame.liquidity_value, errors='coerce'))
-    return frame.sort_values(['turnover', 'ticker'], ascending=[False, True]).ticker.drop_duplicates().head(100).tolist()
+    frame = frame[frame.turnover.ge(20_000_000)].sort_values(['turnover', 'ticker'], ascending=[False, True])
+    # Round-robin sectors before rotation: a large sector cannot occupy every first batch.
+    frame = frame.drop_duplicates('ticker')
+    sectors = frame.get('sector', pd.Series('UNKNOWN', index=frame.index)).fillna('UNKNOWN')
+    frame['sector_rank'] = frame.groupby(sectors, sort=False).cumcount()
+    return frame.sort_values(['sector_rank', 'turnover', 'ticker'], ascending=[True, False, True]).ticker.tolist()
+
+
+def choose_batch(universe, old, budget=300):
+    if not universe:
+        return [], 0
+    cursor = int(old.get('coverage', {}).get('next_cursor', 0)) % len(universe)
+    rotated = universe[cursor:]+universe[:cursor]
+    # Previous near setups are rechecked; reserve most slots for systematic rotation.
+    priority = [p['ticker'] for p in old.get('plans', []) if p['status'] in {'NEAR', 'PENDING'} and p['ticker'] in universe][:budget//3]
+    selected = list(dict.fromkeys(priority))
+    walked = 0
+    for ticker in rotated:
+        if len(selected) >= budget:
+            break
+        walked += 1
+        if ticker not in selected:
+            selected.append(ticker)
+    return selected, (cursor+walked) % len(universe)
 
 
 def fetch_bars(tickers, market, now):
     from valuation import quiet_yfinance_call
     last = latest_completed(market, now)
     frames = {}
+    deadline = time.monotonic()+18*60
     for offset in range(0, len(tickers), 20):
+        if time.monotonic() >= deadline:
+            break
         batch = tickers[offset:offset+20]
         try:
             result = quiet_yfinance_call(lambda: yf.download(
@@ -60,16 +87,25 @@ def run(market, state_dir, now=None, fetch=fetch_bars):
     if old and (old.get('policy') != POLICY or old.get('market') != market):
         raise ValueError('short-term state requires explicit migration')
     journal = old.get('trades', [])
-    universe = select_universe(pd.read_csv(source), now)
+    source_frame = pd.read_csv(source)
+    universe = select_universe(source_frame, now)
+    selected, next_cursor = choose_batch(universe, old)
     active = [t['ticker'] for t in journal if t['state'] in {'PENDING', 'OPEN', 'DATA_REVIEW'}]
     benchmark = '^HSI' if market == 'hk' else '^GSPC'
-    frames = fetch(list(dict.fromkeys([benchmark]+active+universe)), market, now)
+    frames = fetch(list(dict.fromkeys([benchmark]+active+selected)), market, now)
     # Record observation after fetching, not before a request that may cross the opening bell.
     observed = max(now, timestamp()) if fetch is fetch_bars else now
-    plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed) for t in universe]
+    plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed) for t in selected]
+    names = source_frame.set_index('ticker').get('company_name', pd.Series(dtype=str)).to_dict()
+    for p in plans:
+        name = names.get(p['ticker'], '')
+        p['company_name'] = str(name) if pd.notna(name) else ''
     journal = update_journal(journal, plans, frames, market, observed)
     result = dict(policy=POLICY, market=market, observed_at=observed.isoformat(),
                   signal_date=str(latest_completed(market, observed).date()),
+                  coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
+                                unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),
+                                data_failed=sum(p['status']=='DATA' for p in plans), next_cursor=next_cursor),
                   plans=plans, trades=journal)
     # Atomic replacement: failed writes must not truncate the forward ledger.
     tmp = path.with_suffix('.json.tmp')

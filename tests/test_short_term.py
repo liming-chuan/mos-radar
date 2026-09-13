@@ -3,13 +3,15 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
 from market_sessions import calendar, latest_completed
 from short_term import make_plan, advance_trade, update_journal, report_html, POLICY
-from short_term_scan import select_universe, run
+from short_term_scan import select_universe, run, choose_batch
+from short_brief import prepare_brief
 from report_timing import premarket_title, market_time
 from trend_evidence import compute_trend
 
@@ -90,7 +92,10 @@ class PlanTests(unittest.TestCase):
     def test_volume_price_and_actions(self):
         stock, base = bars()
         stock.loc[stock.index[-1], 'Volume'] = 1_000_000
-        self.assertEqual(make_plan('TEST',stock,base,now=NOW)['status'],'WAIT')
+        result = make_plan('TEST',stock,base,now=NOW)
+        self.assertEqual(result['status'],'NEAR')
+        self.assertEqual(result['missing_conditions'],['成交量确认'])
+        self.assertNotIn('trigger',result)
         stock.loc[stock.index[-1], 'Stock Splits'] = 2
         self.assertEqual(make_plan('TEST',stock,base,now=NOW)['status'],'DATA')
         stock.loc[stock.index[-1], 'High'] = 1
@@ -172,6 +177,41 @@ class ForwardTests(unittest.TestCase):
             self.assertEqual(result['plans'][0]['status'],'DATA')
             self.assertEqual(len(result['trades']),1)
             self.assertNotIn('最高追价',report_html('us',d,NOW))
+
+    def test_rotation_reaches_beyond_first_100_and_rechecks_near(self):
+        universe = [str(i) for i in range(700)]
+        first,cursor = choose_batch(universe,{})
+        second,next_cursor = choose_batch(universe,{'coverage':{'next_cursor':cursor}})
+        self.assertEqual(len(first),300)
+        self.assertEqual(len(set(first+second)),600)
+        third,_ = choose_batch(universe,{'coverage':{'next_cursor':next_cursor},'plans':[{'ticker':'0','status':'NEAR'}]})
+        self.assertIn('0',third)
+        self.assertTrue(set(universe).issubset(first+second+third))
+
+    def test_sector_interleave_and_liquidity_prefilter(self):
+        row = dict(quote_type='EQUITY',scan_time=NOW.isoformat(),equity=10,statement_evidence_status='NONE')
+        rows = [dict(row,ticker='A',sector='Tech',liquidity_value=100e6),dict(row,ticker='B',sector='Tech',liquidity_value=90e6),dict(row,ticker='C',sector='Energy',liquidity_value=30e6),dict(row,ticker='D',sector='Energy',liquidity_value=1e6)]
+        self.assertEqual(select_universe(pd.DataFrame(rows),NOW),['A','C','B'])
+
+    def test_brief_missing_state_and_late_title(self):
+        with tempfile.TemporaryDirectory() as d:
+            subject,body = prepare_brief('us',d,'2026-09-14T15:00Z')
+            self.assertIn('延迟',subject)
+            self.assertIn('<html>',body)
+            self.assertIn('尚未成功生成',body)
+
+    def test_near_is_never_journal_entry(self):
+        stock,base = bars()
+        stock.loc[stock.index[-1],'Volume'] = 1e6
+        p = make_plan('TEST',stock,base,now=NOW)
+        self.assertEqual(update_journal([],[p],{},'us',NOW),[])
+
+    def test_daily_email_precedes_full_scan_and_is_not_sent_twice(self):
+        import main
+        calls = []
+        with tempfile.TemporaryDirectory() as d, patch.object(main,'ROOT',Path(d)), patch.object(main,'STATE_DIR',Path(d)), patch.object(main,'detect_mode',return_value='premarket_scan'), patch.dict('os.environ',{'DRY_RUN':'false'}), patch.object(main,'send_email',side_effect=lambda *a:calls.append('email')), patch.object(main,'run_full_scan',side_effect=lambda: (calls.append('scan') or pd.DataFrame())), patch.object(main,'generate_report',return_value='<html>value</html>'), patch.object(main,'save_report_files'):
+            main.main()
+        self.assertEqual(calls,['email','scan'])
 
 
 if __name__ == '__main__':

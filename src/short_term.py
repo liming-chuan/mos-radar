@@ -9,6 +9,7 @@ from market_sessions import calendar, latest_completed, timestamp
 POLICY = 'breakout-1'
 FIELDS = ['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close', 'Dividends', 'Stock Splits']
 LABELS = {'PENDING': '等待下一交易日触发（模拟）', 'LATE': '生成太晚，禁止补记买入',
+          'NEAR': '预备观察：尚未触发',
           'EXPIRED': '计划有效期已结束',
           'WAIT': '未满足突破条件', 'DATA': '行情或证据不足', 'RISK': '基础风险未通过'}
 
@@ -65,9 +66,15 @@ def make_plan(ticker, frame, benchmark, market='us', now=None):
         volume_ratio = bars.Volume.iloc[-1]/avg_volume
         result.update(signal_date=str(session.date()), close=float(close.iloc[-1]),
                       turnover=float(turnover), volume_ratio=float(volume_ratio), relative_20d=float(relative))
-        if not (close.iloc[-1] > ma20 > ma50 and relative > 0 and
-                close.iloc[-1] > adjusted.High.iloc[-21:-1].max() and volume_ratio >= 1.5):
-            return finish('WAIT', '需收盘突破前20日高点、放量1.5倍、均线向上且20日强于基准')
+        breakout = float(adjusted.High.iloc[-21:-1].max())
+        checks = {'均线向上': bool(close.iloc[-1] > ma20 > ma50), '强于基准': bool(relative > 0),
+                  '收盘突破': bool(close.iloc[-1] > breakout), '成交量确认': bool(volume_ratio >= 1.5)}
+        result.update(checks=checks, breakout_reference=breakout,
+                      breakout_distance=float(breakout/close.iloc[-1]-1), volume_required=1.5,
+                      missing_conditions=[k for k,v in checks.items() if not v])
+        if not all(checks.values()):
+            near = checks['均线向上'] and checks['强于基准'] and abs(result['breakout_distance']) <= .03
+            return finish('NEAR' if near else 'WAIT', '尚缺：'+'、'.join(result['missing_conditions']))
         tr = pd.concat([adjusted.High-adjusted.Low,
                         (adjusted.High-close.shift()).abs(), (adjusted.Low-close.shift()).abs()], axis=1).max(axis=1)
         atr = float(tr.tail(14).mean())
@@ -171,6 +178,11 @@ def ledger_html(trades):
     return ''.join(parts)
 
 
+def ranked_plans(plans):
+    # Transparent research priority, not a calibrated probability of profit.
+    return sorted(plans, key=lambda p: (-p.get('relative_20d', 0), -p.get('volume_ratio', 0), p['ticker']))
+
+
 def report_html(market, state_dir=None, now=None):
     """Read only public research state. Old or missing plans never become buy signals."""
     root = Path(state_dir) if state_dir is not None else Path(__file__).resolve().parents[1]/'state'
@@ -185,7 +197,7 @@ def report_html(market, state_dir=None, now=None):
         now = timestamp(now)
         if timestamp(data['observed_at']) > now or pd.Timestamp(data['signal_date']) != latest_completed(market, now):
             return intro+'<p>短线快照已过期，等待新一轮完整行情；旧触发价不再展示。下列跟踪记录也尚未更新。</p>'+ledger
-        plans = [p for p in data['plans'] if p['status'] in {'PENDING', 'LATE'}]
+        plans = ranked_plans([p for p in data['plans'] if p['status'] in {'PENDING', 'LATE'}])
         cards = []
         for p in plans[:5]:
             opened = now >= calendar(market).session_open(p['entry_session'])
@@ -203,8 +215,16 @@ def report_html(market, state_dir=None, now=None):
         counts = pd.Series(['EXPIRED' if p['status'] == 'PENDING' and now >= timestamp(p['expires_at'])
                             else p['status'] for p in data['plans']], dtype=str).value_counts()
         summary = '；'.join(f'{LABELS.get(k,k)} {v}只' for k,v in counts.items())
+        coverage = data.get('coverage', {})
+        coverage_text = (f'<p>公开池 {coverage.get("source_count",0)}只；基础及流动性通过 {coverage.get("eligible",0)}只；'
+                         f'本轮未覆盖 {coverage.get("unselected",0)}只；已选择但数据不足 {coverage.get("data_failed",0)}只。未覆盖不等于无机会。</p>') if coverage else '<p>旧版快照：只检查固定100只，未覆盖范围未记录。</p>'
+        near = sorted([p for p in data['plans'] if p['status']=='NEAR'], key=lambda p: (abs(p['breakout_distance']), -p['relative_20d'], p['ticker']))
+        watch = '<h3>预备名单 · 等待条件满足</h3><p class="sub">这些股票不能按已触发计划操作。按距突破位置排序；新日线仍需重新核验全部条件。</p>' if near else ''
+        for p in near[:8]:
+            watch += f'<p><b>{escape(p["ticker"])}</b> · {escape(p.get("company_name", ""))}<br>距20日高点 {p["breakout_distance"]:+.1%}；量比 {p["volume_ratio"]:.2f}/要求1.50；{escape(p["reason"])}。</p>'
+        display_note = f'<p class="sub">有效/延迟计划展示 {min(5,len(plans))}/{len(plans)}；预备展示 {min(8,len(near))}/{len(near)}。计划按20日相对强度、量比排序，不代表胜率排名。</p>'
         local = timestamp(data['observed_at']).tz_convert('Asia/Hong_Kong' if market == 'hk' else 'America/New_York')
         observed_label = f'{local:%Y-%m-%d %H:%M}（市场当地时间）'
-        return intro+f'<p>行情截至 {escape(data["signal_date"])}；短线检查完成 {observed_label}；实际检查 {len(data["plans"])}只。{escape(summary)}</p>'+(''.join(cards) or '<p>当前没有可展示的短线计划；不放宽阈值凑数量。</p>')+ledger+'<p class="sub">完整清单与逐笔模拟记录见 short-term 工作流产物。模拟收益不等于账户收益，尚不能评估20%账户回撤约束。</p>'
+        return intro+f'<p>行情截至 {escape(data["signal_date"])}；短线检查完成 {observed_label}；实际检查 {len(data["plans"])}只。{escape(summary)}</p>'+coverage_text+(''.join(cards) or '<p>本轮没有可展示的触发计划。</p>')+watch+display_note+ledger+'<p class="sub">完整清单与逐笔模拟记录见 short-term 工作流产物。模拟收益不等于账户收益，尚不能评估20%账户回撤约束。</p>'
     except (OSError, ValueError, KeyError, TypeError):
         return intro+'<p>短线任务尚未成功生成可用快照；请查看 short-term 工作流。不能用长期估值替代短线买点。</p>'

@@ -73,6 +73,7 @@ jobs:
           path: |
             data/results/hk_*.csv
             reports/hk/*.md
+            reports/hk/*.html
             state/hk_*.csv
 
       - name: Commit HK public market state

@@ -1043,7 +1043,7 @@ def generate_report(
             <p class="legend">观察池收益尚未验证；约20%是回撤容忍偏好，不是系统保证。未提供持仓金额时无法评估账户回撤。</p>
         </div>
     </div>
-    <p class="footer">{escape(provenance_text)}<br>模型 {escape(model_version or '未提供')} · 报告版式 V6.9.0</p>
+    <p class="footer">{escape(provenance_text)}<br>模型 {escape(model_version or '未提供')} · 报告版式 V6.9.1</p>
 </div>
 </body>
 </html>

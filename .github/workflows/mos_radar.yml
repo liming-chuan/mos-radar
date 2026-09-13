@@ -72,6 +72,7 @@ jobs:
           path: |
             data/results/*.csv
             reports/*.md
+            reports/us/*.html
             state/*.csv
 
       - name: Commit public market state
