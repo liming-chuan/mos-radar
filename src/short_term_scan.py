@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 from market_sessions import latest_completed, timestamp
-from short_term import POLICY, make_plan, update_journal, report_html
+from short_term import POLICY, STRATEGIES, make_plan, update_journal, report_html, annotate_existing_positions
 
 
 def select_universe(frame, now):
@@ -37,7 +37,7 @@ def choose_batch(universe, old, budget=300):
     cursor = int(old.get('coverage', {}).get('next_cursor', 0)) % len(universe)
     rotated = universe[cursor:]+universe[:cursor]
     # Previous near setups are rechecked; reserve most slots for systematic rotation.
-    priority = [p['ticker'] for p in old.get('plans', []) if p['status'] in {'NEAR', 'PENDING'} and p['ticker'] in universe][:budget//3]
+    priority = list(dict.fromkeys(p['ticker'] for p in old.get('plans', []) if p['status'] in {'NEAR', 'PENDING'} and p['ticker'] in universe))[:budget//3]
     selected = list(dict.fromkeys(priority))
     walked = 0
     for ticker in rotated:
@@ -95,17 +95,19 @@ def run(market, state_dir, now=None, fetch=fetch_bars):
     frames = fetch(list(dict.fromkeys([benchmark]+active+selected)), market, now)
     # Record observation after fetching, not before a request that may cross the opening bell.
     observed = max(now, timestamp()) if fetch is fetch_bars else now
-    plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed) for t in selected]
+    plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed, strategy)
+             for t in selected for strategy in STRATEGIES]
     names = source_frame.set_index('ticker').get('company_name', pd.Series(dtype=str)).to_dict()
     for p in plans:
         name = names.get(p['ticker'], '')
         p['company_name'] = str(name) if pd.notna(name) else ''
     journal = update_journal(journal, plans, frames, market, observed)
+    plans = annotate_existing_positions(plans, journal)
     result = dict(policy=POLICY, market=market, observed_at=observed.isoformat(),
                   signal_date=str(latest_completed(market, observed).date()),
                   coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
                                 unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),
-                                data_failed=sum(p['status']=='DATA' for p in plans), next_cursor=next_cursor),
+                                data_failed=len({p['ticker'] for p in plans if p['status']=='DATA'}), next_cursor=next_cursor),
                   plans=plans, trades=journal)
     # Atomic replacement: failed writes must not truncate the forward ledger.
     tmp = path.with_suffix('.json.tmp')
@@ -115,7 +117,7 @@ def run(market, state_dir, now=None, fetch=fetch_bars):
     pd.DataFrame(journal).to_csv(state_dir/f'{prefix}mos_short_trades.csv', index=False)
     body = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{max-width:760px;margin:24px auto;padding:16px;font:16px/1.7 sans-serif}.stock{border:1px solid #ddd;padding:16px;margin:16px 0;break-inside:avoid}.sub{color:#526271}</style>'+report_html(market, state_dir, observed)
     (state_dir/f'{prefix}mos_short_report.html').write_text(body, encoding='utf-8')
-    print(f'{market}: checked={len(plans)} pending={sum(p["status"] == "PENDING" for p in plans)} ledger={len(journal)}')
+    print(f'{market}: checked={len(selected)} evaluations={len(plans)} pending={sum(p["status"] == "PENDING" for p in plans)} ledger={len(journal)}')
     return result
 
 

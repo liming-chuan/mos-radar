@@ -180,7 +180,9 @@ class NormalizationAndExplanationTests(unittest.TestCase):
     def test_short_report_keeps_all_signal_rows_in_dataframe(self):
         rows = [good_row(ticker=f"FAR_{i}", price=300., market_cap=6000.) for i in range(12)]
         df = o.annotate_opportunities(pd.DataFrame(rows), now=NOW)
-        body = generate_report(df, "manual")
+        # This tests value-card compression, independently of live short-term state files.
+        with patch('short_term.report_html', return_value=''):
+            body = generate_report(df, "manual")
         self.assertIn("没有处于触发价上方", body)
         self.assertIn("其余等待名单", body)
         self.assertIn("10 / 12", body)
