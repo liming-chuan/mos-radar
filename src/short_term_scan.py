@@ -6,6 +6,8 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 from market_sessions import latest_completed, timestamp
+from market_sessions import calendar
+from entry_guards import GATE_VERSION, regime_gate, fetch_earnings, apply_guards, earnings_gate
 from short_term import POLICY, STRATEGIES, make_plan, update_journal, report_html, annotate_existing_positions
 
 
@@ -76,7 +78,7 @@ def fetch_bars(tickers, market, now):
     return frames
 
 
-def run(market, state_dir, now=None, fetch=fetch_bars):
+def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earnings):
     now = timestamp(now)
     prefix = 'hk_' if market == 'hk' else ''
     state_dir = Path(state_dir)
@@ -101,9 +103,35 @@ def run(market, state_dir, now=None, fetch=fetch_bars):
     for p in plans:
         name = names.get(p['ticker'], '')
         p['company_name'] = str(name) if pd.notna(name) else ''
-    journal = update_journal(journal, plans, frames, market, observed)
+    regime=regime_gate(frames.get(benchmark),market,observed)
+    candidates=list(dict.fromkeys(p['ticker'] for p in plans if p['status'] in {'PENDING','NEAR'}))
+    # Prioritize actual plans before the watchlist within the bounded event budget.
+    candidates=list(dict.fromkeys([t['ticker'] for t in journal if t['state']=='PENDING']+[p['ticker'] for p in plans if p['status']=='PENDING']+candidates))
+    events=event_fetch(candidates,observed)
+    observed=max(observed,timestamp()) if fetch is fetch_bars else observed
+    for p in plans:
+        p['observed_at']=observed.isoformat()
+        if p['status']=='PENDING' and observed>=calendar(market).session_open(p['entry_session']):
+            p.update(status='LATE',reason='排雷完成时已开盘，禁止追认早盘成交')
+    source_rows={str(r['ticker']):r.to_dict() for _,r in source_frame.iterrows()}
+    plans=apply_guards(plans,regime,events,source_rows,market,observed)
+    for p in plans:
+        sector=source_rows.get(p['ticker'],{}).get('sector')
+        p['sector']=str(sector) if pd.notna(sector) else ''
+    for t in journal:
+        if t['state']=='PENDING' and observed<calendar(market).session_open(t['entry_session']):
+            event=earnings_gate(events.get(t['ticker']),market,t['entry_session'],observed)
+            if t.get('gate_version')!=GATE_VERSION or regime['status']!='ALLOW' or event['status']!='ALLOW':
+                t.update(state='CANCELLED_GUARD',exit_reason='新版排雷未通过，撤销尚未入场的模拟计划')
+            else:
+                t.update(earnings_gate=event,market_gate=regime)
+    experiments=[]
+    for p in plans:
+        if p['status']=='PENDING':
+            experiments.extend([dict(p,exit_policy='FIXED'),dict(p,id=p['id']+':be-1',source_id=p['id'],exit_policy='BE_1R')])
+    journal = update_journal(journal, experiments, frames, market, observed)
     plans = annotate_existing_positions(plans, journal)
-    result = dict(policy=POLICY, market=market, observed_at=observed.isoformat(),
+    result = dict(policy=POLICY, market=market, gate_version=GATE_VERSION,market_gate=regime, observed_at=observed.isoformat(),
                   signal_date=str(latest_completed(market, observed).date()),
                   coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
                                 unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),

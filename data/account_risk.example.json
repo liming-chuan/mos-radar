@@ -1,0 +1,12 @@
+{
+  "market": "us",
+  "currency": "USD",
+  "asof": null,
+  "equity": null,
+  "peak_equity": null,
+  "cash": null,
+  "cash_basis": "before_pending_reservations",
+  "positions": [],
+  "pending_orders": [],
+  "lot_sizes": {}
+}

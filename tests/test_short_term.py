@@ -164,18 +164,19 @@ class ForwardTests(unittest.TestCase):
         self.assertLess(r['exit_price'],90)
 
     def test_pipeline_empty_provider_and_report_expiry(self):
-        with tempfile.TemporaryDirectory() as d:
+        event_fetch=lambda tickers,now:{t:dict(dates=['2026-11-01'],source='test',observed_at=now.isoformat()) for t in tickers}
+        with tempfile.TemporaryDirectory() as d, patch('short_term_scan.regime_gate',return_value=dict(status='ALLOW',reason='test',asof='2026-09-11')):
             row = dict(ticker='TEST',quote_type='EQUITY',scan_time=NOW.isoformat(),liquidity_value=100e6,
                        equity=100,statement_evidence_status='NOT_CONFIGURED')
             pd.DataFrame([row]).to_csv(Path(d)/'mos_market_latest.csv',index=False)
             stock, base = bars()
-            result = run('us',d,NOW,fetch=lambda *a: {'TEST':stock,'^GSPC':base})
-            self.assertEqual(len(result['trades']),1)
+            result = run('us',d,NOW,fetch=lambda *a: {'TEST':stock,'^GSPC':base},event_fetch=event_fetch)
+            self.assertEqual(len(result['trades']),2)
             self.assertIn('最高追价',report_html('us',d,NOW))
             self.assertIn('快照已过期',report_html('us',d,'2026-09-14T22:00Z'))
-            result = run('us',d,NOW,fetch=lambda *a: {})
+            result = run('us',d,NOW,fetch=lambda *a: {},event_fetch=event_fetch)
             self.assertEqual(result['plans'][0]['status'],'DATA')
-            self.assertEqual(len(result['trades']),1)
+            self.assertEqual(len(result['trades']),2)
             self.assertNotIn('最高追价',report_html('us',d,NOW))
 
     def test_rotation_reaches_beyond_first_100_and_rechecks_near(self):
