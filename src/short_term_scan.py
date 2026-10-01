@@ -1,10 +1,9 @@
 """Bounded public-universe price scan. Does not import email or private holdings."""
 import argparse
 import json
-import time
 from pathlib import Path
 import pandas as pd
-import yfinance as yf
+from price_feed import fetch_bars
 from market_sessions import latest_completed, timestamp
 from market_sessions import calendar
 from entry_guards import GATE_VERSION, regime_gate, fetch_earnings, apply_guards, earnings_gate
@@ -51,33 +50,6 @@ def choose_batch(universe, old, budget=300):
     return selected, (cursor+walked) % len(universe)
 
 
-def fetch_bars(tickers, market, now):
-    from valuation import quiet_yfinance_call
-    last = latest_completed(market, now)
-    frames = {}
-    deadline = time.monotonic()+18*60
-    for offset in range(0, len(tickers), 20):
-        if time.monotonic() >= deadline:
-            break
-        batch = tickers[offset:offset+20]
-        try:
-            result = quiet_yfinance_call(lambda: yf.download(
-                batch, start=str((last-pd.Timedelta(days=180)).date()),
-                end=str((last+pd.Timedelta(days=1)).date()), auto_adjust=False,
-                actions=True, threads=False, progress=False, timeout=10))
-            if result is None or result.empty:
-                break
-            for ticker in batch:
-                if isinstance(result.columns, pd.MultiIndex):
-                    if ticker in result.columns.get_level_values(-1):
-                        frames[ticker] = result.xs(ticker, axis=1, level=-1).dropna(how='all')
-                elif len(batch) == 1:
-                    frames[ticker] = result.dropna(how='all')
-        except Exception:
-            break
-    return frames
-
-
 def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earnings):
     now = timestamp(now)
     prefix = 'hk_' if market == 'hk' else ''
@@ -94,7 +66,8 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
     selected, next_cursor = choose_batch(universe, old)
     active = [t['ticker'] for t in journal if t['state'] in {'PENDING', 'OPEN', 'DATA_REVIEW'}]
     benchmark = '^HSI' if market == 'hk' else '^GSPC'
-    frames = fetch(list(dict.fromkeys([benchmark]+active+selected)), market, now)
+    requested=list(dict.fromkeys([benchmark]+active+selected))
+    frames = fetch(requested, market, now, priority=active) if fetch is fetch_bars else fetch(requested,market,now)
     # Record observation after fetching, not before a request that may cross the opening bell.
     observed = max(now, timestamp()) if fetch is fetch_bars else now
     plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed, strategy)
@@ -131,7 +104,15 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
             experiments.extend([dict(p,exit_policy='FIXED'),dict(p,id=p['id']+':be-1',source_id=p['id'],exit_policy='BE_1R')])
     journal = update_journal(journal, experiments, frames, market, observed)
     plans = annotate_existing_positions(plans, journal)
+    failed=len({p['ticker'] for p in plans if p['status']=='DATA'})
+    unhealthy=not selected or failed==len(selected) or regime['status']=='UNKNOWN'
+    health=dict(status='FAILED' if unhealthy else ('PARTIAL' if failed else 'OK'),
+                reason='无有效股票或基准数据，扫描失败，不能解释为没有机会' if unhealthy else
+                       ('部分股票证据不足，完整原因见诊断文件' if failed else '行情校验通过'))
+    if unhealthy:
+        next_cursor=old.get('coverage',{}).get('next_cursor',0)
     result = dict(policy=POLICY, market=market, gate_version=GATE_VERSION,market_gate=regime, observed_at=observed.isoformat(),
+                  health=health, diagnostics=getattr(frames,'diagnostics',{}),
                   signal_date=str(latest_completed(market, observed).date()),
                   coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
                                 unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),
@@ -141,11 +122,30 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
     tmp = path.with_suffix('.json.tmp')
     tmp.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False)+'\n', encoding='utf-8', newline='\n')
     tmp.replace(path)
+    if not unhealthy:
+        good=state_dir/f'{prefix}mos_short_last_good.json'
+        good_tmp=good.with_suffix('.json.tmp')
+        good_tmp.write_text(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
+        good_tmp.replace(good)
+    pd.DataFrame([dict(ticker=t,**d) for t,d in getattr(frames,'diagnostics',{}).items()]).to_csv(state_dir/f'{prefix}mos_short_diagnostics.csv',index=False)
+    # Keep bounded raw public evidence for future diagnosis, rather than guessing
+    # which field the vendor returned after it has changed on a later request.
+    samples=[]
+    cutoff=calendar(market).sessions_in_range(latest_completed(market,observed)-pd.Timedelta(days=130),latest_completed(market,observed))[-60]
+    for ticker,d in getattr(frames,'diagnostics',{}).items():
+        raw=frames.get(ticker)
+        if d['reason'] and raw is not None and not raw.empty and len(samples)<10:
+            days=pd.to_datetime(raw.index).date
+            raw=raw.loc[(days>=cutoff.date()) & (days<=latest_completed(market,observed).date())].copy()
+            raw=raw.rename_axis('date').reset_index()
+            raw.insert(0,'ticker',ticker)
+            samples.append(raw)
+    (pd.concat(samples,ignore_index=True) if samples else pd.DataFrame(columns=['ticker','date'])).to_csv(state_dir/f'{prefix}mos_short_bad_bars.csv',index=False)
     pd.DataFrame(plans).to_csv(state_dir/f'{prefix}mos_short_plans.csv', index=False)
     pd.DataFrame(journal).to_csv(state_dir/f'{prefix}mos_short_trades.csv', index=False)
     body = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{max-width:760px;margin:24px auto;padding:16px;font:16px/1.7 sans-serif}.stock{border:1px solid #ddd;padding:16px;margin:16px 0;break-inside:avoid}.sub{color:#526271}</style>'+report_html(market, state_dir, observed)
     (state_dir/f'{prefix}mos_short_report.html').write_text(body, encoding='utf-8')
-    print(f'{market}: checked={len(selected)} evaluations={len(plans)} pending={sum(p["status"] == "PENDING" for p in plans)} ledger={len(journal)}')
+    print(f'{market}: health={health["status"]} checked={len(selected)} valid={len(selected)-failed} pending={sum(p["status"] == "PENDING" for p in plans)} ledger={len(journal)}')
     return result
 
 
@@ -154,4 +154,6 @@ if __name__ == '__main__':
     parser.add_argument('--market', choices=['hk', 'us'], required=True)
     parser.add_argument('--state-dir', type=Path, default=Path(__file__).resolve().parents[1]/'state')
     args = parser.parse_args()
-    run(args.market, args.state_dir)
+    result=run(args.market, args.state_dir)
+    if result['health']['status']=='FAILED':
+        raise SystemExit('Short-term scan failed: diagnostics and ledger retained; no valid market snapshot')

@@ -210,7 +210,7 @@ class ForwardTests(unittest.TestCase):
     def test_daily_email_precedes_full_scan_and_is_not_sent_twice(self):
         import main
         calls = []
-        with tempfile.TemporaryDirectory() as d, patch.object(main,'ROOT',Path(d)), patch.object(main,'STATE_DIR',Path(d)), patch.object(main,'detect_mode',return_value='premarket_scan'), patch.dict('os.environ',{'DRY_RUN':'false'}), patch.object(main,'send_email',side_effect=lambda *a:calls.append('email')), patch.object(main,'run_full_scan',side_effect=lambda: (calls.append('scan') or pd.DataFrame())), patch.object(main,'generate_report',return_value='<html>value</html>'), patch.object(main,'save_report_files'):
+        with tempfile.TemporaryDirectory() as d, patch.object(main,'ROOT',Path(d)), patch.object(main,'STATE_DIR',Path(d)/'state'), patch.object(main,'detect_mode',return_value='premarket_scan'), patch.dict('os.environ',{'DRY_RUN':'false'}), patch('brief_delivery.timestamp',side_effect=lambda x=None:pd.Timestamp(x) if x else pd.Timestamp('2026-09-14T12:00Z')), patch.object(main,'send_email',side_effect=lambda *a:calls.append('email')), patch.object(main,'run_full_scan',side_effect=lambda: (calls.append('scan') or pd.DataFrame())), patch.object(main,'generate_report',return_value='<html>value</html>'), patch.object(main,'save_report_files'):
             main.main()
         self.assertEqual(calls,['email','scan'])
 

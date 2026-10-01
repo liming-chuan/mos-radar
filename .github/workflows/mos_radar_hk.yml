@@ -2,7 +2,7 @@ name: MOS Radar - HK - Daily Scanner
 
 on:
   schedule:
-    # Hong Kong market weekdays only. One pre-market full scan and email per day.
+    # Hong Kong weekdays. Full scan plus a fallback for the once-daily brief.
     # 00:07 UTC = 08:07 Hong Kong time; allow time for a cold full scan.
     # GitHub schedules may be delayed; late reports are explicitly labelled.
     - cron: "7 0 * * 1-5"
@@ -38,6 +38,34 @@ jobs:
           key: mos-radar-hk-fundamentals-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             mos-radar-hk-fundamentals-${{ runner.os }}-
+
+      - name: Send daily brief if not delivered after close
+        id: delivery
+        if: github.event_name == 'schedule'
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SSL: ${{ secrets.SMTP_SSL }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || vars.DRY_RUN }}
+        run: python src/brief_delivery.py --market hk --mode premarket
+
+      - name: Persist delivery receipt before full scan
+        if: steps.delivery.outcome == 'success'
+        run: |
+          git config user.name mos-radar-bot
+          git config user.email bot@example.com
+          if [ -f state/hk_mos_brief_delivery.json ]; then
+            git add state/hk_mos_brief_delivery.json
+            if ! git diff --cached --quiet; then
+              git commit -m "record hk daily brief delivery"
+              git pull --rebase origin "$GITHUB_REF_NAME"
+              git push origin "HEAD:$GITHUB_REF_NAME"
+            fi
+          fi
 
       - name: Run MOS Radar HK
         env:

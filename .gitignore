@@ -17,5 +17,7 @@ state/hk_*.private.csv
 state/*mos_short_*.csv
 state/*mos_short_*.html
 state/*mos_short_term.json.tmp
+state/*mos_short_last_good.json.tmp
+state/*mos_brief_delivery.json.tmp
 data/*.private.json
 state/*.private.json

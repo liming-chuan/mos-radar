@@ -537,15 +537,11 @@ def main() -> None:
     # Keep the existing daily recipient/frequency, but deliver before the slow scan.
     brief_sent = False
     if mode == 'premarket_scan':
-        from short_brief import prepare_brief
-        brief_subject, brief_body = prepare_brief(MARKET, STATE_DIR)
-        brief_dir = ROOT / 'reports' / MARKET
-        brief_dir.mkdir(parents=True, exist_ok=True)
-        (brief_dir / 'short_brief.html').write_text(brief_body, encoding='utf-8')
-        if not env_bool('DRY_RUN', default=False):
-            send_email(brief_subject, brief_body)
-            brief_sent = True
-            print(f'Short brief sent at {datetime.now(timezone.utc).isoformat()}', flush=True)
+        from brief_delivery import deliver
+        delivery=deliver(MARKET,STATE_DIR,sender=send_email,dry_run=env_bool('DRY_RUN',default=False))
+        # An earlier successful delivery replaces this fallback email for the session.
+        brief_sent=delivery['status'] in {'SENT','ALREADY_SENT','SKIPPED_HOLIDAY','SKIPPED_ENDED','DRY_RUN'}
+        print('Daily brief delivery: '+str(delivery),flush=True)
 
     top_mos_count = getenv_int("TOP_MOS_COUNT", 50)
     trap_count = getenv_int("TRAP_COUNT", 30)

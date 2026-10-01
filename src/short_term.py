@@ -29,13 +29,17 @@ def clean_bars(frame, market, now, start=None):
         frame = frame.loc[frame.index >= start]
     frame = frame.apply(pd.to_numeric, errors='coerce')
     if frame.empty or not np.isfinite(frame.to_numpy()).all():
-        raise ValueError('行情为空或含无效数值')
-    if (frame[['Open', 'High', 'Low', 'Close', 'Adj Close']] <= 0).any().any():
-        raise ValueError('价格必须为正')
-    if ((frame.High < frame[['Open', 'Close', 'Low']].max(axis=1)) |
+        bad=frame.columns[~np.isfinite(frame.to_numpy()).all(axis=0)] if not frame.empty else []
+        raise ValueError('行情为空或含无效数值'+('：'+','.join(bad) if len(bad) else ''))
+    bad_prices=frame[['Open', 'High', 'Low', 'Close', 'Adj Close']] <= 0
+    if bad_prices.any().any():
+        raise ValueError('价格必须为正；字段：'+','.join(bad_prices.columns[bad_prices.any()])+
+                         '；日期：'+','.join(str(d.date()) for d in frame.index[bad_prices.any(axis=1)][:3]))
+    bad_ohlc=((frame.High < frame[['Open', 'Close', 'Low']].max(axis=1)) |
         (frame.Low > frame[['Open', 'Close', 'High']].min(axis=1)) |
-        (frame.Volume < 0)).any():
-        raise ValueError('OHLC或成交量异常')
+        (frame.Volume < 0))
+    if bad_ohlc.any():
+        raise ValueError('OHLC或成交量异常；日期：'+','.join(str(d.date()) for d in frame.index[bad_ohlc][:3]))
     return frame
 
 
@@ -263,6 +267,9 @@ def report_html(market, state_dir=None, now=None):
         guard_summary = f'<h3>入场排雷</h3><p>大盘：{escape(gate.get("reason","尚未执行新版排雷，旧计划不可直接使用"))}</p><p>账户资料未接入本公开报告，暂不计算实际买入股数。</p>'
         intro += guard_summary
         now = timestamp(now)
+        if data.get('health',{}).get('status')=='FAILED':
+            c=data.get('coverage',{})
+            return intro+f'<p><b>本轮扫描故障，不能判断是否有机会。</b>选中 {c.get("selected",0)}只，校验失败 {c.get("data_failed",0)}只。等待行情恢复，暂停展示买入价格。已有记录可能尚未更新。</p>'+ledger
         if timestamp(data['observed_at']) > now or pd.Timestamp(data['signal_date']) != latest_completed(market, now):
             return intro+'<p>短线快照已过期，等待新一轮完整行情；旧触发价不再展示。下列跟踪记录也尚未更新。</p>'+ledger
         plans = ranked_plans([p for p in data['plans'] if p['status'] in {'PENDING', 'LATE'}])
