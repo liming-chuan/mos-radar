@@ -535,13 +535,13 @@ def main() -> None:
     print(f"Run mode: {mode}", flush=True)
 
     # Keep the existing daily recipient/frequency, but deliver before the slow scan.
-    brief_sent = mode=='premarket_scan'
+    brief_handled = mode=='premarket_scan'
     if mode == 'premarket_scan' and not env_bool('DAILY_BRIEF_MANAGED',default=False):
         from brief_delivery import deliver
         delivery=deliver(MARKET,STATE_DIR,sender=send_email,dry_run=env_bool('DRY_RUN',default=False))
         # An earlier successful delivery replaces this fallback email for the session.
         # Even deferred/faulted evidence must not cause an unrelated second email.
-        brief_sent=True
+        brief_handled=True
         print('Daily brief delivery: '+str(delivery),flush=True)
 
     top_mos_count = getenv_int("TOP_MOS_COUNT", 50)
@@ -653,11 +653,11 @@ def main() -> None:
 
     if dry_run:
         print("DRY_RUN=true, email not sent.", flush=True)
-    elif should_send and not brief_sent:
+    elif should_send and not brief_handled:
         send_email(subject_for(mode), report_body)
         print("Email sent.", flush=True)
-    elif brief_sent:
-        print("Daily brief already sent; full report saved without a second email.", flush=True)
+    elif brief_handled:
+        print("Daily brief managed by delivery pipeline; full report saved without another email.", flush=True)
     else:
         print("Email not sent for this mode.", flush=True)
 
