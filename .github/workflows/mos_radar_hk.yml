@@ -12,36 +12,44 @@ permissions:
   contents: write
 
 jobs:
-  mos-radar-hk:
+  brief:
+    if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      run_value: ${{ steps.scan.outputs.run_value }}
+    env:
+      MARKET: hk
     concurrency:
-      group: mos-radar-hk
+      group: mos-brief-hk
       cancel-in-progress: false
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
         with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Restore HK fundamentals cache
-        uses: actions/cache@v4
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
         with:
-          path: cache/fundamentals/hk
-          key: mos-radar-hk-fundamentals-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            mos-radar-hk-fundamentals-${{ runner.os }}-
-
-      - name: Send daily brief if not delivered after close
-        id: delivery
-        if: github.event_name == 'schedule'
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Check latest evidence and repair before delivery
+        id: scan
+        continue-on-error: true
+        run: python src/short_pipeline.py --market "$MARKET" --phase premarket
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: premarket-evidence-hk
+          path: |
+            state/*mos_short_*.csv
+            state/*mos_short_*.html
+            state/*mos_short_term.json
+            state/*mos_short_last_good.json
+      - name: Save public forward state even when evidence failed
+        if: always()
+        run: python src/persist_public_state.py --market "$MARKET" --kind short
+      - name: Deliver once or show fault; persist claim before SMTP
+        if: success()
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -50,26 +58,41 @@ jobs:
           SMTP_SSL: ${{ secrets.SMTP_SSL }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
-          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || vars.DRY_RUN }}
-        run: python src/brief_delivery.py --market hk --mode premarket
+          DRY_RUN: 'false'
+        run: python src/brief_delivery.py --market "$MARKET" --mode premarket --persist
+      - name: Fail on invalid scan evidence
+        if: always() && steps.scan.outcome != 'success'
+        run: exit 1
 
-      - name: Persist delivery receipt before full scan
-        if: steps.delivery.outcome == 'success'
-        run: |
-          git config user.name mos-radar-bot
-          git config user.email bot@example.com
-          if [ -f state/hk_mos_brief_delivery.json ]; then
-            git add state/hk_mos_brief_delivery.json
-            if ! git diff --cached --quiet; then
-              git commit -m "record hk daily brief delivery"
-              git pull --rebase origin "$GITHUB_REF_NAME"
-              git push origin "HEAD:$GITHUB_REF_NAME"
-            fi
-          fi
+  value:
+    needs: brief
+    if: always() && !cancelled() && (github.event_name != 'schedule' || needs.brief.outputs.run_value != 'false')
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    concurrency:
+      group: mos-value-hk
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore HK fundamentals cache
+        uses: actions/cache@v4
+        with:
+          path: cache/fundamentals/hk
+          key: mos-radar-hk-fundamentals-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            mos-radar-hk-fundamentals-${{ runner.os }}-
 
       - name: Run MOS Radar HK
         env:
           MARKET: hk
+          DAILY_BRIEF_MANAGED: 'true'
           GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -104,22 +127,6 @@ jobs:
             reports/hk/*.html
             state/hk_*.csv
 
-      - name: Commit HK public market state
+      - name: Commit public value state
         if: success()
-        run: |
-          if [ -f state/hk_mos_market_latest.csv ]; then
-            git config user.name "mos-radar-bot"
-            git config user.email "bot@example.com"
-            git add state/hk_mos_market_latest.csv
-            if [ -f state/hk_mos_watch_history.csv ]; then
-              git add state/hk_mos_watch_history.csv
-            fi
-            if [ -f state/hk_mos_entry_history.csv ]; then
-              git add state/hk_mos_entry_history.csv
-            fi
-            git commit -m "update hk mos radar public state" || echo "No HK state changes"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          else
-            echo "No HK public market state file to commit"
-          fi
+        run: python src/persist_public_state.py --market hk --kind value

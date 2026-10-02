@@ -8,6 +8,7 @@ from market_sessions import latest_completed, timestamp
 from market_sessions import calendar
 from entry_guards import GATE_VERSION, regime_gate, fetch_earnings, apply_guards, earnings_gate
 from short_term import POLICY, STRATEGIES, make_plan, update_journal, report_html, annotate_existing_positions
+from scan_health import assess, snapshot_health
 
 
 def select_universe(frame, now):
@@ -35,6 +36,12 @@ def select_universe(frame, now):
 def choose_batch(universe, old, budget=300):
     if not universe:
         return [], 0
+    # A broken cohort must be retried, not silently skipped by rotation.
+    if old.get('plans') and snapshot_health(old)['status']=='FAILED':
+        retry=list(dict.fromkeys(p['ticker'] for p in old['plans'] if p['ticker'] in universe))[:budget]
+        if retry:
+            coverage=old.get('coverage',{})
+            return retry,int(coverage.get('retry_next_cursor',coverage.get('next_cursor',0)))%len(universe)
     cursor = int(old.get('coverage', {}).get('next_cursor', 0)) % len(universe)
     rotated = universe[cursor:]+universe[:cursor]
     # Previous near setups are rechecked; reserve most slots for systematic rotation.
@@ -64,6 +71,9 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
     source_frame = pd.read_csv(source)
     universe = select_universe(source_frame, now)
     selected, next_cursor = choose_batch(universe, old)
+    old_coverage=old.get('coverage',{})
+    retrying=bool(old.get('plans') and snapshot_health(old)['status']=='FAILED')
+    cursor_start=old_coverage.get('cursor_start',old_coverage.get('next_cursor',0)) if retrying else old_coverage.get('next_cursor',0)
     active = [t['ticker'] for t in journal if t['state'] in {'PENDING', 'OPEN', 'DATA_REVIEW'}]
     benchmark = '^HSI' if market == 'hk' else '^GSPC'
     requested=list(dict.fromkeys([benchmark]+active+selected))
@@ -77,10 +87,12 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
         name = names.get(p['ticker'], '')
         p['company_name'] = str(name) if pd.notna(name) else ''
     regime=regime_gate(frames.get(benchmark),market,observed)
+    failed=len({p['ticker'] for p in plans if p['status']=='DATA'})
+    health=assess(len(selected),failed,regime)
     candidates=list(dict.fromkeys(p['ticker'] for p in plans if p['status'] in {'PENDING','NEAR'}))
     # Prioritize actual plans before the watchlist within the bounded event budget.
-    candidates=list(dict.fromkeys([t['ticker'] for t in journal if t['state']=='PENDING']+[p['ticker'] for p in plans if p['status']=='PENDING']+candidates))
-    events=event_fetch(candidates,observed)
+    candidates=list(dict.fromkeys([t['ticker'] for t in journal if t['state'] in {'PENDING','DATA_REVIEW'} and 'fill' not in t]+[p['ticker'] for p in plans if p['status']=='PENDING']+candidates))
+    events=event_fetch(candidates,observed) if health['status']!='FAILED' else {}
     observed=max(observed,timestamp()) if fetch is fetch_bars else observed
     for p in plans:
         p['observed_at']=observed.isoformat()
@@ -92,31 +104,43 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
         sector=source_rows.get(p['ticker'],{}).get('sector')
         p['sector']=str(sector) if pd.notna(sector) else ''
     for t in journal:
-        if t['state']=='PENDING' and observed<calendar(market).session_open(t['entry_session']):
+        if t['state'] in {'PENDING','DATA_REVIEW'} and 'fill' not in t and observed<calendar(market).session_open(t['entry_session']):
             event=earnings_gate(events.get(t['ticker']),market,t['entry_session'],observed)
-            if t.get('gate_version')!=GATE_VERSION or regime['status']!='ALLOW' or event['status']!='ALLOW':
+            if t.get('gate_version')!=GATE_VERSION or regime['status']=='BLOCK' or event['status']=='BLOCK':
                 t.update(state='CANCELLED_GUARD',exit_reason='新版排雷未通过，撤销尚未入场的模拟计划')
+                t.pop('data_reason',None)
+            elif regime['status']=='UNKNOWN' or event['status']=='UNKNOWN':
+                t.update(state='DATA_REVIEW',data_reason='入场前排雷证据待核验；暂不授权模拟成交',earnings_gate=event,market_gate=regime)
             else:
-                t.update(earnings_gate=event,market_gate=regime)
+                t.update(state='PENDING',earnings_gate=event,market_gate=regime)
+                t.pop('data_reason',None)
+    journal=update_journal(journal,[],frames,market,observed)
+    tracking_gaps=[t['ticker'] for t in journal if t['state']=='DATA_REVIEW' and
+                   not t.get('data_reason','').startswith(('公司行动或停牌','入场前排雷'))]
+    # Event fetching may cross a session boundary: count the final plans again.
+    failed=len({p['ticker'] for p in plans if p['status']=='DATA'})
+    health=assess(len(selected),failed,regime,tracking_gaps)
+    if health['status']=='FAILED':
+        for p in plans:
+            if p['status'] in {'PENDING','NEAR','LATE','GUARD_BLOCKED'}:
+                p.update(status='GUARD_BLOCKED',reason='本轮扫描故障：'+health['reason'])
     experiments=[]
     for p in plans:
         if p['status']=='PENDING':
             experiments.extend([dict(p,exit_policy='FIXED'),dict(p,id=p['id']+':be-1',source_id=p['id'],exit_policy='BE_1R')])
-    journal = update_journal(journal, experiments, frames, market, observed)
+    journal = update_journal(journal, experiments, frames, market, observed, advance=False)
     plans = annotate_existing_positions(plans, journal)
-    failed=len({p['ticker'] for p in plans if p['status']=='DATA'})
-    unhealthy=not selected or failed==len(selected) or regime['status']=='UNKNOWN'
-    health=dict(status='FAILED' if unhealthy else ('PARTIAL' if failed else 'OK'),
-                reason='无有效股票或基准数据，扫描失败，不能解释为没有机会' if unhealthy else
-                       ('部分股票证据不足，完整原因见诊断文件' if failed else '行情校验通过'))
+    unhealthy=health['status']=='FAILED'
+    retry_next_cursor=next_cursor
     if unhealthy:
-        next_cursor=old.get('coverage',{}).get('next_cursor',0)
+        next_cursor=cursor_start
     result = dict(policy=POLICY, market=market, gate_version=GATE_VERSION,market_gate=regime, observed_at=observed.isoformat(),
                   health=health, diagnostics=getattr(frames,'diagnostics',{}),
                   signal_date=str(latest_completed(market, observed).date()),
                   coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
                                 unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),
-                                data_failed=len({p['ticker'] for p in plans if p['status']=='DATA'}), next_cursor=next_cursor),
+                                data_failed=failed,next_cursor=next_cursor,cursor_start=cursor_start,
+                                retry_next_cursor=retry_next_cursor,retrying_failed_cohort=retrying),
                   plans=plans, trades=journal)
     # Atomic replacement: failed writes must not truncate the forward ledger.
     tmp = path.with_suffix('.json.tmp')

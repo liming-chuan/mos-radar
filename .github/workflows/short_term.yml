@@ -2,15 +2,21 @@ name: MOS Radar - Short-term research
 
 on:
   schedule:
-    # After close: research plus the next-session daily brief; no broker access.
+    # Primary after-close and later recovery waves; UTC, holiday-aware in code.
     - cron: '23 9 * * 1-5'
+    - cron: '41 13 * * 1-5'
     - cron: '37 21 * * 1-5'
+    - cron: '17 6 * * 2-6'
   workflow_dispatch:
     inputs:
       market:
         type: choice
         options: [hk, us]
         default: hk
+      force_scan:
+        description: Force another rotation even if current data are healthy (no email)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -20,21 +26,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      MARKET: ${{ inputs.market || (github.event.schedule == '23 9 * * 1-5' && 'hk' || 'us') }}
+      MARKET: ${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5') && 'hk' || 'us') }}
     concurrency:
-      group: mos-radar-${{ inputs.market || (github.event.schedule == '23 9 * * 1-5' && 'hk' || 'us') }}
+      group: mos-brief-${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5') && 'hk' || 'us') }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Generate public short-term plans and advance forward ledger
+      - name: Refresh incomplete evidence; retain failed cohort for recovery
         id: scan
         continue-on-error: true
-        run: python src/short_term_scan.py --market "$MARKET"
+        env:
+          FORCE_SCAN: ${{ inputs.force_scan }}
+        run: |
+          args=()
+          if [ "$FORCE_SCAN" = true ]; then args+=(--force); fi
+          python src/short_pipeline.py --market "$MARKET" --phase recovery "${args[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -44,26 +57,10 @@ jobs:
             state/*mos_short_*.html
             state/*mos_short_term.json
             state/*mos_short_last_good.json
-      - name: Save forward research state
+      - name: Save public forward state even when evidence failed
         if: always()
-        run: |
-          prefix=""
-          if [ "$MARKET" = hk ]; then prefix="hk_"; fi
-          git config user.name mos-radar-bot
-          git config user.email bot@example.com
-          if [ -f "state/${prefix}mos_short_term.json" ]; then
-            git add "state/${prefix}mos_short_term.json"
-          fi
-          if [ -f "state/${prefix}mos_short_last_good.json" ]; then
-            git add "state/${prefix}mos_short_last_good.json"
-          fi
-          if ! git diff --cached --quiet; then
-            git commit -m "update $MARKET short-term research state"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push origin "HEAD:$GITHUB_REF_NAME"
-          fi
-      - name: Send next-session brief once
-        id: delivery
+        run: python src/persist_public_state.py --market "$MARKET" --kind short
+      - name: Send next-session brief with durable pre-send claim
         if: success() && steps.scan.outcome == 'success' && github.event_name == 'schedule'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -73,22 +70,8 @@ jobs:
           SMTP_SSL: ${{ secrets.SMTP_SSL }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
-          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || vars.DRY_RUN }}
-        run: python src/brief_delivery.py --market "$MARKET" --mode after-close
-      - name: Persist delivery receipt immediately
-        if: always() && steps.delivery.outcome == 'success'
-        run: |
-          prefix=""
-          if [ "$MARKET" = hk ]; then prefix="hk_"; fi
-          receipt="state/${prefix}mos_brief_delivery.json"
-          if [ -f "$receipt" ]; then
-            git add "$receipt"
-            if ! git diff --cached --quiet; then
-              git commit -m "record $MARKET daily brief delivery"
-              git pull --rebase origin "$GITHUB_REF_NAME"
-              git push origin "HEAD:$GITHUB_REF_NAME"
-            fi
-          fi
+          DRY_RUN: 'false'
+        run: python src/brief_delivery.py --market "$MARKET" --mode after-close --persist
       - name: Fail on invalid scan evidence
         if: always() && steps.scan.outcome != 'success'
         run: exit 1

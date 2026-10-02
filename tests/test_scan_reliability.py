@@ -69,7 +69,7 @@ class RecoveryTests(unittest.TestCase):
             root=Path(d)
             rows=[row]+[dict(row,ticker=f'T{i}',liquidity_value=50e6) for i in range(400)]
             pd.DataFrame(rows).to_csv(root/'mos_market_latest.csv',index=False)
-            good=run('us',root,NOW,fetch=lambda *a:{'TEST':stock,'^GSPC':base},event_fetch=events)
+            good=run('us',root,NOW,fetch=lambda ts,*a:{t:(base if t=='^GSPC' else stock) for t in ts},event_fetch=events)
             saved=(root/'mos_short_last_good.json').read_bytes()
             bad=run('us',root,NOW,fetch=lambda *a:{},event_fetch=events)
             self.assertEqual(bad['health']['status'],'FAILED')
@@ -114,7 +114,8 @@ class DeliveryTests(unittest.TestCase):
     def snapshot(self,root,health='OK'):
         root.mkdir()
         (root/'mos_short_term.json').write_text(json.dumps(dict(policy='breakout-1',market='us',signal_date='2026-09-11',
-            observed_at=NOW.isoformat(),health=dict(status=health),coverage={},plans=[],trades=[])),encoding='utf-8')
+            observed_at=NOW.isoformat(),health=dict(status=health),coverage=dict(selected=1,data_failed=0),
+            market_gate=dict(status='ALLOW'),plans=[dict(ticker='TEST',status='WAIT')],trades=[])),encoding='utf-8')
 
     def test_after_close_and_premarket_send_only_once_for_next_session(self):
         sent=[]
@@ -127,15 +128,19 @@ class DeliveryTests(unittest.TestCase):
             self.assertEqual(len(sent),1)
             self.assertIn('盘后提前准备',sent[0][0])
 
-    def test_failed_snapshot_defers_early_email_but_sends_failure_once_in_morning(self):
+    def test_failed_snapshot_defers_before_open_but_sends_fault_once_when_late(self):
         sent=[]
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)/'state';self.snapshot(root,'FAILED')
             self.assertEqual(deliver('us',root,'after-close',NOW,sender=lambda *a:sent.append(a))['status'],'DEFERRED_DATA')
             self.assertFalse((root/'mos_brief_delivery.json').exists())
             result=deliver('us',root,'premarket','2026-09-14T12:00Z',sender=lambda *a:sent.append(a))
+            self.assertEqual(result['status'],'DEFERRED_DATA')
+            result=deliver('us',root,'premarket','2026-09-14T15:00Z',sender=lambda *a:sent.append(a))
             self.assertEqual(result['status'],'SENT')
             self.assertIn('扫描故障',sent[0][1])
+            self.assertIn('数据故障提示',sent[0][0])
+            self.assertEqual(deliver('us',root,'premarket','2026-09-14T15:01Z')['status'],'ALREADY_SENT')
 
     def test_dry_run_and_smtp_failure_never_mark_sent(self):
         with tempfile.TemporaryDirectory() as d:
@@ -145,7 +150,10 @@ class DeliveryTests(unittest.TestCase):
             self.assertFalse((root/'mos_brief_delivery.json').exists())
             with self.assertRaises(RuntimeError):
                 deliver('us',root,'after-close',NOW,sender=lambda *a:(_ for _ in ()).throw(RuntimeError('SMTP test')))
-            self.assertFalse((root/'mos_brief_delivery.json').exists())
+            marker=json.loads((root/'mos_brief_delivery.json').read_text())
+            self.assertEqual(marker['sessions'],{})
+            self.assertEqual(marker['pending']['2026-09-14']['status'],'UNCERTAIN')
+            self.assertEqual(deliver('us',root,'after-close',NOW)['status'],'DELIVERY_REVIEW')
 
     def test_holidays_and_expired_sessions_are_not_sent(self):
         with tempfile.TemporaryDirectory() as d:

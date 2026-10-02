@@ -130,6 +130,7 @@ def advance_trade(trade, frame, market, now=None):
     """Conservative daily fills; no intraday order or portfolio simulation."""
     trade = dict(trade)
     if trade['state'] not in {'PENDING', 'OPEN', 'DATA_REVIEW'}:
+        trade.pop('data_reason',None)
         return trade
     cal, end = calendar(market), latest_completed(market, now)
     start = pd.Timestamp(trade.get('last_processed', trade['entry_session']))
@@ -143,10 +144,11 @@ def advance_trade(trade, frame, market, now=None):
             if date not in bars.index:
                 raise ValueError('应有交易日缺行情，不能判定成交或退出')
             row = bars.loc[date]
-            if trade.get('next_stop') is not None:
-                trade['stop']=max(trade['stop'],trade.pop('next_stop'))
             if row['Stock Splits'] != 0 or row.Dividends != 0 or row.Volume <= 0:
                 raise ValueError('公司行动或停牌需复核，暂停收益计算')
+            trade.pop('data_reason',None)
+            if trade.get('next_stop') is not None:
+                trade['stop']=max(trade['stop'],trade.pop('next_stop'))
             trade['state'] = 'OPEN' if 'fill' in trade else 'PENDING'
             if trade['state'] == 'PENDING':
                 from entry_guards import entry_snapshot_valid
@@ -192,8 +194,8 @@ def advance_trade(trade, frame, market, now=None):
     return trade
 
 
-def update_journal(journal, plans, frames, market, now=None):
-    trades = [advance_trade(t, frames.get(t['ticker']), market, now) for t in journal]
+def update_journal(journal, plans, frames, market, now=None, advance=True):
+    trades = [advance_trade(t, frames.get(t['ticker']), market, now) for t in journal] if advance else journal
     ids = {t['id'] for t in trades}
     active = {(t.get('policy', POLICY),t.get('exit_policy','FIXED'),t['ticker']) for t in trades if t['state'] in {'PENDING', 'OPEN', 'DATA_REVIEW'}}
     for p in plans:
@@ -267,9 +269,11 @@ def report_html(market, state_dir=None, now=None):
         guard_summary = f'<h3>入场排雷</h3><p>大盘：{escape(gate.get("reason","尚未执行新版排雷，旧计划不可直接使用"))}</p><p>账户资料未接入本公开报告，暂不计算实际买入股数。</p>'
         intro += guard_summary
         now = timestamp(now)
-        if data.get('health',{}).get('status')=='FAILED':
+        from scan_health import snapshot_health
+        health=snapshot_health(data)
+        if health['status']=='FAILED':
             c=data.get('coverage',{})
-            return intro+f'<p><b>本轮扫描故障，不能判断是否有机会。</b>选中 {c.get("selected",0)}只，校验失败 {c.get("data_failed",0)}只。等待行情恢复，暂停展示买入价格。已有记录可能尚未更新。</p>'+ledger
+            return intro+f'<p><b>本轮扫描故障，不能判断是否有机会。</b>选中 {c.get("selected",0)}只，校验失败 {c.get("data_failed",0)}只。{escape(health["reason"])}。等待行情恢复，暂停展示买入价格。已有记录可能尚未更新。</p>'+ledger
         if timestamp(data['observed_at']) > now or pd.Timestamp(data['signal_date']) != latest_completed(market, now):
             return intro+'<p>短线快照已过期，等待新一轮完整行情；旧触发价不再展示。下列跟踪记录也尚未更新。</p>'+ledger
         plans = ranked_plans([p for p in data['plans'] if p['status'] in {'PENDING', 'LATE'}])

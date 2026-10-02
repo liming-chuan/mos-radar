@@ -17,3 +17,36 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
+  live-evidence:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[live-check]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        market: [us, hk]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Refresh public evidence on a GitHub runner; no SMTP or state push
+        id: evidence
+        continue-on-error: true
+        run: python src/short_pipeline.py --market "${{ matrix.market }}" --force
+      - name: Preview daily brief without sending
+        run: python src/brief_delivery.py --market "${{ matrix.market }}" --dry-run
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-evidence-${{ matrix.market }}
+          path: |
+            state/*mos_short_*.csv
+            state/*mos_short_*.html
+            state/*mos_short_term.json
+            reports/*/short_brief.html
+      - name: Fail if evidence was not usable
+        if: always() && steps.evidence.outcome != 'success'
+        run: exit 1

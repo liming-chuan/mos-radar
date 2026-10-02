@@ -185,7 +185,7 @@ class ForwardTests(unittest.TestCase):
         second,next_cursor = choose_batch(universe,{'coverage':{'next_cursor':cursor}})
         self.assertEqual(len(first),300)
         self.assertEqual(len(set(first+second)),600)
-        third,_ = choose_batch(universe,{'coverage':{'next_cursor':next_cursor},'plans':[{'ticker':'0','status':'NEAR'}]})
+        third,_ = choose_batch(universe,{'market_gate':{'status':'ALLOW'},'coverage':{'next_cursor':next_cursor,'selected':1,'data_failed':0},'plans':[{'ticker':'0','status':'NEAR'}]})
         self.assertIn('0',third)
         self.assertTrue(set(universe).issubset(first+second+third))
 
@@ -210,7 +210,7 @@ class ForwardTests(unittest.TestCase):
     def test_daily_email_precedes_full_scan_and_is_not_sent_twice(self):
         import main
         calls = []
-        with tempfile.TemporaryDirectory() as d, patch.object(main,'ROOT',Path(d)), patch.object(main,'STATE_DIR',Path(d)/'state'), patch.object(main,'detect_mode',return_value='premarket_scan'), patch.dict('os.environ',{'DRY_RUN':'false'}), patch('brief_delivery.timestamp',side_effect=lambda x=None:pd.Timestamp(x) if x else pd.Timestamp('2026-09-14T12:00Z')), patch.object(main,'send_email',side_effect=lambda *a:calls.append('email')), patch.object(main,'run_full_scan',side_effect=lambda: (calls.append('scan') or pd.DataFrame())), patch.object(main,'generate_report',return_value='<html>value</html>'), patch.object(main,'save_report_files'):
+        with tempfile.TemporaryDirectory() as d, patch.object(main,'ROOT',Path(d)), patch.object(main,'STATE_DIR',Path(d)/'state'), patch.object(main,'detect_mode',return_value='premarket_scan'), patch.dict('os.environ',{'DRY_RUN':'false','DAILY_BRIEF_MANAGED':'false'}), patch('brief_delivery.deliver',side_effect=lambda *a,**kw:(calls.append('email') or {'status':'SENT'})), patch.object(main,'send_email',side_effect=lambda *a:calls.append('email')), patch.object(main,'run_full_scan',side_effect=lambda: (calls.append('scan') or pd.DataFrame())), patch.object(main,'generate_report',return_value='<html>value</html>'), patch.object(main,'save_report_files'):
             main.main()
         self.assertEqual(calls,['email','scan'])
 

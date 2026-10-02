@@ -38,6 +38,27 @@ def issue(frame, market, now):
         return str(exc)
 
 
+def pending_daily_bar(frame, market, now):
+    """Latest daily close is absent; a later scheduled request is required."""
+    try:
+        last=latest_completed(market,now)
+        expected=calendar(market).sessions_in_range(last-pd.Timedelta(days=130),last)[-60:]
+        window=frame[FIELDS].copy()
+        window.index=pd.DatetimeIndex(pd.to_datetime(window.index).date)
+        window=window.reindex(expected).apply(pd.to_numeric,errors='coerce')
+        if not window.iloc[:-1].notna().all().all():
+            return False
+        missing=set(window.columns[window.iloc[-1].isna()])
+        if not missing or not missing.issubset({'Close','Adj Close'}):
+            return False
+        # This diagnosis never authorizes use of the unfinished bar.
+        previous_now=calendar(market).session_open(last)-pd.Timedelta(seconds=1)
+        checked=clean_bars(frame,market,previous_now,expected[0])
+        return checked.index.equals(expected[:-1])
+    except (ValueError,TypeError,KeyError,AttributeError,IndexError):
+        return False
+
+
 def fetch_bars(tickers, market, now, priority=()):
     last = latest_completed(market, now)
     frames = PriceFrames()
@@ -70,7 +91,8 @@ def fetch_bars(tickers, market, now, priority=()):
             reason = issue(frame, market, now)
             before = frames.diagnostics.get(ticker, {})
             frames.diagnostics[ticker] = dict(reason=reason, attempts=before.get('attempts',0)+1,
-                                             first_issue=before.get('first_issue',reason), vendor_error=error)
+                                             first_issue=before.get('first_issue',reason), vendor_error=error,
+                                             readiness='DAILY_PENDING' if pending_daily_bar(frame,market,now) else ('INVALID' if reason else 'READY'))
             if frame is not None:
                 frames[ticker] = frame
 
@@ -81,7 +103,7 @@ def fetch_bars(tickers, market, now, priority=()):
         if time.monotonic() >= deadline:
             break
         download([ticker])
-        if frames.diagnostics[ticker]['reason'] and time.monotonic()<deadline:
+        if frames.diagnostics[ticker]['reason'] and frames.diagnostics[ticker]['readiness']!='DAILY_PENDING' and time.monotonic()<deadline:
             download([ticker])
     remaining=[t for t in tickers if t not in isolated]
     for offset in range(0, len(remaining), 20):
@@ -90,7 +112,7 @@ def fetch_bars(tickers, market, now, priority=()):
         batch = remaining[offset:offset+20]
         download(batch)
         for ticker in batch:
-            if frames.diagnostics[ticker]['reason'] and retry_budget>0 and time.monotonic()<deadline:
+            if frames.diagnostics[ticker]['reason'] and frames.diagnostics[ticker]['readiness']!='DAILY_PENDING' and retry_budget>0 and time.monotonic()<deadline:
                 download([ticker])
                 retry_budget -= 1
         print(f'{market}: price requests checked={len(frames.diagnostics)}/{len(tickers)} remaining retries={retry_budget}',flush=True)
