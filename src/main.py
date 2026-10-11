@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,7 +55,7 @@ STATE_REQUIRED_MODES = {"morning_email", "noon_update", "afternoon_update"}
 
 def env_bool(name: str, default: bool = False) -> bool:
     value = os.getenv(name)
-    if value is None:
+    if value is None or not str(value).strip():
         return default
     return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
 
@@ -296,7 +297,10 @@ def save_cached_analysis(ticker: str, result) -> None:
         if str(ticker).endswith('.HK'):
             from statement_evidence import evidence_fingerprint
             payload['evidence_fingerprint'] = evidence_fingerprint()
-        cache_path(ticker).write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        path = cache_path(ticker)
+        tmp = path.with_suffix('.json.tmp')
+        tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(path)
     except Exception as e:
         print(f"Cache write skipped for {ticker}: {type(e).__name__}: {e}", flush=True)
 
@@ -372,45 +376,83 @@ def save_entry_history(df: pd.DataFrame) -> None:
 
 
 def run_full_scan() -> pd.DataFrame:
+    from scan_checkpoint import load_checkpoint, save_checkpoint, scan_identity
     started_at = datetime.now(timezone.utc)
     previous = pd.read_csv(STATE_MARKET_PATH) if STATE_MARKET_PATH.exists() else pd.DataFrame()
     tickers = load_scan_tickers()
     sleep_seconds = getenv_float("REQUEST_SLEEP_SECONDS", 0.2)
     price_sleep_seconds = getenv_float("PRICE_SLEEP_SECONDS", 0.02)
 
-    rows = []
+    checkpoint = CACHE_DIR / '_scan_progress.json'
+    identity = scan_identity(tickers, MARKET, MODEL_VERSION)
+    rows = load_checkpoint(checkpoint, identity, tickers, cache_ttl_days())
+    if not rows:
+        checkpoint.unlink(missing_ok=True)
+    resumed = len(rows)
+    if resumed:
+        print(f'Resuming value scan: {resumed}/{len(tickers)} completed', flush=True)
+    # Leave time for output/persistence/cache saving before the runner's 65m cap.
+    budget = max(60., getenv_float('VALUE_SCAN_BUDGET_SECONDS', 2700))
+    deadline = time.monotonic() + budget
+    reserve = min(600., budget / 4)
+    batch_size = max(1, getenv_int('VALUE_SCAN_BATCH_SIZE', 500))
     total = len(tickers)
     consecutive_rate_limits = 0
     source_interrupted = False
+    budget_exhausted = False
+    fresh_requests = 0
 
-    for i, ticker in enumerate(tickers, start=1):
+    for i, ticker in enumerate(tickers[resumed:], start=resumed+1):
+        if time.monotonic() >= deadline-reserve or fresh_requests >= batch_size:
+            budget_exhausted = True
+            break
         print(f"[{i}/{total}] analyzing {ticker}", flush=True)
         analyzed = analyze_one(ticker, sleep_seconds=sleep_seconds)
         rows.append(analyzed)
+        fresh_requests += analyzed.get('cache_status') != 'HIT'
         consecutive_rate_limits = consecutive_rate_limits + 1 if analyzed.get("price_data_status") == "YAHOO_RATE_LIMIT" else 0
         if consecutive_rate_limits >= 5:
             source_interrupted = True
             print("Yahoo repeatedly rate limited; stop requests and preserve previous public state.", flush=True)
             break
+        if len(rows) % 5 == 0:
+            save_checkpoint(checkpoint, identity, rows)
+
+    interrupted = source_interrupted or budget_exhausted
+    if source_interrupted:
+        # Retry the rate-limited tail on the next wave, rather than persisting errors.
+        save_checkpoint(checkpoint, identity, rows[:-consecutive_rate_limits])
+    elif interrupted:
+        save_checkpoint(checkpoint, identity, rows)
 
     df = pd.DataFrame(rows)
     df = annotate_pools(df)
-    if "cache_status" in df.columns and (df["cache_status"].astype(str) == "HIT").any():
+    if not interrupted and (resumed or ("cache_status" in df.columns and df["cache_status"].astype(str).eq("HIT").any())):
         df = update_prices_only(df, sleep_seconds=price_sleep_seconds)
 
     if "margin_of_safety" in df.columns:
         df["margin_of_safety_at_scan"] = df["margin_of_safety"]
 
     df = annotate_opportunities(df, previous=previous)
-    df = enrich_watchlists(df, previous=previous, market=MARKET, fetch_history=not source_interrupted)
+    df = enrich_watchlists(df, previous=previous, market=MARKET, fetch_history=not interrupted)
     finished_at = datetime.now(timezone.utc)
     df["scan_started_at"] = started_at.isoformat(timespec="seconds")
     df["scan_time"] = finished_at.isoformat(timespec="seconds")
     df["scan_duration_seconds"] = (finished_at-started_at).total_seconds()
-    df["scan_status"] = "PARTIAL_SOURCE_FAILURE" if source_interrupted else "COMPLETE"
+    status = "PARTIAL_SOURCE_FAILURE" if source_interrupted else ("PARTIAL_BUDGET" if budget_exhausted else "COMPLETE")
+    df["scan_status"] = status
     df["scan_expected_count"] = total
     df["scan_attempted_count"] = len(rows)
-    save_outputs(df, write_state=not source_interrupted)
+    df["scan_resumed_count"] = resumed
+    save_outputs(df, write_state=not interrupted)
+    if not interrupted:
+        checkpoint.unlink(missing_ok=True)
+    print(f'Value scan: status={status} completed={len(rows)}/{total} resumed={resumed}', flush=True)
+    summary = os.getenv('GITHUB_STEP_SUMMARY')
+    if summary:
+        with open(summary, 'a', encoding='utf-8') as stream:
+            stream.write(f'\n### Value scan\n\n{status}: {len(rows)}/{total}; resumed {resumed}. '
+                         'Partial scans do not replace the last complete public value snapshot.\n')
     return df
 
 

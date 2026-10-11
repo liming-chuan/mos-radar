@@ -32,10 +32,24 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements.txt
+      - name: Restore validated daily price cache
+        id: price-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: cache/prices
+          key: mos-prices-v1-${{ env.MARKET }}-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            mos-prices-v1-${{ env.MARKET }}-${{ runner.os }}-
       - name: Check latest evidence and repair before delivery
         id: scan
         continue-on-error: true
         run: python src/short_pipeline.py --market "$MARKET" --phase premarket
+      - name: Save validated prices even after incomplete evidence
+        if: always() && !cancelled()
+        uses: actions/cache/save@v4
+        with:
+          path: cache/prices
+          key: ${{ steps.price-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -82,9 +96,10 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Restore fundamentals cache
-        uses: actions/cache@v4
+        id: fundamentals-cache
+        uses: actions/cache/restore@v4
         with:
-          path: cache/fundamentals
+          path: cache/fundamentals/us
           key: mos-radar-fundamentals-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             mos-radar-fundamentals-${{ runner.os }}-
@@ -107,11 +122,20 @@ jobs:
           MAX_TICKERS: ${{ vars.MAX_TICKERS }}
           REQUEST_SLEEP_SECONDS: ${{ vars.REQUEST_SLEEP_SECONDS }}
           PRICE_SLEEP_SECONDS: ${{ vars.PRICE_SLEEP_SECONDS }}
-          USE_FUNDAMENTALS_CACHE: ${{ vars.USE_FUNDAMENTALS_CACHE }}
+          USE_FUNDAMENTALS_CACHE: ${{ vars.USE_FUNDAMENTALS_CACHE || 'true' }}
+          VALUE_SCAN_BUDGET_SECONDS: '2700'
+          VALUE_SCAN_BATCH_SIZE: ${{ vars.VALUE_SCAN_BATCH_SIZE || '500' }}
           FUNDAMENTALS_CACHE_DAYS: ${{ vars.FUNDAMENTALS_CACHE_DAYS }}
           SEND_AFTER_CLOSE: ${{ vars.SEND_AFTER_CLOSE }}
           DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || vars.DRY_RUN }}
         run: python src/main.py
+
+      - name: Save fundamentals and scan progress, including partial scans
+        if: always() && !cancelled()
+        uses: actions/cache/save@v4
+        with:
+          path: cache/fundamentals/us
+          key: ${{ steps.fundamentals-cache.outputs.cache-primary-key }}
 
       - name: Upload MOS Radar results
         if: always()

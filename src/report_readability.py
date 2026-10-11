@@ -52,7 +52,7 @@ def overview_html(df, symbol='$', historical=False):
                                ('其中趋势通过', str(len(trend)) if 'trend_status' in df else '未评估', '属于左侧观察池')]:
         body += f'<td><span>{label}</span><strong>{value}</strong><small>{note}</small></td>'
     body += '</tr></table><p class="sub">合理估值观察不代表厚安全边际；趋势通过也不是买入指令。</p>'
-    if values(df, 'scan_status').eq('PARTIAL_SOURCE_FAILURE').any():
+    if values(df, 'scan_status').astype(str).str.startswith('PARTIAL_').any():
         body += '<p class="warning">扫描中断：以上仅为已扫描部分，不代表全市场结果。</p>'
     items = []
     if not strict.empty:

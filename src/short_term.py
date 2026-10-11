@@ -156,11 +156,20 @@ def advance_trade(trade, frame, market, now=None):
                     trade.update(state='CANCELLED_GUARD',exit_reason='入场前的排雷快照缺失或失效，不能模拟成交')
                     return trade
                 if timestamp(trade['observed_at']) >= cal.session_open(date):
-                    trade.update(state='EXPIRED', exit_reason='计划晚于开盘，禁止回填')
+                    trade.update(state='EXPIRED', exit_reason='计划晚于开盘，禁止回填', expiry_code='LATE_PLAN')
                     return trade
                 fill = max(float(row.Open), trade['trigger'])*(1+trade['slippage'])
+                trade['entry_evidence'] = dict(session=str(date.date()), open=float(row.Open), high=float(row.High),
+                                               trigger=trade['trigger'], max_entry=trade['max_entry'],
+                                               estimated_fill=fill)
                 if row.Open <= trade['stop'] or fill > trade['max_entry'] or row.High < trade['trigger']:
-                    trade.update(state='EXPIRED', exit_reason='有效日未触发或跳空越界')
+                    if row.Open <= trade['stop']:
+                        code, reason = 'OPEN_BELOW_STOP', '开盘已到止损区，放弃入场'
+                    elif row.High < trade['trigger']:
+                        code, reason = 'NOT_TRIGGERED', '有效日最高价未到触发价'
+                    else:
+                        code, reason = 'ABOVE_ENTRY_LIMIT', '估计成交价（含滑点）超过最高追价'
+                    trade.update(state='EXPIRED', exit_reason=reason, expiry_code=code)
                     return trade
                 trade.update(state='OPEN', fill=fill, filled_on=str(date.date()), held_sessions=0,
                              initial_stop=trade['stop'], initial_risk=fill-trade['stop'])
@@ -212,6 +221,18 @@ def ledger_html(trades):
     closed = [t for t in trades if t['state'] == 'CLOSED']
     parts = [f'<h3>前瞻模拟跟踪</h3><p>已结束 {len(closed)}笔；持有或待核验 {len(active)}笔。'
              '只记录计划生成后的行情，未做历史收益补算。</p>']
+    ended_on = max((t.get('exited_on','') for t in closed), default='')
+    independent = {t.get('source_id', t['id']) for t in closed}
+    if closed:
+        parts.append(f'<p class="sub">累计历史结果，最近平仓日 {escape(ended_on)}；{len(independent)}组原始入场对应{len(closed)}条退出实验记录。不是本周收益。</p>')
+    expired = [t for t in trades if t['state']=='EXPIRED' and t.get('exit_policy','FIXED')=='FIXED']
+    if expired:
+        codes = {'NOT_TRIGGERED':'未到触发价', 'ABOVE_ENTRY_LIMIT':'超过追价上限',
+                 'OPEN_BELOW_STOP':'开盘已破止损', 'LATE_PLAN':'生成太晚', 'LEGACY':'旧记录原因未拆分'}
+        reasons = {key:sum(t.get('expiry_code','LEGACY')==key for t in expired) for key in codes}
+        parts.append('<p>累计未成交计划 '+str(len(expired))+'组：'+
+                     '；'.join(label+' '+str(reasons[code])+'组' for code,label in codes.items() if reasons[code])+
+                     '。两套止损实验不重复计数。</p>')
     for policy,label in STRATEGIES.items():
         for exit_policy,exit_label in [('FIXED','固定止损'),('BE_1R','1R后次日上移止损')]:
             group = [t for t in closed if t.get('policy',POLICY)==policy and t.get('exit_policy','FIXED')==exit_policy and t.get('gate_version')=='guards-1']
@@ -273,7 +294,8 @@ def report_html(market, state_dir=None, now=None):
         health=snapshot_health(data)
         if health['status']=='FAILED':
             c=data.get('coverage',{})
-            return intro+f'<p><b>本轮扫描故障，不能判断是否有机会。</b>选中 {c.get("selected",0)}只，校验失败 {c.get("data_failed",0)}只。{escape(health["reason"])}。等待行情恢复，暂停展示买入价格。已有记录可能尚未更新。</p>'+ledger
+            individual = (f'个股行情可用 {c["price_valid"]}/{c.get("selected",0)}；基准'+('已就绪' if c.get('benchmark_ready') else '未就绪')+'。') if 'price_valid' in c else ''
+            return intro+f'<p><b>本轮扫描故障，不能判断是否有机会。</b>{individual}计划证据校验失败 {c.get("data_failed",0)}只。{escape(health["reason"])}。等待行情恢复，暂停展示买入价格。已有记录可能尚未更新。</p>'+ledger
         if timestamp(data['observed_at']) > now or pd.Timestamp(data['signal_date']) != latest_completed(market, now):
             return intro+'<p>短线快照已过期，等待新一轮完整行情；旧触发价不再展示。下列跟踪记录也尚未更新。</p>'+ledger
         plans = ranked_plans([p for p in data['plans'] if p['status'] in {'PENDING', 'LATE'}])
@@ -323,7 +345,9 @@ def report_html(market, state_dir=None, now=None):
             for p in group[:4]:
                 shown_near.append(p)
                 watch += f'<p><b>{escape(p["ticker"])}</b> · {escape(p.get("company_name", ""))}<br>相对{escape(p.get("watch_reference","20日高点"))}距离 {p.get("watch_distance",p["breakout_distance"]):+.2%}；量比 {p["volume_ratio"]:.2f}/要求{p.get("volume_required",1.5):.2f}；{escape(p["reason"])}。</p>'
-        display_note = f'<p class="sub">有效/延迟计划展示 {len(visible_plans)}/{len(plans)}；预备展示 {len(shown_near)}/{len(near)}项。同一股票可能属于两个策略，状态数量按策略项统计。各策略内计划按20日相对强度、量比排序，不代表胜率排名。</p>'
+        pending_count=sum(p['status']=='PENDING' and now<timestamp(p['expires_at']) for p in visible_plans)
+        late_count=len(visible_plans)-pending_count
+        display_note = f'<p class="sub">待触发计划展示 {pending_count}项；延迟或过期展示 {late_count}项（不可补记入场）；预备展示 {len(shown_near)}/{len(near)}项。同一股票可能属于两个策略，状态数量按策略项统计。各策略内计划按20日相对强度、量比排序，不代表胜率排名。</p>'
         local = timestamp(data['observed_at']).tz_convert('Asia/Hong_Kong' if market == 'hk' else 'America/New_York')
         observed_label = f'{local:%Y-%m-%d %H:%M}（市场当地时间）'
         return intro+f'<p>行情截至 {escape(data["signal_date"])}；短线检查完成 {observed_label}；实际检查 {len({p["ticker"] for p in data["plans"]})}只 / {len(data["plans"])}策略项。{escape(summary)}</p>'+coverage_text+(''.join(cards) or '<p>本轮没有可展示的触发计划。</p>')+blocked_html+watch+display_note+ledger+'<p class="sub">完整清单与逐笔模拟记录见 short-term 工作流产物。模拟收益不等于账户收益，尚不能评估20%账户回撤约束。</p>'

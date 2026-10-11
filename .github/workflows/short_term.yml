@@ -5,8 +5,10 @@ on:
     # Primary after-close and later recovery waves; UTC, holiday-aware in code.
     - cron: '23 9 * * 1-5'
     - cron: '41 13 * * 1-5'
+    - cron: '13 17 * * 1-5'
     - cron: '37 21 * * 1-5'
     - cron: '17 6 * * 2-6'
+    - cron: '47 3 * * 2-6'
   workflow_dispatch:
     inputs:
       market:
@@ -26,9 +28,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      MARKET: ${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5') && 'hk' || 'us') }}
+      MARKET: ${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5' || github.event.schedule == '13 17 * * 1-5') && 'hk' || 'us') }}
     concurrency:
-      group: mos-brief-${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5') && 'hk' || 'us') }}
+      group: mos-brief-${{ inputs.market || ((github.event.schedule == '23 9 * * 1-5' || github.event.schedule == '41 13 * * 1-5' || github.event.schedule == '13 17 * * 1-5') && 'hk' || 'us') }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +41,14 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements.txt
+      - name: Restore validated daily price cache
+        id: price-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: cache/prices
+          key: mos-prices-v1-${{ env.MARKET }}-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            mos-prices-v1-${{ env.MARKET }}-${{ runner.os }}-
       - name: Refresh incomplete evidence; retain failed cohort for recovery
         id: scan
         continue-on-error: true
@@ -48,6 +58,12 @@ jobs:
           args=()
           if [ "$FORCE_SCAN" = true ]; then args+=(--force); fi
           python src/short_pipeline.py --market "$MARKET" --phase recovery "${args[@]}"
+      - name: Save validated prices even after incomplete evidence
+        if: always() && !cancelled()
+        uses: actions/cache/save@v4
+        with:
+          path: cache/prices
+          key: ${{ steps.price-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

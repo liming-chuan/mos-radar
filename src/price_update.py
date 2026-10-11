@@ -97,6 +97,7 @@ def _quiet_download(tickers: list[str]) -> pd.DataFrame:
                 auto_adjust=False,
                 progress=False,
                 threads=True,
+                timeout=10,
             )
     except Exception:
         return pd.DataFrame()
@@ -104,7 +105,7 @@ def _quiet_download(tickers: list[str]) -> pd.DataFrame:
         logger.setLevel(old_level)
 
 
-def batch_current_quotes(tickers: list[str]) -> dict[str, tuple[float, str]]:
+def _batch_quotes(tickers: list[str]) -> dict[str, tuple[float, str]]:
     clean = []
     seen = set()
     for ticker in tickers:
@@ -143,6 +144,18 @@ def batch_current_quotes(tickers: list[str]) -> dict[str, tuple[float, str]]:
             if price is not None and price > 0:
                 prices[clean[0]] = (price, pd.to_datetime(close.index[-1], utc=True).isoformat())
 
+    return prices
+
+
+def batch_current_quotes(tickers: list[str]) -> dict[str, tuple[float, str]]:
+    """Bound request size and stop between batches; missing quotes stay missing."""
+    clean = list(dict.fromkeys(str(t or '').strip().upper() for t in tickers if str(t or '').strip()))
+    prices = {}
+    deadline = time.monotonic()+300
+    for offset in range(0,len(clean),50):
+        if time.monotonic() >= deadline:
+            break
+        prices.update(_batch_quotes(clean[offset:offset+50]))
     return prices
 
 

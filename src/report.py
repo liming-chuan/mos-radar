@@ -640,8 +640,9 @@ def opportunity_html(df, currency_symbol="$", limit=20):
     if "entry_status" not in df:
         return '<h2>严格入场观察区</h2><div class="empty">旧结果没有压力情景和数据日期，请重新完整扫描。</div>'
     parts = ['<h2>01 · 严格入场观察区</h2><p class="sub">先看现价距离严格触发上限还有多远；达标后仍需人工复核最新公告。</p>']
-    if "scan_status" in df and df["scan_status"].eq("PARTIAL_SOURCE_FAILURE").any():
-        parts.append('<p><b>本次扫描因数据源连续限流提前停止，下方只包含已尝试的股票；已保留此前公开状态。</b></p>')
+    if "scan_status" in df and df["scan_status"].astype(str).str.startswith("PARTIAL_").any():
+        reason = '运行预算用尽，已保存进度，等待后续续跑' if df['scan_status'].eq('PARTIAL_BUDGET').any() else '数据源连续限流'
+        parts.append(f'<p><b>本次扫描因{reason}提前停止，下方只包含已尝试的股票；已保留此前公开状态。</b></p>')
     groups = [("价格已达标：优先复核", ENTRY_STATES),
               ("质量通过：优先跟踪的价格距离", {"NEAR_ENTRY", "WAIT_PRICE"}),
               ("已退出或估值明显下修", {"REVIEW_REQUIRED"})]

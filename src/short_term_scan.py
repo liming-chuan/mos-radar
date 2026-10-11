@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import pandas as pd
-from price_feed import fetch_bars
+from price_feed import fetch_bars, issue
 from market_sessions import latest_completed, timestamp
 from market_sessions import calendar
 from entry_guards import GATE_VERSION, regime_gate, fetch_earnings, apply_guards, earnings_gate
@@ -77,7 +77,7 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
     active = [t['ticker'] for t in journal if t['state'] in {'PENDING', 'OPEN', 'DATA_REVIEW'}]
     benchmark = '^HSI' if market == 'hk' else '^GSPC'
     requested=list(dict.fromkeys([benchmark]+active+selected))
-    frames = fetch(requested, market, now, priority=active) if fetch is fetch_bars else fetch(requested,market,now)
+    frames = fetch(requested, market, now, priority=active, cache_root=state_dir.parent/'cache'/'prices', fallback=True) if fetch is fetch_bars else fetch(requested,market,now)
     # Record observation after fetching, not before a request that may cross the opening bell.
     observed = max(now, timestamp()) if fetch is fetch_bars else now
     plans = [make_plan(t, frames.get(t), frames.get(benchmark), market, observed, strategy)
@@ -87,6 +87,7 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
         name = names.get(p['ticker'], '')
         p['company_name'] = str(name) if pd.notna(name) else ''
     regime=regime_gate(frames.get(benchmark),market,observed)
+    price_valid=sum(not issue(frames.get(t),market,observed) for t in selected)
     failed=len({p['ticker'] for p in plans if p['status']=='DATA'})
     health=assess(len(selected),failed,regime)
     candidates=list(dict.fromkeys(p['ticker'] for p in plans if p['status'] in {'PENDING','NEAR'}))
@@ -140,6 +141,8 @@ def run(market, state_dir, now=None, fetch=fetch_bars, event_fetch=fetch_earning
                   coverage=dict(source_count=len(source_frame), eligible=len(universe), selected=len(selected),
                                 unselected=len(universe)-len(selected), received=sum(t in frames for t in selected),
                                 data_failed=failed,next_cursor=next_cursor,cursor_start=cursor_start,
+                                price_valid=price_valid,price_failed=len(selected)-price_valid,
+                                benchmark_ready=regime['status'] in {'ALLOW','BLOCK'},
                                 retry_next_cursor=retry_next_cursor,retrying_failed_cohort=retrying),
                   plans=plans, trades=journal)
     # Atomic replacement: failed writes must not truncate the forward ledger.
