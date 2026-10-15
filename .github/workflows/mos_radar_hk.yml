@@ -1,11 +1,13 @@
 name: MOS Radar - HK - Daily Scanner
 
 on:
-  schedule:
-    # Hong Kong weekdays. Full scan plus a fallback for the once-daily brief.
-    # 00:07 UTC = 08:07 Hong Kong time; allow time for a cold full scan.
-    # GitHub schedules may be delayed; late reports are explicitly labelled.
-    - cron: "7 0 * * 1-5"
+  # Automatic schedules paused at the owner's request on 2026-10-15.
+  # Retained below for an explicit future resume; manual runs remain available.
+  # schedule:
+  #   # Hong Kong weekdays. Full scan plus a fallback for the once-daily brief.
+  #   # 00:07 UTC = 08:07 Hong Kong time; allow time for a cold full scan.
+  #   # GitHub schedules may be delayed; late reports are explicitly labelled.
+  #   - cron: "7 0 * * 1-5"
   workflow_dispatch:
 
 permissions:

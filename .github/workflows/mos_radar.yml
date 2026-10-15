@@ -1,11 +1,13 @@
 name: MOS Radar - US - Daily Scanner
 
 on:
-  schedule:
-    # GitHub Actions cron uses UTC time.
-    # US market weekdays. Full scan plus a fallback for the once-daily brief.
-    # 12:31 UTC ~= 08:31 New York during EDT; still pre-market during EST.
-    - cron: "31 12 * * 1-5"
+  # Automatic schedules paused at the owner's request on 2026-10-15.
+  # Retained below for an explicit future resume; manual runs remain available.
+  # schedule:
+  #   # GitHub Actions cron uses UTC time.
+  #   # US market weekdays. Full scan plus a fallback for the once-daily brief.
+  #   # 12:31 UTC ~= 08:31 New York during EDT; still pre-market during EST.
+  #   - cron: "31 12 * * 1-5"
   workflow_dispatch:
 
 permissions:
